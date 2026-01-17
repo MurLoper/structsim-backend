@@ -4,6 +4,7 @@
 """
 from .routes import orders_bp
 from .service import orders_service
+from .init_config_routes import init_config_bp
 
-__all__ = ['orders_bp', 'orders_service']
+__all__ = ['orders_bp', 'orders_service', 'init_config_bp']
 

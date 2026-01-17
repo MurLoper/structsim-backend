@@ -10,6 +10,7 @@ from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
 from .schemas import (
+    ProjectCreate, ProjectUpdate,
     SimTypeCreate, SimTypeUpdate,
     ParamDefCreate, ParamDefUpdate,
     SolverCreate, SolverUpdate,
@@ -20,6 +21,58 @@ from .schemas import (
 from .service import config_service
 
 config_bp = Blueprint('config', __name__, url_prefix='/config')
+
+
+# ============ 项目配置 CRUD ============
+@config_bp.route('/projects', methods=['GET'])
+def list_projects():
+    """获取所有项目"""
+    data = config_service.get_projects()
+    return success(data)
+
+
+@config_bp.route('/projects/<int:id>', methods=['GET'])
+def get_project(id: int):
+    """获取单个项目"""
+    try:
+        data = config_service.get_project(id)
+        return success(data)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@config_bp.route('/projects', methods=['POST'])
+def create_project():
+    """创建项目"""
+    try:
+        validated = ProjectCreate(**request.get_json())
+        result = config_service.create_project(validated.model_dump())
+        return success(result, "创建成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e.errors()), http_status=400)
+
+
+@config_bp.route('/projects/<int:id>', methods=['PUT'])
+def update_project(id: int):
+    """更新项目"""
+    try:
+        validated = ProjectUpdate(**request.get_json())
+        result = config_service.update_project(id, validated.model_dump(exclude_unset=True))
+        return success(result, "更新成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e.errors()), http_status=400)
+
+
+@config_bp.route('/projects/<int:id>', methods=['DELETE'])
+def delete_project(id: int):
+    """删除项目（软删除）"""
+    try:
+        config_service.delete_project(id)
+        return success(None, "删除成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
 
 # ============ 仿真类型 CRUD ============

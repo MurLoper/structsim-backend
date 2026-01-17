@@ -6,7 +6,7 @@
 from typing import Optional, List, Dict, Any
 from app.common.errors import NotFoundError
 from app.api.v1.config.repository import (
-    SimTypeRepository, ParamDefRepository, SolverRepository,
+    ProjectRepository, SimTypeRepository, ParamDefRepository, SolverRepository,
     ConditionDefRepository, OutputDefRepository, FoldTypeRepository,
     ParamTplSetRepository, CondOutSetRepository, WorkflowRepository,
     StatusDefRepository, AutomationModuleRepository
@@ -24,6 +24,10 @@ class ConfigService:
         if name not in self._repos:
             self._repos[name] = repo_class()
         return self._repos[name]
+
+    @property
+    def project_repo(self) -> ProjectRepository:
+        return self._get_repo('project', ProjectRepository)
 
     @property
     def sim_type_repo(self) -> SimTypeRepository:
@@ -94,6 +98,38 @@ class ConfigService:
         if not repo.soft_delete(id):
             raise NotFoundError(name, id)
         return True
+
+    # ============ 项目配置 ============
+    def get_projects(self, user_id: Optional[int] = None) -> List[Dict]:
+        """
+        获取项目列表
+        如果提供 user_id，则只返回该用户有权限的项目
+        如果是管理员，返回所有项目
+        """
+        if user_id:
+            # TODO: 检查用户是否是管理员
+            # 如果是管理员，返回所有项目
+            # 如果是普通用户，只返回有权限的项目
+            projects = self.project_repo.find_by_user(user_id)
+        else:
+            projects = self.project_repo.find_all_valid()
+        return [p.to_dict() for p in projects]
+
+    def get_project(self, id: int) -> Dict:
+        """获取单个项目"""
+        return self._get(self.project_repo, id, "项目")
+
+    def create_project(self, data: Dict) -> Dict:
+        """创建项目"""
+        return self._create(self.project_repo, data)
+
+    def update_project(self, id: int, data: Dict) -> Dict:
+        """更新项目"""
+        return self._update(self.project_repo, id, data, "项目")
+
+    def delete_project(self, id: int) -> bool:
+        """删除项目（软删除）"""
+        return self._delete(self.project_repo, id, "项目")
 
     # ============ 仿真类型 ============
     def get_sim_types(self) -> List[Dict]:

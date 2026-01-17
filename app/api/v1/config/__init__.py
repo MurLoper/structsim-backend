@@ -4,6 +4,15 @@
 """
 from .routes import config_bp
 from .service import config_service
+from .param_groups import param_groups_bp
+from .cond_out_groups import cond_out_groups_bp
+from .config_relations import config_relations_bp
 
-__all__ = ['config_bp', 'config_service']
+__all__ = [
+    'config_bp',
+    'config_service',
+    'param_groups_bp',
+    'cond_out_groups_bp',
+    'config_relations_bp'
+]
 

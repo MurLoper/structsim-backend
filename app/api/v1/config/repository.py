@@ -7,7 +7,7 @@ import time
 from typing import Optional, List, TypeVar, Generic, Type
 from app.extensions import db
 from app.models import (
-    SimType, ParamDef, ParamTplSet, ParamTplItem,
+    Project, SimType, ParamDef, ParamTplSet, ParamTplItem,
     ConditionDef, OutputDef, CondOutSet, Solver,
     Workflow, StatusDef, AutomationModule, FoldType
 )
@@ -83,6 +83,16 @@ class BaseRepository(Generic[T]):
 
 
 # ============ 具体仓储类 ============
+class ProjectRepository(BaseRepository[Project]):
+    model_class = Project
+
+    def find_by_user(self, user_id: int) -> List[Project]:
+        """查找用户有权限的项目"""
+        # TODO: 关联 user_project_permissions 表查询
+        # 暂时返回所有有效项目
+        return self.find_all_valid()
+
+
 class SimTypeRepository(BaseRepository[SimType]):
     model_class = SimType
 

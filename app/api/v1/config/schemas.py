@@ -6,6 +6,27 @@ from typing import Optional, List, Any
 from pydantic import BaseModel, Field, field_validator
 
 
+# ============ 项目配置 ============
+class ProjectCreate(BaseModel):
+    """创建项目请求"""
+    name: str = Field(..., min_length=1, max_length=200, description="项目名称")
+    code: Optional[str] = Field(None, max_length=50, description="项目编码")
+    default_sim_type_id: Optional[int] = Field(None, description="默认仿真类型ID")
+    default_solver_id: Optional[int] = Field(None, description="默认求解器ID")
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class ProjectUpdate(BaseModel):
+    """更新项目请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    code: Optional[str] = Field(None, max_length=50)
+    default_sim_type_id: Optional[int] = None
+    default_solver_id: Optional[int] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
 # ============ 仿真类型 ============
 class SimTypeCreate(BaseModel):
     """创建仿真类型请求"""

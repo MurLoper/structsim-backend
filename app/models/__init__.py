@@ -20,6 +20,19 @@ from app.models.config import (
     FoldType
 )
 
+# 配置关联关系模型
+from app.models.config_relations import (
+    ParamGroup,
+    ConditionOutputGroup,
+    ProjectSimTypeRel,
+    SimTypeParamGroupRel,
+    SimTypeCondOutGroupRel,
+    SimTypeSolverRel,
+    ParamGroupParamRel,
+    CondOutGroupConditionRel,
+    CondOutGroupOutputRel
+)
+
 # 订单模型
 from app.models.order import (
     Order,
@@ -55,6 +68,16 @@ __all__ = [
     'StatusDef',
     'AutomationModule',
     'FoldType',
+    # 配置关联关系
+    'ParamGroup',
+    'ConditionOutputGroup',
+    'ProjectSimTypeRel',
+    'SimTypeParamGroupRel',
+    'SimTypeCondOutGroupRel',
+    'SimTypeSolverRel',
+    'ParamGroupParamRel',
+    'CondOutGroupConditionRel',
+    'CondOutGroupOutputRel',
     # 订单
     'Order',
     'OrderResult',
