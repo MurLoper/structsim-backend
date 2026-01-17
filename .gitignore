@@ -1,0 +1,70 @@
+# Python 相关
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# 环境变量和敏感信息
+.env
+.env.local
+.env.development
+.env.production
+*.key
+*.pem
+*.p12
+*.pfx
+config_local.py
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 日志文件
+*.log
+logs/
+backend_startup.log
+
+# 测试和覆盖率
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.hypothesis/
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 迁移文件（根据需要）
+# migrations/versions/*.py
+
+# 上传文件（如果有）
+uploads/
+media/
+static/uploads/
+

@@ -1,0 +1,165 @@
+"""
+配置中心 - Pydantic Schema定义
+用于请求参数校验和响应数据序列化
+"""
+from typing import Optional, List, Any
+from pydantic import BaseModel, Field, field_validator
+
+
+# ============ 仿真类型 ============
+class SimTypeCreate(BaseModel):
+    """创建仿真类型请求"""
+    name: str = Field(..., min_length=1, max_length=100, description="仿真类型名称")
+    code: Optional[str] = Field(None, max_length=50, description="类型编码")
+    category: Optional[str] = Field(None, max_length=50, description="分类")
+    support_alg_mask: int = Field(default=3, ge=0, description="支持算法位掩码")
+    node_icon: Optional[str] = Field(None, max_length=50)
+    color_tag: Optional[str] = Field(None, max_length=20)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class SimTypeUpdate(BaseModel):
+    """更新仿真类型请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=50)
+    support_alg_mask: Optional[int] = Field(None, ge=0)
+    node_icon: Optional[str] = None
+    color_tag: Optional[str] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 参数定义 ============
+class ParamDefCreate(BaseModel):
+    """创建参数定义请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    key: str = Field(..., min_length=1, max_length=50)
+    val_type: int = Field(default=1, ge=1, le=5, description="1=float,2=int,3=string,4=enum,5=bool")
+    unit: Optional[str] = Field(None, max_length=20)
+    min_val: Optional[float] = None
+    max_val: Optional[float] = None
+    default_val: Optional[str] = None
+    precision: int = Field(default=3, ge=0, le=10)
+    enum_options: Optional[List[Any]] = None
+    required: int = Field(default=1, ge=0, le=1)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+    @field_validator('max_val')
+    @classmethod
+    def validate_max_val(cls, v, info):
+        min_val = info.data.get('min_val')
+        if v is not None and min_val is not None and v < min_val:
+            raise ValueError('max_val must be >= min_val')
+        return v
+
+
+class ParamDefUpdate(BaseModel):
+    """更新参数定义请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    key: Optional[str] = Field(None, min_length=1, max_length=50)
+    val_type: Optional[int] = Field(None, ge=1, le=5)
+    unit: Optional[str] = None
+    min_val: Optional[float] = None
+    max_val: Optional[float] = None
+    default_val: Optional[str] = None
+    precision: Optional[int] = Field(None, ge=0, le=10)
+    enum_options: Optional[List[Any]] = None
+    required: Optional[int] = Field(None, ge=0, le=1)
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 求解器 ============
+class SolverCreate(BaseModel):
+    """创建求解器请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    version: Optional[str] = Field(None, max_length=20)
+    cpu_core_min: int = Field(default=1, ge=1)
+    cpu_core_max: int = Field(default=256, ge=1)
+    cpu_core_default: int = Field(default=16, ge=1)
+    memory_min: int = Field(default=1, ge=1)
+    memory_max: int = Field(default=1024, ge=1)
+    memory_default: int = Field(default=64, ge=1)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class SolverUpdate(BaseModel):
+    """更新求解器请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    version: Optional[str] = None
+    cpu_core_min: Optional[int] = Field(None, ge=1)
+    cpu_core_max: Optional[int] = Field(None, ge=1)
+    cpu_core_default: Optional[int] = Field(None, ge=1)
+    memory_min: Optional[int] = Field(None, ge=1)
+    memory_max: Optional[int] = Field(None, ge=1)
+    memory_default: Optional[int] = Field(None, ge=1)
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 工况定义 ============
+class ConditionDefCreate(BaseModel):
+    """创建工况定义请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = None
+    unit: Optional[str] = None
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class ConditionDefUpdate(BaseModel):
+    """更新工况定义请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    category: Optional[str] = None
+    unit: Optional[str] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 输出定义 ============
+class OutputDefCreate(BaseModel):
+    """创建输出定义请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    unit: Optional[str] = None
+    data_type: str = Field(default='float')
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class OutputDefUpdate(BaseModel):
+    """更新输出定义请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    unit: Optional[str] = None
+    data_type: Optional[str] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 姿态类型 ============
+class FoldTypeCreate(BaseModel):
+    """创建姿态类型请求"""
+    name: str = Field(..., min_length=1, max_length=50)
+    code: Optional[str] = Field(None, max_length=30)
+    angle: int = Field(default=0)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class FoldTypeUpdate(BaseModel):
+    """更新姿态类型请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    code: Optional[str] = None
+    angle: Optional[int] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
