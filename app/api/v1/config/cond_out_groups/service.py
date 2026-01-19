@@ -130,7 +130,7 @@ class CondOutGroupService:
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"工况输出组合 {group_id} 不存在")
-        
+
         cond_rels = self.cond_rel_repo.find_by_group_id(group_id)
         conditions = []
         for rel in cond_rels:
@@ -139,9 +139,9 @@ class CondOutGroupService:
             if cond_def:
                 cond_data['conditionName'] = cond_def.name
                 cond_data['conditionCode'] = cond_def.code
-                cond_data['conditionSchema'] = cond_def.schema  # 改为 conditionSchema
+                cond_data['conditionSchema'] = cond_def.condition_schema  # 使用 condition_schema
             conditions.append(cond_data)
-        
+
         return conditions
 
     def add_condition_to_group(self, group_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -175,7 +175,7 @@ class CondOutGroupService:
             result = rel.to_dict()
             result['conditionName'] = cond_def.name
             result['conditionCode'] = cond_def.code
-            result['conditionSchema'] = cond_def.schema  # 改为 conditionSchema
+            result['conditionSchema'] = cond_def.condition_schema  # 使用 condition_schema
             return result
         except Exception as e:
             db.session.rollback()

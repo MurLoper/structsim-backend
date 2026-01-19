@@ -31,7 +31,12 @@ class ErrorCode(IntEnum):
     PROJECT_NOT_FOUND = 404003
     ORDER_NOT_FOUND = 404004
     CONFIG_NOT_FOUND = 404005
-    
+    NOT_FOUND = 404001  # 通用资源不存在
+
+    # 409xxx - 业务逻辑错误
+    BUSINESS_ERROR = 409001
+    DUPLICATE_RESOURCE = 409002
+
     # 500xxx - 服务器错误
     INTERNAL_ERROR = 500001
     DATABASE_ERROR = 500002
@@ -56,6 +61,9 @@ ERROR_MESSAGES = {
     ErrorCode.PROJECT_NOT_FOUND: "项目不存在",
     ErrorCode.ORDER_NOT_FOUND: "订单不存在",
     ErrorCode.CONFIG_NOT_FOUND: "配置不存在",
+    ErrorCode.NOT_FOUND: "资源不存在",
+    ErrorCode.BUSINESS_ERROR: "业务逻辑错误",
+    ErrorCode.DUPLICATE_RESOURCE: "资源已存在",
     ErrorCode.INTERNAL_ERROR: "服务器内部错误",
     ErrorCode.DATABASE_ERROR: "数据库错误",
     ErrorCode.EXTERNAL_SERVICE_ERROR: "外部服务错误",

@@ -52,16 +52,28 @@ class BaseRepository(Generic[T]):
     
     def update(self, id: int, data: dict) -> Optional[T]:
         """更新记录"""
+        print(f"🟢 [BaseRepository.update] ID: {id}")
+        print(f"🟢 [BaseRepository.update] 更新数据: {data}")
+
         instance = self.find_by_id(id)
         if not instance:
+            print(f"🔴 [BaseRepository.update] 未找到记录 ID: {id}")
             return None
-        
+
+        print(f"🟢 [BaseRepository.update] 更新前的实例: {instance.to_dict() if hasattr(instance, 'to_dict') else instance}")
+
         data['updated_at'] = int(time.time())
         for key, value in data.items():
             if hasattr(instance, key):
+                old_value = getattr(instance, key)
                 setattr(instance, key, value)
-        
+                print(f"🟡 [BaseRepository.update] 字段 {key}: {old_value} -> {value}")
+            else:
+                print(f"🔴 [BaseRepository.update] 实例没有字段: {key}")
+
         self.session.commit()
+
+        print(f"🟢 [BaseRepository.update] 更新后的实例: {instance.to_dict() if hasattr(instance, 'to_dict') else instance}")
         return instance
     
     def soft_delete(self, id: int) -> bool:

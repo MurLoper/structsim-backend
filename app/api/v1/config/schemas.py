@@ -81,16 +81,19 @@ class ParamDefUpdate(BaseModel):
     """更新参数定义请求"""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     key: Optional[str] = Field(None, min_length=1, max_length=50)
-    val_type: Optional[int] = Field(None, ge=1, le=5)
+    val_type: Optional[int] = Field(None, ge=1, le=5, alias='valType')
     unit: Optional[str] = None
-    min_val: Optional[float] = None
-    max_val: Optional[float] = None
-    default_val: Optional[str] = None
+    min_val: Optional[float] = Field(None, alias='minVal')
+    max_val: Optional[float] = Field(None, alias='maxVal')
+    default_val: Optional[str] = Field(None, alias='defaultVal')
     precision: Optional[int] = Field(None, ge=0, le=10)
-    enum_options: Optional[List[Any]] = None
+    enum_options: Optional[List[Any]] = Field(None, alias='enumOptions')
     required: Optional[int] = Field(None, ge=0, le=1)
     sort: Optional[int] = Field(None, ge=0)
     remark: Optional[str] = None
+
+    class Config:
+        populate_by_name = True  # 允许使用字段名或别名
 
 
 # ============ 求解器 ============
@@ -151,7 +154,7 @@ class OutputDefCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     code: Optional[str] = Field(None, max_length=50)
     unit: Optional[str] = None
-    data_type: str = Field(default='float')
+    val_type: int = Field(default=1, ge=1, le=3)  # 1=number,2=int,3=string
     sort: int = Field(default=100, ge=0)
     remark: Optional[str] = None
 
@@ -161,7 +164,7 @@ class OutputDefUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     code: Optional[str] = None
     unit: Optional[str] = None
-    data_type: Optional[str] = None
+    val_type: Optional[int] = Field(None, ge=1, le=3)
     sort: Optional[int] = Field(None, ge=0)
     remark: Optional[str] = None
 

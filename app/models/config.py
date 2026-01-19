@@ -173,7 +173,9 @@ class ConditionDef(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False, comment='工况名称')
     code = db.Column(db.String(50), unique=True, comment='工况编码')
-    schema = db.Column(db.JSON, comment='工况参数schema定义')
+    category = db.Column(db.String(50), comment='工况分类')
+    unit = db.Column(db.String(20), comment='单位')
+    condition_schema = db.Column(db.JSON, comment='工况参数schema定义')
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
     remark = db.Column(db.Text)
@@ -186,10 +188,14 @@ class ConditionDef(db.Model):
             'id': self.id,
             'name': self.name,
             'code': self.code,
-            'schema': self.schema,
+            'category': self.category,
+            'unit': self.unit,
+            'conditionSchema': self.condition_schema,
             'valid': self.valid,
             'sort': self.sort,
-            'remark': self.remark
+            'remark': self.remark,
+            'createdAt': self.created_at,
+            'updatedAt': self.updated_at
         }
 
 
@@ -395,6 +401,7 @@ class FoldType(db.Model):
     angle = db.Column(db.Integer, comment='角度值')
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
+    remark = db.Column(db.Text, comment='备注')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
@@ -406,6 +413,7 @@ class FoldType(db.Model):
             'code': self.code,
             'angle': self.angle,
             'valid': self.valid,
-            'sort': self.sort
+            'sort': self.sort,
+            'remark': self.remark
         }
 

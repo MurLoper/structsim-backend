@@ -150,8 +150,16 @@ def create_param_def():
 def update_param_def(id: int):
     """更新参数定义"""
     try:
-        validated = ParamDefUpdate(**request.get_json())
-        result = config_service.update_param_def(id, validated.model_dump(exclude_none=True))
+        request_data = request.get_json()
+        print(f"🔵 [update_param_def] 接收到的原始数据: {request_data}")
+
+        validated = ParamDefUpdate(**request_data)
+        update_data = validated.model_dump(exclude_none=True)
+        print(f"🔵 [update_param_def] 验证后的数据: {update_data}")
+
+        result = config_service.update_param_def(id, update_data)
+        print(f"🔵 [update_param_def] 更新后的结果: {result}")
+
         return success(result, "更新成功")
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
