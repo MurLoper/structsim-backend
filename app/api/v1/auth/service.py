@@ -21,7 +21,21 @@ class AuthService:
         self.repository = auth_repository
 
     def _get_permission_codes(self, role_ids: Optional[List[int]]) -> List[str]:
-        permissions = Permission.query.filter(Permission.valid == 1).all()
+        role_ids = list(role_ids or [])
+        if not role_ids:
+            return []
+        roles = Role.query.filter(Role.id.in_(role_ids), Role.valid == 1).all()
+        if not roles:
+            return []
+        if any(role.code == 'ADMIN' for role in roles if role.code):
+            permissions = Permission.query.filter(Permission.valid == 1).order_by(Permission.sort.asc(), Permission.id.asc()).all()
+            return [p.code for p in permissions]
+        permission_ids = set()
+        for role in roles:
+            permission_ids.update(role.permission_ids or [])
+        if not permission_ids:
+            return []
+        permissions = Permission.query.filter(Permission.id.in_(permission_ids), Permission.valid == 1).order_by(Permission.sort.asc(), Permission.id.asc()).all()
         return [p.code for p in permissions]
     
     def login(self, email: str, password: Optional[str] = None) -> Dict:

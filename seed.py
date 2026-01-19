@@ -71,9 +71,10 @@ def seed_database():
         db.session.add_all(permissions)
 
         # ============ 角色 ============
+        admin_permission_ids = [p.id for p in permissions]
         roles = [
             Role(id=1, name='管理员', code='ADMIN', description='系统管理员',
-                 permission_ids=[1, 2, 3, 4, 5, 6], valid=1, sort=10),
+                 permission_ids=admin_permission_ids, valid=1, sort=10),
             Role(id=2, name='工程师', code='ENGINEER', description='仿真工程师',
                  permission_ids=[1, 2, 3, 4], valid=1, sort=20),
             Role(id=3, name='查看者', code='VIEWER', description='只读用户',

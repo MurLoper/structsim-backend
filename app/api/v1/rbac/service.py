@@ -43,17 +43,31 @@ def _build_role_maps(roles: List[Role]):
     return id_map, code_map
 
 
+ADMIN_EMAIL = 'alice@sim.com'
+
+
 def _get_admin_role_id() -> int | None:
     admin_role = Role.query.filter(Role.code == 'ADMIN', Role.valid == 1).first()
     return admin_role.id if admin_role else None
 
 
-def _ensure_admin_role(role_ids: List[int] | None) -> List[int]:
-    ids = list(role_ids or [])
+def _is_admin_user(user: User) -> bool:
+    return bool(user.email) and user.email.lower() == ADMIN_EMAIL
+
+
+def _ensure_admin_role_for_user(user: User) -> bool:
+    if not _is_admin_user(user):
+        return False
     admin_id = _get_admin_role_id()
-    if admin_id and admin_id not in ids:
-        ids.append(admin_id)
-    return ids
+    if not admin_id:
+        return False
+    role_ids = list(user.role_ids or [])
+    if admin_id in role_ids:
+        return False
+    role_ids.append(admin_id)
+    user.role_ids = role_ids
+    return True
+
 
 
 
@@ -63,11 +77,17 @@ def _user_to_dict(user: User, roles: List[Role], permissions: List[Permission]) 
     permission_map, _ = _build_permission_maps(permissions)
 
     user_roles = [role_map[rid] for rid in role_ids if rid in role_map]
-    permission_ids = []
-    for role in user_roles:
-        permission_ids.extend(role.permission_ids or [])
-    permission_ids = sorted(set(permission_ids))
-    permission_codes = [permission_map[pid].code for pid in permission_ids if pid in permission_map]
+    is_admin = any(role.code == 'ADMIN' for role in user_roles if role.code)
+    if is_admin:
+        permission_ids = [p.id for p in permissions]
+        permission_codes = [p.code for p in permissions]
+    else:
+        permission_ids = []
+        for role in user_roles:
+            permission_ids.extend(role.permission_ids or [])
+        permission_ids = sorted(set(permission_ids))
+        permission_codes = [permission_map[pid].code for pid in permission_ids if pid in permission_map]
+
 
     data = user.to_dict()
     data.update({
@@ -106,36 +126,35 @@ class RbacService:
         users = user_repository.find_all_valid(order_by='id')
         roles = role_repository.find_all_valid()
         permissions = permission_repository.find_all_valid()
-        admin_id = _get_admin_role_id()
+        updated_users = []
         for user in users:
-            role_ids = _ensure_admin_role(user.role_ids)
-            if admin_id and role_ids != (user.role_ids or []):
-                user.role_ids = role_ids
-        if admin_id:
-            self._commit_users(users)
+            if _ensure_admin_role_for_user(user):
+                updated_users.append(user)
+        if updated_users:
+            self._commit_users(updated_users)
         return [_user_to_dict(user, roles, permissions) for user in users]
+
 
 
 
     def create_user(self, data: dict) -> Dict:
         payload = _normalize_user_payload(data)
-        payload['role_ids'] = _ensure_admin_role(payload.get('role_ids'))
         if user_repository.find_by_email(payload.get('email')):
             raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '邮箱已存在')
         if user_repository.find_by_username(payload.get('username')):
             raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '用户名已存在')
         user = user_repository.create(payload)
-        user.role_ids = _ensure_admin_role(user.role_ids)
+        if _ensure_admin_role_for_user(user):
+            self._commit_users([user])
         roles = role_repository.find_all_valid()
         permissions = permission_repository.find_all_valid()
         return _user_to_dict(user, roles, permissions)
 
 
 
+
     def update_user(self, user_id: int, data: dict) -> Dict:
         payload = _normalize_user_payload(data)
-        if 'role_ids' in payload:
-            payload['role_ids'] = _ensure_admin_role(payload.get('role_ids'))
         if 'email' in payload:
             existing = user_repository.find_by_email(payload['email'])
             if existing and existing.id != user_id:
@@ -147,10 +166,12 @@ class RbacService:
         user = user_repository.update(user_id, payload)
         if not user:
             raise NotFoundError('用户', user_id)
-        user.role_ids = _ensure_admin_role(user.role_ids)
+        if _ensure_admin_role_for_user(user):
+            self._commit_users([user])
         roles = role_repository.find_all_valid()
         permissions = permission_repository.find_all_valid()
         return _user_to_dict(user, roles, permissions)
+
 
 
 
