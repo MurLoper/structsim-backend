@@ -6,7 +6,7 @@ import logging
 from functools import wraps
 from typing import Callable, Any
 from flask import request, g
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 from app.common.response import error
 from app.constants import ErrorCode
@@ -22,10 +22,17 @@ def require_permission(permission: str):
             try:
                 verify_jwt_in_request()
                 identity = get_jwt_identity()
-                user_permissions = identity.get('permissions', [])
+                claims = get_jwt() or {}
+                user_permissions = claims.get('permissions', [])
+                if isinstance(identity, dict):
+                    user_id = identity.get('id')
+                elif isinstance(identity, str) and identity.isdigit():
+                    user_id = int(identity)
+                else:
+                    user_id = identity
                 
                 if permission not in user_permissions:
-                    logger.warning(f"Permission denied: {permission} for user {identity.get('id')}")
+                    logger.warning(f"Permission denied: {permission} for user {user_id}")
                     return error(ErrorCode.PERMISSION_DENIED, f"缺少权限: {permission}", http_status=403)
                 
                 return f(*args, **kwargs)

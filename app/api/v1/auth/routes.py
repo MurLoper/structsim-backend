@@ -36,7 +36,13 @@ def login():
 def get_current_user():
     """获取当前登录用户信息"""
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        if isinstance(identity, dict):
+            user_id = identity.get('id')
+        elif isinstance(identity, str) and identity.isdigit():
+            user_id = int(identity)
+        else:
+            user_id = identity
         result = auth_service.get_current_user(user_id)
         return success(result)
     except NotFoundError as e:
@@ -54,7 +60,13 @@ def get_all_users():
 @jwt_required()
 def logout():
     """用户登出"""
-    user_id = get_jwt_identity()
+    identity = get_jwt_identity()
+    if isinstance(identity, dict):
+        user_id = identity.get('id')
+    elif isinstance(identity, str) and identity.isdigit():
+        user_id = int(identity)
+    else:
+        user_id = identity
     result = auth_service.logout(user_id)
     return success(result)
 

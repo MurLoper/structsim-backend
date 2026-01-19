@@ -58,7 +58,13 @@ def create_order():
     """创建订单"""
     try:
         validated = OrderCreate(**request.get_json())
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        if isinstance(identity, dict):
+            user_id = identity.get('id')
+        elif isinstance(identity, str) and identity.isdigit():
+            user_id = int(identity)
+        else:
+            user_id = identity
         result = orders_service.create_order(validated.model_dump(), user_id)
         return success(result, "创建成功")
     except ValidationError as e:

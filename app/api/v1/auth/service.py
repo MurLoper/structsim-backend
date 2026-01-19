@@ -10,6 +10,7 @@ from werkzeug.security import check_password_hash
 
 from app.common.errors import NotFoundError, BusinessError
 from app.constants import ErrorCode
+from app.models.auth import Role, Permission
 from .repository import auth_repository
 
 
@@ -18,6 +19,10 @@ class AuthService:
     
     def __init__(self):
         self.repository = auth_repository
+
+    def _get_permission_codes(self, role_ids: Optional[List[int]]) -> List[str]:
+        permissions = Permission.query.filter(Permission.valid == 1).all()
+        return [p.code for p in permissions]
     
     def login(self, email: str, password: Optional[str] = None) -> Dict:
         """
@@ -41,15 +46,29 @@ class AuthService:
         # if password and not check_password_hash(user.password_hash, password):
         #     raise BusinessError(ErrorCode.VALIDATION_ERROR, "密码错误")
         
+        permission_codes = self._get_permission_codes(user.role_ids)
+
         # 生成访问令牌
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(
+            identity=str(user.id),
+            additional_claims={
+                'permissions': permission_codes
+            }
+        )
         
         # 更新最后登录时间
         self.repository.update_last_login(user, int(time.time()))
+
+        user_data = user.to_dict()
+        user_data.update({
+            'roleIds': user.role_ids or [],
+            'permissions': permission_codes,
+            'permissionCodes': permission_codes
+        })
         
         return {
             'token': access_token,
-            'user': user.to_dict()
+            'user': user_data
         }
     
     def get_current_user(self, user_id: int) -> Dict:
@@ -66,8 +85,16 @@ class AuthService:
         
         if not user:
             raise NotFoundError("用户不存在")
+
+        permission_codes = self._get_permission_codes(user.role_ids)
+        user_data = user.to_dict()
+        user_data.update({
+            'roleIds': user.role_ids or [],
+            'permissions': permission_codes,
+            'permissionCodes': permission_codes
+        })
         
-        return user.to_dict()
+        return user_data
     
     def get_all_users(self) -> List[Dict]:
         """
