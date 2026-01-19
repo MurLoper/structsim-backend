@@ -7,15 +7,31 @@ import requests
 import json
 import random
 import string
+import pytest
 
 BASE_URL = "http://localhost:5000/api/v1"
+HEALTH_URL = "http://localhost:5000/health"
+
+
+def is_server_available() -> bool:
+    try:
+        response = requests.get(HEALTH_URL, timeout=2)
+        return response.status_code < 500
+    except requests.RequestException:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    not is_server_available(),
+    reason="API server not running on http://localhost:5000",
+)
 
 def random_code(prefix="TEST", length=6):
     """生成随机编码"""
     suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
     return f"{prefix}_{suffix}"
 
-def test_api(method, endpoint, data=None, description=""):
+def call_api(method, endpoint, data=None, description=""):
     """测试 API 接口"""
     url = f"{BASE_URL}{endpoint}"
     print(f"\n{'='*60}")
@@ -57,43 +73,43 @@ def test_basic_config_apis():
     
     # 1. 测试项目管理 API
     print("\n\n【1. 项目管理 API】")
-    projects = test_api("GET", "/config/projects", description="获取项目列表")
+    projects = call_api("GET", "/config/projects", description="获取项目列表")
 
-    new_project = test_api("POST", "/config/projects",
+    new_project = call_api("POST", "/config/projects",
                            data={"name": "测试项目", "code": random_code("PRJ"), "sort": 100},
                            description="创建项目")
 
     if new_project:
         project_id = new_project.get('id')
-        test_api("PUT", f"/config/projects/{project_id}",
+        call_api("PUT", f"/config/projects/{project_id}",
                 data={"name": "测试项目（已更新）", "remark": "这是测试备注"},
                 description="更新项目")
 
-        test_api("DELETE", f"/config/projects/{project_id}",
+        call_api("DELETE", f"/config/projects/{project_id}",
                 description="删除项目")
 
     # 2. 测试仿真类型 API
     print("\n\n【2. 仿真类型 API】")
-    sim_types = test_api("GET", "/config/sim-types", description="获取仿真类型列表")
+    sim_types = call_api("GET", "/config/sim-types", description="获取仿真类型列表")
 
-    new_sim_type = test_api("POST", "/config/sim-types",
+    new_sim_type = call_api("POST", "/config/sim-types",
                             data={"name": "测试仿真", "code": random_code("SIM"), "category": "STRUCTURE", "sort": 100},
                             description="创建仿真类型")
     
     if new_sim_type:
         sim_type_id = new_sim_type.get('id')
-        test_api("PUT", f"/config/sim-types/{sim_type_id}",
+        call_api("PUT", f"/config/sim-types/{sim_type_id}",
                 data={"name": "测试仿真（已更新）"},
                 description="更新仿真类型")
         
-        test_api("DELETE", f"/config/sim-types/{sim_type_id}",
+        call_api("DELETE", f"/config/sim-types/{sim_type_id}",
                 description="删除仿真类型")
     
     # 3. 测试参数定义 API
     print("\n\n【3. 参数定义 API】")
-    param_defs = test_api("GET", "/config/param-defs", description="获取参数定义列表")
+    param_defs = call_api("GET", "/config/param-defs", description="获取参数定义列表")
 
-    new_param = test_api("POST", "/config/param-defs",
+    new_param = call_api("POST", "/config/param-defs",
                          data={
                              "name": "测试参数",
                              "key": random_code("param").lower(),
@@ -109,18 +125,18 @@ def test_basic_config_apis():
 
     if new_param:
         param_id = new_param.get('id')
-        test_api("PUT", f"/config/param-defs/{param_id}",
+        call_api("PUT", f"/config/param-defs/{param_id}",
                 data={"name": "测试参数（已更新）", "maxVal": 200},
                 description="更新参数定义")
 
-        test_api("DELETE", f"/config/param-defs/{param_id}",
+        call_api("DELETE", f"/config/param-defs/{param_id}",
                 description="删除参数定义")
 
     # 4. 测试求解器 API
     print("\n\n【4. 求解器 API】")
-    solvers = test_api("GET", "/config/solvers", description="获取求解器列表")
+    solvers = call_api("GET", "/config/solvers", description="获取求解器列表")
 
-    new_solver = test_api("POST", "/config/solvers",
+    new_solver = call_api("POST", "/config/solvers",
                           data={
                               "name": "测试求解器",
                               "code": random_code("SOLVER"),
@@ -137,18 +153,18 @@ def test_basic_config_apis():
     
     if new_solver:
         solver_id = new_solver.get('id')
-        test_api("PUT", f"/config/solvers/{solver_id}",
+        call_api("PUT", f"/config/solvers/{solver_id}",
                 data={"name": "测试求解器（已更新）", "version": "2.0"},
                 description="更新求解器")
         
-        test_api("DELETE", f"/config/solvers/{solver_id}",
+        call_api("DELETE", f"/config/solvers/{solver_id}",
                 description="删除求解器")
     
     # 5. 测试工况定义 API
     print("\n\n【5. 工况定义 API】")
-    condition_defs = test_api("GET", "/config/condition-defs", description="获取工况定义列表")
+    condition_defs = call_api("GET", "/config/condition-defs", description="获取工况定义列表")
 
-    new_condition = test_api("POST", "/config/condition-defs",
+    new_condition = call_api("POST", "/config/condition-defs",
                              data={
                                  "name": "测试工况",
                                  "code": random_code("COND"),
@@ -160,18 +176,18 @@ def test_basic_config_apis():
 
     if new_condition:
         condition_id = new_condition.get('id')
-        test_api("PUT", f"/config/condition-defs/{condition_id}",
+        call_api("PUT", f"/config/condition-defs/{condition_id}",
                 data={"name": "测试工况（已更新）", "unit": "kN"},
                 description="更新工况定义")
 
-        test_api("DELETE", f"/config/condition-defs/{condition_id}",
+        call_api("DELETE", f"/config/condition-defs/{condition_id}",
                 description="删除工况定义")
 
     # 6. 测试输出定义 API
     print("\n\n【6. 输出定义 API】")
-    output_defs = test_api("GET", "/config/output-defs", description="获取输出定义列表")
+    output_defs = call_api("GET", "/config/output-defs", description="获取输出定义列表")
 
-    new_output = test_api("POST", "/config/output-defs",
+    new_output = call_api("POST", "/config/output-defs",
                           data={
                               "name": "测试输出",
                               "code": random_code("OUT"),
@@ -183,18 +199,18 @@ def test_basic_config_apis():
 
     if new_output:
         output_id = new_output.get('id')
-        test_api("PUT", f"/config/output-defs/{output_id}",
+        call_api("PUT", f"/config/output-defs/{output_id}",
                 data={"name": "测试输出（已更新）", "unit": "m"},
                 description="更新输出定义")
 
-        test_api("DELETE", f"/config/output-defs/{output_id}",
+        call_api("DELETE", f"/config/output-defs/{output_id}",
                 description="删除输出定义")
 
     # 7. 测试姿态类型 API
     print("\n\n【7. 姿态类型 API】")
-    fold_types = test_api("GET", "/config/fold-types", description="获取姿态类型列表")
+    fold_types = call_api("GET", "/config/fold-types", description="获取姿态类型列表")
 
-    new_fold_type = test_api("POST", "/config/fold-types",
+    new_fold_type = call_api("POST", "/config/fold-types",
                              data={
                                  "name": "测试姿态",
                                  "code": random_code("FOLD"),
@@ -205,11 +221,11 @@ def test_basic_config_apis():
     
     if new_fold_type:
         fold_type_id = new_fold_type.get('id')
-        test_api("PUT", f"/config/fold-types/{fold_type_id}",
+        call_api("PUT", f"/config/fold-types/{fold_type_id}",
                 data={"name": "测试姿态（已更新）", "angle": 90},
                 description="更新姿态类型")
         
-        test_api("DELETE", f"/config/fold-types/{fold_type_id}",
+        call_api("DELETE", f"/config/fold-types/{fold_type_id}",
                 description="删除姿态类型")
     
     print("\n\n" + "="*60)
