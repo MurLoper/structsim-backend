@@ -3,6 +3,7 @@
 按照 requirement_and_design.md 规范设计
 """
 import time
+import random
 from app import create_app, db
 from app.models import (
     # 配置表
@@ -10,7 +11,11 @@ from app.models import (
     ConditionDef, OutputDef, CondOutSet, Solver, Workflow,
     StatusDef, AutomationModule, FoldType,
     # 权限表
-    User, Role, Permission, Menu
+    User, Role, Permission, Menu,
+    # 订单表
+    Order,
+    # 结果表
+    SimTypeResult, Round
 )
 
 
@@ -23,10 +28,33 @@ def seed_database():
         db.create_all()
 
         print("Clearing existing data...")
-        # 清除现有数据（按依赖顺序）
+        # 清除现有数据（按依赖顺序 - 先删除关联表，再删除主表）
+        # 1. 先删除结果相关数据（最底层）
+        db.session.query(Round).delete()
+        db.session.query(SimTypeResult).delete()
+
+        # 2. 删除订单相关数据
+        db.session.query(Order).delete()
+
+        # 3. 删除关联表（多对多关系表）
+        db.session.execute(db.text('DELETE FROM project_sim_type_rels'))
+        db.session.execute(db.text('DELETE FROM sim_type_param_group_rels'))
+        db.session.execute(db.text('DELETE FROM sim_type_cond_out_group_rels'))
+        db.session.execute(db.text('DELETE FROM sim_type_solver_rels'))
+        db.session.execute(db.text('DELETE FROM param_group_param_rels'))
+        db.session.execute(db.text('DELETE FROM cond_out_group_condition_rels'))
+        db.session.execute(db.text('DELETE FROM cond_out_group_output_rels'))
+
+        # 4. 删除配置数据
         db.session.query(ParamTplItem).delete()
         db.session.query(ParamTplSet).delete()
         db.session.query(CondOutSet).delete()
+
+        # 5. 删除分组表
+        db.session.execute(db.text('DELETE FROM param_groups'))
+        db.session.execute(db.text('DELETE FROM condition_output_groups'))
+
+        # 6. 删除主配置表
         db.session.query(Project).delete()
         db.session.query(SimType).delete()
         db.session.query(ParamDef).delete()
@@ -37,6 +65,8 @@ def seed_database():
         db.session.query(StatusDef).delete()
         db.session.query(AutomationModule).delete()
         db.session.query(FoldType).delete()
+
+        # 7. 删除权限相关
         db.session.query(Menu).delete()
         db.session.query(Permission).delete()
         db.session.query(Role).delete()
@@ -129,16 +159,16 @@ def seed_database():
         # ============ 工况定义 ============
         condition_defs = [
             ConditionDef(id=1, name='弯曲工况', code='BENDING',
-                        schema={'load': {'type': 'number', 'unit': 'N'}, 'direction': {'type': 'enum', 'values': ['X', 'Y', 'Z']}},
+                        condition_schema={'load': {'type': 'number', 'unit': 'N'}, 'direction': {'type': 'enum', 'values': ['X', 'Y', 'Z']}},
                         valid=1, sort=10),
             ConditionDef(id=2, name='扭转工况', code='TORSION',
-                        schema={'torque': {'type': 'number', 'unit': 'Nm'}, 'axis': {'type': 'enum', 'values': ['X', 'Y', 'Z']}},
+                        condition_schema={'torque': {'type': 'number', 'unit': 'Nm'}, 'axis': {'type': 'enum', 'values': ['X', 'Y', 'Z']}},
                         valid=1, sort=20),
             ConditionDef(id=3, name='制动工况', code='BRAKING',
-                        schema={'deceleration': {'type': 'number', 'unit': 'g'}},
+                        condition_schema={'deceleration': {'type': 'number', 'unit': 'g'}},
                         valid=1, sort=30),
             ConditionDef(id=4, name='转弯工况', code='CORNERING',
-                        schema={'lateral_g': {'type': 'number', 'unit': 'g'}},
+                        condition_schema={'lateral_g': {'type': 'number', 'unit': 'g'}},
                         valid=1, sort=40),
         ]
         for c in condition_defs:
@@ -370,7 +400,142 @@ def seed_database():
         for m in menus:
             db.session.add(m)
 
+        print("Seeding orders...")
+        # ============ 订单/申请单 ============
+        # 清除现有订单
+        db.session.query(Order).delete()
+
+        # 状态: 1=待处理, 2=排队中, 3=运行中, 4=已完成, 5=失败
+        status_options = [1, 2, 3, 4, 4, 4, 5]  # 更多完成状态
+
+        orders = []
+        for i in range(1, 26):  # 创建25个测试订单
+            project_id = random.choice([1, 2, 3, 4, 5])
+            sim_type_count = random.randint(1, 3)
+            sim_type_ids = random.sample([1, 2, 3, 4, 5, 6], sim_type_count)
+            status = random.choice(status_options)
+            progress = 100 if status == 4 else (0 if status in [1, 2] else random.randint(10, 90))
+            created_by = random.choice([1, 2, 3])
+            # 随机时间：过去30天内
+            created_at = now - random.randint(0, 30 * 24 * 3600)
+
+            order = Order(
+                id=i,
+                order_no=f'ORD-2025-{i:04d}',
+                project_id=project_id,
+                origin_file_type=1,
+                origin_file_name=f'model_{i}.inp',
+                origin_file_path=f'/data/models/model_{i}.inp',
+                fold_type_id=random.choice([1, 2, 3, 4]),
+                participant_uids=[created_by],
+                remark=f'测试订单 #{i}' if random.random() > 0.5 else None,
+                sim_type_ids=sim_type_ids,
+                opt_param={str(st_id): {'solver_id': 1} for st_id in sim_type_ids},
+                workflow_id=1,
+                status=status,
+                progress=progress,
+                created_by=created_by,
+                created_at=created_at,
+                updated_at=created_at + random.randint(0, 3600)
+            )
+            orders.append(order)
+
+        for o in orders:
+            db.session.add(o)
+
+        db.session.flush()
+
+        print("Seeding simulation results and rounds...")
+        # ============ 仿真结果和轮次数据 ============
+        # 只为已完成的订单创建结果数据
+        completed_orders = [o for o in orders if o.status == 4]
+
+        sim_type_results = []
+        rounds = []
+        round_id_counter = 1
+
+        for order in completed_orders:
+            for sim_type_id in order.sim_type_ids:
+                # 创建仿真类型结果
+                total_rounds = random.randint(5, 15)  # 每个仿真类型5-15轮
+                completed_rounds = total_rounds
+
+                # 生成最优结果指标
+                best_round_index = random.randint(1, total_rounds)
+                best_metrics = {
+                    'stress_max': round(random.uniform(100, 500), 2),
+                    'displacement_max': round(random.uniform(0.5, 5.0), 3),
+                    'safety_factor': round(random.uniform(1.5, 3.0), 2)
+                }
+
+                sim_result = SimTypeResult(
+                    order_id=order.id,
+                    sim_type_id=sim_type_id,
+                    status=4,  # 已完成
+                    progress=100,
+                    cur_node_id=5,  # 最后一个节点
+                    best_exists=1,
+                    best_round_index=best_round_index,
+                    best_metrics=best_metrics,
+                    total_rounds=total_rounds,
+                    completed_rounds=completed_rounds,
+                    failed_rounds=0,
+                    created_at=order.created_at,
+                    updated_at=order.updated_at
+                )
+                db.session.add(sim_result)
+                db.session.flush()  # 获取sim_result.id
+
+                sim_type_results.append(sim_result)
+
+                # 为每个仿真类型结果创建轮次数据
+                for round_idx in range(1, total_rounds + 1):
+                    # 生成参数值（假设有3-5个参数）
+                    params = {
+                        f'param_{i}': round(random.uniform(10, 100), 2)
+                        for i in range(1, random.randint(4, 6))
+                    }
+
+                    # 生成输出结果
+                    outputs = {
+                        'stress_max': round(random.uniform(100, 500), 2),
+                        'displacement_max': round(random.uniform(0.5, 5.0), 3),
+                        'safety_factor': round(random.uniform(1.5, 3.0), 2),
+                        'mass': round(random.uniform(50, 200), 1)
+                    }
+
+                    # 如果是最优轮次，使用最优指标
+                    if round_idx == best_round_index:
+                        outputs.update(best_metrics)
+
+                    round_obj = Round(
+                        sim_type_result_id=sim_result.id,
+                        order_id=order.id,
+                        sim_type_id=sim_type_id,
+                        round_index=round_idx,
+                        params=params,
+                        outputs=outputs,
+                        status=4,  # 已完成
+                        flow_cur_node_id=5,
+                        flow_node_progress={
+                            '1': 100, '2': 100, '3': 100, '4': 100, '5': 100
+                        },
+                        started_at=order.created_at + round_idx * 60,
+                        finished_at=order.created_at + round_idx * 60 + random.randint(30, 120),
+                        created_at=order.created_at + round_idx * 60,
+                        updated_at=order.created_at + round_idx * 60 + random.randint(30, 120)
+                    )
+                    rounds.append(round_obj)
+                    round_id_counter += 1
+
+        # 批量添加轮次数据
+        for r in rounds:
+            db.session.add(r)
+
         db.session.commit()
+
+        print(f"Created {len(sim_type_results)} simulation results")
+        print(f"Created {len(rounds)} rounds")
         print("Database seeded successfully!")
 
 

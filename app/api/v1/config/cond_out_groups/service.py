@@ -49,7 +49,7 @@ class CondOutGroupService:
             if cond_def:
                 cond_data['conditionName'] = cond_def.name
                 cond_data['conditionCode'] = cond_def.code
-                cond_data['conditionSchema'] = cond_def.schema  # 改为 conditionSchema
+                cond_data['conditionSchema'] = cond_def.condition_schema  # 改为 conditionSchema
             conditions.append(cond_data)
         
         # 获取组合包含的输出

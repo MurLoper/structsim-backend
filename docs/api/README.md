@@ -6,6 +6,11 @@ StructSim AI Platform 后端提供 RESTful API，基于 Flask 3.x 构建。
 
 **Base URL**: `http://127.0.0.1:5000/api/v1`
 
+**Swagger/OpenAPI**:
+
+- UI: `http://127.0.0.1:5000/api/docs`
+- JSON: `http://127.0.0.1:5000/api/docs.json`
+
 ---
 
 ## API 分类
@@ -16,7 +21,6 @@ StructSim AI Platform 后端提供 RESTful API，基于 Flask 3.x 构建。
 |------|------|------|
 | `/auth/login` | POST | 用户登录 |
 | `/auth/logout` | POST | 用户登出 |
-| `/auth/refresh` | POST | 刷新Token |
 
 ### 基础配置 API (7组)
 
@@ -108,7 +112,7 @@ Authorization: Bearer <token>
 
 ### Token 刷新
 
-Token 过期后，使用 refresh token 获取新 token。
+当前版本未提供 refresh 接口，Token 过期后需重新登录。
 
 ---
 
@@ -141,7 +145,6 @@ Token 过期后，使用 refresh token 获取新 token。
 
 ## 待完成
 
-- [ ] Swagger/OpenAPI 集成
 - [ ] 详细的请求/响应示例
 - [ ] 错误码完整列表
 

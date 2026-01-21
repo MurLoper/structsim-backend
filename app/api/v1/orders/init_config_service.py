@@ -160,7 +160,7 @@ class OrderInitConfigService:
                         'conditionName': cond_def.name,
                         'conditionCode': cond_def.code,
                         'configData': cond_rel.config_data,
-                        'conditionSchema': cond_def.schema
+                        'conditionSchema': cond_def.condition_schema
                     })
 
             # 获取输出
