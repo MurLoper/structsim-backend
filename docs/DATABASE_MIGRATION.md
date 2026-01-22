@@ -67,82 +67,45 @@ source ../.venv/bin/activate  # Linux/Mac
 python init_db.py --all
 ```
 
-### 2. 检查数据库状态
+### 2. 数据库管理工具
 
-```bash
-python init_database.py --check
-```
-
-输出示例：
-```
-✓ 数据库连接正常
-数据库表数量: 30
-✓ 所有关键表都存在
-
-数据统计:
-  - 用户 (users): 4 条
-  - 订单 (orders): 25 条
-  - 项目 (projects): 5 条
-  - 仿真类型 (sim_types): 6 条
-  - 仿真结果 (sim_type_results): 18 条
-  - 轮次数据 (rounds): 215 条
-```
-
----
-
-## 数据初始化工具
-
-### init_database.py
-
-统一的数据库管理工具，支持以下操作：
+统一的数据库管理工具 `init_db.py`，支持以下操作：
 
 ```bash
 # 查看帮助
-python init_database.py --help
+python init_db.py --help
 
-# 初始化数据库结构（创建所有表）
-python init_database.py --init
+# 一键初始化（创建表 + 导入数据）- 推荐
+python init_db.py --all
 
-# 填充测试数据
-python init_database.py --seed
+# 仅创建数据库表结构
+python init_db.py --init
 
-# 初始化并填充数据
-python init_database.py --init --seed
+# 仅导入种子数据
+python init_db.py --seed
 
-# 重置数据库（危险操作，会删除所有数据）
-python init_database.py --reset
-
-# 检查数据库状态
-python init_database.py --check
-
-# 导出数据库结构
-python init_database.py --export-schema
+# 仅清理所有数据
+python init_db.py --clean
 ```
 
-### seed.py
+### 测试用户
 
-数据填充脚本，包含：
+初始化后会自动创建4个测试用户：
 
-**配置数据：**
-- 5个项目（车身结构、底盘系统、动力总成、电池包、整车集成）
-- 6个仿真类型（静态强度、模态分析、疲劳分析、碰撞安全、NVH分析、热管理）
-- 20+个参数定义
-- 4个工况定义
-- 6个输出定义
-- 3个求解器
-- 2个工作流
-- 5个状态定义
+| 邮箱 | 姓名 | 角色 | 权限 |
+|------|------|------|------|
+| alice@sim.com | Alice Admin | 管理员 | 所有权限 |
+| bob@sim.com | Bob Engineer | 工程师 | 创建订单+管理配置 |
+| charlie@sim.com | Charlie Viewer | 查看者 | 只读权限 |
+| david@sim.com | David Engineer | 工程师 | 创建订单+管理配置 |
 
-**用户数据：**
-- Alice Admin (alice@sim.com) - 管理员
-- Bob Engineer (bob@sim.com) - 工程师
-- Charlie Viewer (charlie@sim.com) - 查看者
-- Guest (guest@sim.com) - 访客
+### 配置数据
 
-**业务数据：**
-- 25个测试订单
-- 18个仿真结果（仅为已完成订单）
-- 215个轮次数据（每个仿真结果5-15轮）
+从 `structsim-ai-platform/data-config/` 目录导入：
+- 项目配置 (`base_config.json`)
+- 参数定义
+- 输出定义
+- 求解器配置
 
 ---
 
@@ -158,7 +121,7 @@ mysqldump -u root -p --no-data sim_ai_paltform > schema.sql
 mysql -u root -p sim_ai_paltform < schema.sql
 
 # 3. 填充测试数据
-python init_database.py --seed
+python init_db.py --seed
 ```
 
 ### 场景2：测试环境 → 生产环境
@@ -181,8 +144,8 @@ mysql -u root -p sim_ai_paltform < full_backup.sql
 # 1. 更新模型文件（app/models/*.py）
 
 # 2. 在开发环境测试
-python init_database.py --reset  # 重置数据库
-python init_database.py --init --seed  # 重新初始化
+python init_db.py --clean  # 清理数据
+python init_db.py --all  # 重新初始化
 
 # 3. 创建迁移SQL脚本
 # 将结构变更保存到 migrations/ 目录
@@ -240,7 +203,7 @@ IntegrityError: Cannot delete or update a parent row: a foreign key constraint f
 ```
 
 **解决方案：**
-按照正确的删除顺序操作，或使用 `init_database.py --reset` 重置数据库。
+按照正确的删除顺序操作，或使用 `init_db.py --clean` 清理数据。
 
 ### Q2: 表已存在错误
 
@@ -251,11 +214,8 @@ Table 'xxx' already exists
 
 **解决方案：**
 ```bash
-# 检查数据库状态
-python init_database.py --check
-
-# 如果需要重新创建，使用reset
-python init_database.py --reset
+# 清理并重新初始化
+python init_db.py --all
 ```
 
 ### Q3: 数据不一致
@@ -263,7 +223,7 @@ python init_database.py --reset
 **解决方案：**
 ```bash
 # 重新填充数据
-python init_database.py --seed
+python init_db.py --seed
 ```
 
 ---
@@ -276,10 +236,10 @@ python init_database.py --seed
 
 ```bash
 # 危险！会删除所有数据
-python init_database.py --reset
+python init_db.py --clean
 
 # 危险！会覆盖现有数据
-python init_database.py --seed
+python init_db.py --seed
 ```
 
 ### ✅ 安全操作
@@ -287,16 +247,13 @@ python init_database.py --seed
 生产环境推荐操作：
 
 ```bash
-# 1. 仅检查状态
-python init_database.py --check
-
-# 2. 备份数据
+# 1. 备份数据
 mysqldump -u root -p sim_ai_paltform > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# 3. 执行迁移前先测试
+# 2. 执行迁移前先测试
 mysql -u root -p test_db < migration.sql
 
-# 4. 确认无误后再在生产环境执行
+# 3. 确认无误后再在生产环境执行
 mysql -u root -p sim_ai_paltform < migration.sql
 ```
 
@@ -327,13 +284,13 @@ SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 | 1.0 | 2026-01-21 | 初始版本，包含30个表 |
 | 1.1 | 2026-01-21 | 添加结果数据生成（SimTypeResult, Round） |
 | 1.2 | 2026-01-21 | 修复外键约束问题，优化删除顺序 |
+| 2.0 | 2026-01-23 | 重构数据库初始化系统，统一为 init_db.py |
 
 ---
 
 ## 相关文件
 
-- `init_database.py` - 数据库初始化工具
-- `seed.py` - 数据填充脚本
+- `init_db.py` - 统一数据库初始化工具
 - `app/models/` - 数据模型定义
 - `migrations/` - 数据库迁移脚本目录
 - `config.py` - 数据库配置
