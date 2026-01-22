@@ -9,7 +9,8 @@ from app.extensions import db
 from app.models import (
     Project, SimType, ParamDef, ParamTplSet, ParamTplItem,
     ConditionDef, OutputDef, CondOutSet, Solver,
-    Workflow, StatusDef, AutomationModule, FoldType
+    Workflow, StatusDef, AutomationModule, FoldType,
+    ModelLevel, CareDevice, SolverResource, Department
 )
 
 T = TypeVar('T')
@@ -171,9 +172,40 @@ class StatusDefRepository(BaseRepository[StatusDef]):
 
 class AutomationModuleRepository(BaseRepository[AutomationModule]):
     model_class = AutomationModule
-    
+
     def find_by_category(self, category: str) -> List[AutomationModule]:
         return self.session.query(self.model_class).filter_by(
             category=category, valid=1
+        ).order_by(self.model_class.sort.asc()).all()
+
+
+class ModelLevelRepository(BaseRepository[ModelLevel]):
+    """模型层级仓储"""
+    model_class = ModelLevel
+
+
+class CareDeviceRepository(BaseRepository[CareDevice]):
+    """关注器件仓储"""
+    model_class = CareDevice
+
+    def find_by_category(self, category: str) -> List[CareDevice]:
+        return self.session.query(self.model_class).filter_by(
+            category=category, valid=1
+        ).order_by(self.model_class.sort.asc()).all()
+
+
+class SolverResourceRepository(BaseRepository[SolverResource]):
+    """求解器资源池仓储"""
+    model_class = SolverResource
+
+
+class DepartmentRepository(BaseRepository[Department]):
+    """部门仓储"""
+    model_class = Department
+
+    def find_by_parent_id(self, parent_id: int) -> List[Department]:
+        """根据父部门ID查找子部门"""
+        return self.session.query(self.model_class).filter_by(
+            parent_id=parent_id, valid=1
         ).order_by(self.model_class.sort.asc()).all()
 

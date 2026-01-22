@@ -187,3 +187,77 @@ class FoldTypeUpdate(BaseModel):
     sort: Optional[int] = Field(None, ge=0)
     remark: Optional[str] = None
 
+
+# ============ 模型层级 ============
+class ModelLevelCreate(BaseModel):
+    """创建模型层级请求"""
+    name: str = Field(..., min_length=1, max_length=50)
+    code: Optional[str] = Field(None, max_length=20)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class ModelLevelUpdate(BaseModel):
+    """更新模型层级请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    code: Optional[str] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 关注器件 ============
+class CareDeviceCreate(BaseModel):
+    """创建关注器件请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=50)
+    sort: int = Field(default=100, ge=0)
+    remark: Optional[str] = None
+
+
+class CareDeviceUpdate(BaseModel):
+    """更新关注器件请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    category: Optional[str] = None
+    sort: Optional[int] = Field(None, ge=0)
+    remark: Optional[str] = None
+
+
+# ============ 求解器资源池 ============
+class SolverResourceCreate(BaseModel):
+    """创建求解器资源池请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    description: Optional[str] = None
+    cpu_cores: Optional[int] = Field(None, ge=1)
+    memory_gb: Optional[int] = Field(None, ge=1)
+    sort: int = Field(default=100, ge=0)
+
+
+class SolverResourceUpdate(BaseModel):
+    """更新求解器资源池请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    description: Optional[str] = None
+    cpu_cores: Optional[int] = Field(None, ge=1)
+    memory_gb: Optional[int] = Field(None, ge=1)
+    sort: Optional[int] = Field(None, ge=0)
+
+
+# ============ 部门 ============
+class DepartmentCreate(BaseModel):
+    """创建部门请求"""
+    name: str = Field(..., min_length=1, max_length=100)
+    code: Optional[str] = Field(None, max_length=50)
+    parent_id: int = Field(default=0, ge=0)
+    sort: int = Field(default=100, ge=0)
+
+
+class DepartmentUpdate(BaseModel):
+    """更新部门请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    parent_id: Optional[int] = Field(None, ge=0)
+    sort: Optional[int] = Field(None, ge=0)
+

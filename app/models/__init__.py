@@ -17,7 +17,11 @@ from app.models.config import (
     Workflow,
     StatusDef,
     AutomationModule,
-    FoldType
+    FoldType,
+    ModelLevel,
+    CareDevice,
+    SolverResource,
+    Department
 )
 
 # 配置关联关系模型
@@ -68,6 +72,10 @@ __all__ = [
     'StatusDef',
     'AutomationModule',
     'FoldType',
+    'ModelLevel',
+    'CareDevice',
+    'SolverResource',
+    'Department',
     # 配置关联关系
     'ParamGroup',
     'ConditionOutputGroup',

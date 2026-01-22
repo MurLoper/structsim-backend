@@ -390,3 +390,192 @@ class ConfigRelationsService:
             db.session.rollback()
             raise BusinessError(f"移除求解器失败: {str(e)}")
 
+    # ============ 配置级联查询接口（新增）============
+
+    def get_project_sim_types_with_full_config(self, project_id: int) -> List[Dict[str, Any]]:
+        """
+        获取项目支持的仿真类型（带完整配置）
+        用于前端级联加载：项目 → 仿真类型 → 参数组/求解器
+
+        返回格式:
+        [
+            {
+                "id": 1,
+                "name": "跌落",
+                "code": "SIM_1",
+                "isDefault": true,
+                "paramGroups": [...],
+                "solvers": [...]
+            }
+        ]
+        """
+        from app.common.serializers import serialize_model, serialize_models
+        from app.api.v1.config.repository import (
+            ProjectRepository, SimTypeRepository, SolverRepository,
+            ModelLevelRepository, FoldTypeRepository, SolverResourceRepository
+        )
+        from app.models.config_relations import ParamGroup, ParamGroupParamRel
+
+        # 验证项目存在
+        project_repo = ProjectRepository()
+        project = project_repo.find_by_id_valid(project_id)
+        if not project:
+            raise NotFoundError(f"项目 {project_id} 不存在")
+
+        # 获取项目关联的仿真类型
+        rels = self.project_sim_type_repo.find_by_project_id(project_id)
+
+        result = []
+        sim_type_repo = SimTypeRepository()
+
+        for rel in rels:
+            sim_type = sim_type_repo.find_by_id_valid(rel.sim_type_id)
+            if not sim_type:
+                continue
+
+            sim_type_dict = serialize_model(sim_type)
+            sim_type_dict['isDefault'] = bool(rel.is_default)
+
+            # 获取参数组合（带参数详情）
+            param_groups = self._get_param_groups_with_params()
+            sim_type_dict['paramGroups'] = param_groups
+
+            # 获取可用求解器
+            solver_repo = SolverRepository()
+            solvers = solver_repo.find_all_valid()
+            sim_type_dict['solvers'] = serialize_models(solvers)
+
+            result.append(sim_type_dict)
+
+        return result
+
+    def _get_param_groups_with_params(self) -> List[Dict[str, Any]]:
+        """获取参数组合（带参数详情）- 内部方法"""
+        from app.common.serializers import serialize_model
+        from app.api.v1.config.repository import ParamDefRepository
+        from app.models.config_relations import ParamGroup, ParamGroupParamRel
+
+        param_groups = db.session.query(ParamGroup).filter_by(valid=1).order_by(ParamGroup.sort.asc()).all()
+
+        result = []
+        param_def_repo = ParamDefRepository()
+
+        for group in param_groups:
+            group_dict = serialize_model(group)
+
+            # 获取参数组包含的参数
+            param_rels = db.session.query(ParamGroupParamRel).filter_by(
+                param_group_id=group.id
+            ).order_by(ParamGroupParamRel.sort.asc()).all()
+
+            params = []
+            for rel in param_rels:
+                param = param_def_repo.find_by_id_valid(rel.param_def_id)
+                if param:
+                    param_dict = serialize_model(param)
+                    if rel.default_value:
+                        param_dict['defaultValue'] = rel.default_value
+                    params.append(param_dict)
+
+            group_dict['params'] = params
+            result.append(group_dict)
+
+        return result
+
+    def get_sim_type_full_config(self, sim_type_id: int, fold_type: int = 0) -> Dict[str, Any]:
+        """
+        获取仿真类型的完整配置
+        用于提单页面初始化，一次性获取所有需要的配置
+
+        Args:
+            sim_type_id: 仿真类型ID
+            fold_type: 折叠态类型 (0=展开态, 1=折叠态)
+
+        Returns:
+            完整配置字典
+        """
+        from app.common.serializers import serialize_model, serialize_models
+        from app.api.v1.config.repository import (
+            SimTypeRepository, SolverRepository, ModelLevelRepository,
+            FoldTypeRepository, SolverResourceRepository
+        )
+
+        # 验证仿真类型存在
+        sim_type_repo = SimTypeRepository()
+        sim_type = sim_type_repo.find_by_id_valid(sim_type_id)
+        if not sim_type:
+            raise NotFoundError(f"仿真类型 {sim_type_id} 不存在")
+
+        # 获取参数组合
+        param_groups = self._get_param_groups_with_params()
+
+        # 获取求解器
+        solver_repo = SolverRepository()
+        solvers = solver_repo.find_all_valid()
+
+        # 获取求解器资源池
+        resource_repo = SolverResourceRepository()
+        resources = resource_repo.find_all_valid()
+
+        # 获取模型层级
+        level_repo = ModelLevelRepository()
+        levels = level_repo.find_all_valid()
+
+        # 获取折叠态类型
+        fold_type_repo = FoldTypeRepository()
+        fold_types = fold_type_repo.find_all_valid()
+
+        return {
+            'simType': serialize_model(sim_type),
+            'foldType': fold_type,
+            'paramGroups': param_groups,
+            'defaultParamGroup': param_groups[0] if param_groups else None,
+            'solvers': serialize_models(solvers),
+            'defaultSolver': serialize_model(solvers[0]) if solvers else None,
+            'solverResources': serialize_models(resources),
+            'defaultResource': serialize_model(resources[0]) if resources else None,
+            'modelLevels': serialize_models(levels),
+            'foldTypes': serialize_models(fold_types)
+        }
+
+    def get_default_config_for_order(
+        self,
+        project_id: int,
+        sim_type_id: int,
+        fold_type: int = 0
+    ) -> Dict[str, Any]:
+        """
+        获取提单默认配置（核心接口）
+        前端提单页面初始化时调用此接口，一次性获取所有需要的配置
+
+        Args:
+            project_id: 项目ID
+            sim_type_id: 仿真类型ID
+            fold_type: 折叠态类型 (0=展开态, 1=折叠态)
+
+        Returns:
+            默认配置字典，包含项目、仿真类型、参数组、求解器等所有配置
+        """
+        from app.common.serializers import serialize_model
+        from app.api.v1.config.repository import ProjectRepository
+
+        # 验证项目和仿真类型关联
+        rel = self.project_sim_type_repo.find_by_project_and_sim_type(project_id, sim_type_id)
+        if not rel:
+            raise NotFoundError(f"项目 {project_id} 不支持仿真类型 {sim_type_id}")
+
+        # 获取项目信息
+        project_repo = ProjectRepository()
+        project = project_repo.find_by_id_valid(project_id)
+        if not project:
+            raise NotFoundError(f"项目 {project_id} 不存在")
+
+        # 获取仿真类型的完整配置
+        full_config = self.get_sim_type_full_config(sim_type_id, fold_type)
+
+        # 添加项目信息
+        full_config['project'] = serialize_model(project)
+
+        return full_config
+
+

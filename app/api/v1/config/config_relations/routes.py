@@ -255,3 +255,124 @@ def remove_solver_from_sim_type(sim_type_id: int, solver_id: int):
     except Exception as e:
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
 
+
+# ============ 配置级联查询接口（新增）============
+
+@config_relations_bp.route('/projects/<int:project_id>/sim-types/full', methods=['GET'])
+def get_project_sim_types_full(project_id: int):
+    """
+    获取项目支持的仿真类型（带完整配置）
+    用于前端级联加载：项目 → 仿真类型 → 参数组/求解器
+
+    返回格式:
+    {
+        "code": 0,
+        "msg": "ok",
+        "data": [
+            {
+                "id": 1,
+                "name": "跌落",
+                "code": "SIM_1",
+                "isDefault": true,
+                "paramGroups": [...],
+                "solvers": [...]
+            }
+        ]
+    }
+    """
+    try:
+        data = service.get_project_sim_types_with_full_config(project_id)
+        return success(data=data)
+    except NotFoundError as e:
+        return error(code=ErrorCode.NOT_FOUND, msg=str(e))
+    except Exception as e:
+        return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
+
+
+@config_relations_bp.route('/sim-types/<int:sim_type_id>/full-config', methods=['GET'])
+def get_sim_type_full_config(sim_type_id: int):
+    """
+    获取仿真类型的完整配置
+    用于提单页面初始化，一次性获取所有需要的配置
+
+    Query参数:
+        foldType: 折叠态类型 (0=展开态, 1=折叠态)，默认0
+
+    返回格式:
+    {
+        "code": 0,
+        "msg": "ok",
+        "data": {
+            "simType": {...},
+            "foldType": 0,
+            "paramGroups": [...],
+            "defaultParamGroup": {...},
+            "solvers": [...],
+            "defaultSolver": {...},
+            "solverResources": [...],
+            "defaultResource": {...},
+            "modelLevels": [...],
+            "foldTypes": [...]
+        }
+    }
+    """
+    try:
+        fold_type = request.args.get('foldType', type=int, default=0)
+        data = service.get_sim_type_full_config(sim_type_id, fold_type)
+        return success(data=data)
+    except NotFoundError as e:
+        return error(code=ErrorCode.NOT_FOUND, msg=str(e))
+    except Exception as e:
+        return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
+
+
+@config_relations_bp.route('/default-config', methods=['GET'])
+def get_default_config():
+    """
+    获取提单默认配置（核心接口）
+    前端提单页面初始化时调用此接口，一次性获取所有需要的配置
+
+    Query参数:
+        projectId: 项目ID（必填）
+        simTypeId: 仿真类型ID（必填）
+        foldType: 折叠态类型 (0=展开态, 1=折叠态)，默认0
+
+    返回格式:
+    {
+        "code": 0,
+        "msg": "ok",
+        "data": {
+            "project": {...},
+            "simType": {...},
+            "foldType": 0,
+            "defaultParamGroup": {...},
+            "defaultSolver": {...},
+            "defaultResource": {...},
+            "modelLevels": [...],
+            "foldTypes": [...],
+            "paramGroups": [...],
+            "solvers": [...],
+            "solverResources": [...]
+        }
+    }
+
+    使用示例:
+        GET /api/v1/config-relations/default-config?projectId=1753&simTypeId=1&foldType=0
+    """
+    try:
+        project_id = request.args.get('projectId', type=int)
+        sim_type_id = request.args.get('simTypeId', type=int)
+        fold_type = request.args.get('foldType', type=int, default=0)
+
+        if not project_id:
+            return error(code=ErrorCode.VALIDATION_ERROR, msg="缺少参数: projectId")
+        if not sim_type_id:
+            return error(code=ErrorCode.VALIDATION_ERROR, msg="缺少参数: simTypeId")
+
+        data = service.get_default_config_for_order(project_id, sim_type_id, fold_type)
+        return success(data=data, msg="获取默认配置成功")
+    except NotFoundError as e:
+        return error(code=ErrorCode.NOT_FOUND, msg=str(e))
+    except Exception as e:
+        return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
+

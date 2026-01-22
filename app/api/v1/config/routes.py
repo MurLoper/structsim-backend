@@ -16,7 +16,11 @@ from .schemas import (
     SolverCreate, SolverUpdate,
     ConditionDefCreate, ConditionDefUpdate,
     OutputDefCreate, OutputDefUpdate,
-    FoldTypeCreate, FoldTypeUpdate
+    FoldTypeCreate, FoldTypeUpdate,
+    ModelLevelCreate, ModelLevelUpdate,
+    CareDeviceCreate, CareDeviceUpdate,
+    SolverResourceCreate, SolverResourceUpdate,
+    DepartmentCreate, DepartmentUpdate
 )
 from .service import config_service
 
@@ -392,4 +396,179 @@ def get_base_data():
     """获取所有基础配置数据（聚合接口）"""
     data = config_service.get_base_data()
     return success(data)
+
+
+# ============ 模型层级 CRUD ============
+@config_bp.route('/model-levels', methods=['GET'])
+def list_model_levels():
+    """获取所有模型层级"""
+    data = config_service.get_model_levels()
+    return success(data)
+
+
+@config_bp.route('/model-levels', methods=['POST'])
+def create_model_level():
+    """创建模型层级"""
+    try:
+        validated = ModelLevelCreate(**request.get_json())
+        result = config_service.create_model_level(validated.model_dump())
+        return success(result, "创建成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+
+
+@config_bp.route('/model-levels/<int:id>', methods=['PUT'])
+def update_model_level(id: int):
+    """更新模型层级"""
+    try:
+        validated = ModelLevelUpdate(**request.get_json())
+        result = config_service.update_model_level(id, validated.model_dump(exclude_none=True))
+        return success(result, "更新成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@config_bp.route('/model-levels/<int:id>', methods=['DELETE'])
+def delete_model_level(id: int):
+    """删除模型层级"""
+    try:
+        config_service.delete_model_level(id)
+        return success(msg="删除成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+# ============ 关注器件 CRUD ============
+@config_bp.route('/care-devices', methods=['GET'])
+def list_care_devices():
+    """获取所有关注器件"""
+    data = config_service.get_care_devices()
+    return success(data)
+
+
+@config_bp.route('/care-devices', methods=['POST'])
+def create_care_device():
+    """创建关注器件"""
+    try:
+        validated = CareDeviceCreate(**request.get_json())
+        result = config_service.create_care_device(validated.model_dump())
+        return success(result, "创建成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+
+
+@config_bp.route('/care-devices/<int:id>', methods=['PUT'])
+def update_care_device(id: int):
+    """更新关注器件"""
+    try:
+        validated = CareDeviceUpdate(**request.get_json())
+        result = config_service.update_care_device(id, validated.model_dump(exclude_none=True))
+        return success(result, "更新成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@config_bp.route('/care-devices/<int:id>', methods=['DELETE'])
+def delete_care_device(id: int):
+    """删除关注器件"""
+    try:
+        config_service.delete_care_device(id)
+        return success(msg="删除成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+# ============ 求解器资源池 CRUD ============
+@config_bp.route('/solver-resources', methods=['GET'])
+def list_solver_resources():
+    """获取所有求解器资源池"""
+    data = config_service.get_solver_resources()
+    return success(data)
+
+
+@config_bp.route('/solver-resources', methods=['POST'])
+def create_solver_resource():
+    """创建求解器资源池"""
+    try:
+        validated = SolverResourceCreate(**request.get_json())
+        result = config_service.create_solver_resource(validated.model_dump())
+        return success(result, "创建成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+
+
+@config_bp.route('/solver-resources/<int:id>', methods=['PUT'])
+def update_solver_resource(id: int):
+    """更新求解器资源池"""
+    try:
+        validated = SolverResourceUpdate(**request.get_json())
+        result = config_service.update_solver_resource(id, validated.model_dump(exclude_none=True))
+        return success(result, "更新成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@config_bp.route('/solver-resources/<int:id>', methods=['DELETE'])
+def delete_solver_resource(id: int):
+    """删除求解器资源池"""
+    try:
+        config_service.delete_solver_resource(id)
+        return success(msg="删除成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+# ============ 部门 CRUD ============
+@config_bp.route('/departments', methods=['GET'])
+def list_departments():
+    """获取所有部门"""
+    data = config_service.get_departments()
+    return success(data)
+
+
+@config_bp.route('/departments/<int:parent_id>/children', methods=['GET'])
+def list_sub_departments(parent_id: int):
+    """获取子部门列表"""
+    data = config_service.get_sub_departments(parent_id)
+    return success(data)
+
+
+@config_bp.route('/departments', methods=['POST'])
+def create_department():
+    """创建部门"""
+    try:
+        validated = DepartmentCreate(**request.get_json())
+        result = config_service.create_department(validated.model_dump())
+        return success(result, "创建成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+
+
+@config_bp.route('/departments/<int:id>', methods=['PUT'])
+def update_department(id: int):
+    """更新部门"""
+    try:
+        validated = DepartmentUpdate(**request.get_json())
+        result = config_service.update_department(id, validated.model_dump(exclude_none=True))
+        return success(result, "更新成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@config_bp.route('/departments/<int:id>', methods=['DELETE'])
+def delete_department(id: int):
+    """删除部门"""
+    try:
+        config_service.delete_department(id)
+        return success(msg="删除成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 

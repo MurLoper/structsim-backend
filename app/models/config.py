@@ -417,3 +417,109 @@ class FoldType(db.Model):
             'remark': self.remark
         }
 
+
+class ModelLevel(db.Model):
+    """模型层级表"""
+    __tablename__ = 'model_levels'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(50), nullable=False, comment='模型层级名称')
+    code = db.Column(db.String(20), unique=True, comment='层级编码')
+    valid = db.Column(db.SmallInteger, default=1)
+    sort = db.Column(db.Integer, default=100)
+    remark = db.Column(db.Text, comment='备注')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'valid': self.valid,
+            'sort': self.sort,
+            'remark': self.remark
+        }
+
+
+class CareDevice(db.Model):
+    """关注器件表"""
+    __tablename__ = 'care_devices'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, comment='器件名称')
+    code = db.Column(db.String(50), unique=True, comment='器件编码')
+    category = db.Column(db.String(50), comment='器件分类')
+    valid = db.Column(db.SmallInteger, default=1)
+    sort = db.Column(db.Integer, default=100)
+    remark = db.Column(db.Text, comment='备注')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'category': self.category,
+            'valid': self.valid,
+            'sort': self.sort,
+            'remark': self.remark
+        }
+
+
+class SolverResource(db.Model):
+    """求解器资源池表"""
+    __tablename__ = 'solver_resources'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, comment='资源池名称')
+    code = db.Column(db.String(50), unique=True, comment='资源池编码')
+    description = db.Column(db.Text, comment='资源池描述')
+    cpu_cores = db.Column(db.Integer, comment='CPU核心数')
+    memory_gb = db.Column(db.Integer, comment='内存大小GB')
+    valid = db.Column(db.SmallInteger, default=1)
+    sort = db.Column(db.Integer, default=100)
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'description': self.description,
+            'cpuCores': self.cpu_cores,
+            'memoryGb': self.memory_gb,
+            'valid': self.valid,
+            'sort': self.sort
+        }
+
+
+class Department(db.Model):
+    """部门表"""
+    __tablename__ = 'departments'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, comment='部门名称')
+    code = db.Column(db.String(50), unique=True, comment='部门编码')
+    parent_id = db.Column(db.Integer, default=0, comment='父部门ID')
+    valid = db.Column(db.SmallInteger, default=1)
+    sort = db.Column(db.Integer, default=100)
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'parentId': self.parent_id,
+            'valid': self.valid,
+            'sort': self.sort
+        }
+

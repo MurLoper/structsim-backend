@@ -201,7 +201,10 @@ docs/
 
 ### 项目文档
 - [项目总览](../../README.md)
-- [前端文档](../../../structsim-ai-platform/docs/README.md)
+- [文档中心](../../docs/README.md)
+- [总需求文档](../../docs/REQUIREMENTS.md)
+- [开发计划与进度](../../docs/DEVELOPMENT_PLAN.md)
+- [前端文档](../../structsim-ai-platform/docs/README.md)
 
 ### 外部资源
 - [Flask 文档](https://flask.palletsprojects.com/)
@@ -219,6 +222,6 @@ docs/
 
 ---
 
-**最后更新**: 2025-01-18
+**最后更新**: 2025-01-22
 **文档版本**: v2.0
 **维护者**: 后端团队

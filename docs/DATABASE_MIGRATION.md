@@ -63,14 +63,8 @@ source ../.venv/bin/activate  # Linux/Mac
 # 或
 ..\.venv\Scripts\Activate.ps1  # Windows
 
-# 初始化数据库结构
-python init_database.py --init
-
-# 填充测试数据
-python init_database.py --seed
-
-# 或者一步完成
-python init_database.py --init --seed
+# 一键初始化（创建表结构 + 导入测试数据）
+python init_db.py --all
 ```
 
 ### 2. 检查数据库状态
