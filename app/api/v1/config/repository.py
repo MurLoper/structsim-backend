@@ -101,7 +101,7 @@ class ProjectRepository(BaseRepository[Project]):
 
     def find_by_user(self, user_id: int) -> List[Project]:
         """查找用户有权限的项目"""
-        # TODO: 关联 user_project_permissions 表查询
+        # 注意：后续需要关联 user_project_permissions 表实现项目级权限过滤
         # 暂时返回所有有效项目
         return self.find_all_valid()
 

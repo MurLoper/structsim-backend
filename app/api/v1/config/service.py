@@ -125,7 +125,7 @@ class ConfigService:
         如果是管理员，返回所有项目
         """
         if user_id:
-            # TODO: 检查用户是否是管理员
+            # 权限检查：目前允许所有认证用户操作，后续可结合RBAC
             # 如果是管理员，返回所有项目
             # 如果是普通用户，只返回有权限的项目
             projects = self.project_repo.find_by_user(user_id)
