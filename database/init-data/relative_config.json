@@ -1,0 +1,42 @@
+{
+  "project_sim_type_config": [
+    {"project_id": "1751", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1751", "fold_type_id": 1, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1751", "fold_type_id": 0, "sim_type_id": 2, "model_level_id": 1, "param_tpl_set_id": 2, "cond_out_set_id": 2, "solver_id": 39},
+    {"project_id": "1752", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1752", "fold_type_id": 1, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1752", "fold_type_id": 0, "sim_type_id": 3, "model_level_id": 2, "param_tpl_set_id": 3, "cond_out_set_id": 3, "solver_id": 40},
+    {"project_id": "1753", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1753", "fold_type_id": 1, "sim_type_id": 2, "model_level_id": 2, "param_tpl_set_id": 2, "cond_out_set_id": 2, "solver_id": 39},
+    {"project_id": "1753", "fold_type_id": 2, "sim_type_id": 3, "model_level_id": 1, "param_tpl_set_id": 3, "cond_out_set_id": 3, "solver_id": 40},
+    {"project_id": "1754", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1754", "fold_type_id": 0, "sim_type_id": 4, "model_level_id": 2, "param_tpl_set_id": 4, "cond_out_set_id": 4, "solver_id": 41},
+    {"project_id": "1755", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1755", "fold_type_id": 0, "sim_type_id": 5, "model_level_id": 1, "param_tpl_set_id": 5, "cond_out_set_id": 5, "solver_id": 42},
+    {"project_id": "1756", "fold_type_id": 0, "sim_type_id": 3, "model_level_id": 1, "param_tpl_set_id": 3, "cond_out_set_id": 3, "solver_id": 40},
+    {"project_id": "1756", "fold_type_id": 0, "sim_type_id": 4, "model_level_id": 1, "param_tpl_set_id": 4, "cond_out_set_id": 4, "solver_id": 41},
+    {"project_id": "1757", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 1, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1757", "fold_type_id": 0, "sim_type_id": 5, "model_level_id": 2, "param_tpl_set_id": 5, "cond_out_set_id": 5, "solver_id": 42},
+    {"project_id": "1758", "fold_type_id": 0, "sim_type_id": 2, "model_level_id": 1, "param_tpl_set_id": 2, "cond_out_set_id": 2, "solver_id": 39},
+    {"project_id": "1758", "fold_type_id": 0, "sim_type_id": 3, "model_level_id": 1, "param_tpl_set_id": 3, "cond_out_set_id": 3, "solver_id": 40},
+    {"project_id": "1759", "fold_type_id": 0, "sim_type_id": 4, "model_level_id": 1, "param_tpl_set_id": 4, "cond_out_set_id": 4, "solver_id": 41},
+    {"project_id": "1759", "fold_type_id": 0, "sim_type_id": 5, "model_level_id": 1, "param_tpl_set_id": 5, "cond_out_set_id": 5, "solver_id": 42},
+    {"project_id": "1760", "fold_type_id": 0, "sim_type_id": 1, "model_level_id": 3, "param_tpl_set_id": 1, "cond_out_set_id": 1, "solver_id": 39},
+    {"project_id": "1760", "fold_type_id": 0, "sim_type_id": 4, "model_level_id": 3, "param_tpl_set_id": 4, "cond_out_set_id": 4, "solver_id": 41}
+  ],
+  "param_tpl_sets": [
+    {"set_id": 1, "set_name": "跌落参数模板", "sim_type_id": 1, "param_ids": [1, 2, 3, 4, 5, 6], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 2, "set_name": "落球参数模板", "sim_type_id": 2, "param_ids": [7, 8, 9, 10], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 3, "set_name": "振动参数模板", "sim_type_id": 3, "param_ids": [11, 12, 13], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 4, "set_name": "冲击参数模板", "sim_type_id": 4, "param_ids": [14, 15, 16], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 5, "set_name": "热分析参数模板", "sim_type_id": 5, "param_ids": [17, 18, 19, 20], "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "cond_out_sets": [
+    {"set_id": 1, "set_name": "跌落输出指标", "sim_type_id": 1, "output_ids": [1, 2, 3, 4, 5, 6], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 2, "set_name": "落球输出指标", "sim_type_id": 2, "output_ids": [1, 2, 3, 7, 8], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 3, "set_name": "振动输出指标", "sim_type_id": 3, "output_ids": [7, 8, 9], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 4, "set_name": "冲击输出指标", "sim_type_id": 4, "output_ids": [4, 5, 6, 7, 8, 9], "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"set_id": 5, "set_name": "热分析输出指标", "sim_type_id": 5, "output_ids": [10, 11], "created_at": 1769231248411, "updated_at": 1769231248411}
+  ]
+}
+

@@ -39,11 +39,12 @@ cp .env.example .env
 4. 初始化数据库：
 ```bash
 # 推荐：一键初始化（创建表 + 导入测试数据）
-python init_db.py --all
+python database/db_manager.py reset -f
 
 # 或分步执行：
-python init_db.py --init  # 仅创建表结构
-python init_db.py --seed  # 仅导入数据
+python database/db_manager.py init   # 仅创建表结构
+python database/db_manager.py seed   # 仅导入数据
+python database/db_manager.py status # 查看数据库状态
 ```
 
 5. 启动开发服务器：

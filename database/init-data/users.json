@@ -1,0 +1,50 @@
+{
+  "users": [
+    {"user_id": 10001, "user_name": "admin", "user_email": "admin@example.com", "user_account": "admin", "real_name": "系统管理员", "department": 1, "is_super": 1, "access_token": "token_10001", "created_at": 1769227648411, "updated_at": 1769231248411},
+    {"user_id": 10002, "user_name": "zhangsan", "user_email": "zhangsan@example.com", "user_account": "zhangsan", "real_name": "张三", "department": 1, "is_super": 0, "access_token": "token_10002", "created_at": 1769224048411, "updated_at": 1769231248411},
+    {"user_id": 10003, "user_name": "lisi", "user_email": "lisi@example.com", "user_account": "lisi", "real_name": "李四", "department": 1, "is_super": 0, "access_token": "token_10003", "created_at": 1769220448411, "updated_at": 1769231248411},
+    {"user_id": 10004, "user_name": "wangwu", "user_email": "wangwu@example.com", "user_account": "wangwu", "real_name": "王五", "department": 2, "is_super": 0, "access_token": "token_10004", "created_at": 1769216848411, "updated_at": 1769231248411},
+    {"user_id": 10005, "user_name": "zhaoliu", "user_email": "zhaoliu@example.com", "user_account": "zhaoliu", "real_name": "赵六", "department": 2, "is_super": 0, "access_token": "token_10005", "created_at": 1769213248411, "updated_at": 1769231248411},
+    {"user_id": 10006, "user_name": "sunqi", "user_email": "sunqi@example.com", "user_account": "sunqi", "real_name": "孙七", "department": 3, "is_super": 0, "access_token": "token_10006", "created_at": 1769209648411, "updated_at": 1769231248411},
+    {"user_id": 10007, "user_name": "zhouba", "user_email": "zhouba@example.com", "user_account": "zhouba", "real_name": "周八", "department": 3, "is_super": 0, "access_token": "token_10007", "created_at": 1769206048411, "updated_at": 1769231248411},
+    {"user_id": 10008, "user_name": "wujiu", "user_email": "wujiu@example.com", "user_account": "wujiu", "real_name": "吴九", "department": 4, "is_super": 0, "access_token": "token_10008", "created_at": 1769202448411, "updated_at": 1769231248411},
+    {"user_id": 10009, "user_name": "zhengshi", "user_email": "zhengshi@example.com", "user_account": "zhengshi", "real_name": "郑十", "department": 4, "is_super": 0, "access_token": "token_10009", "created_at": 1769198848411, "updated_at": 1769231248411},
+    {"user_id": 10010, "user_name": "test_user1", "user_email": "test1@example.com", "user_account": "test_user1", "real_name": "测试用户1", "department": 1, "is_super": 0, "access_token": "token_10010", "created_at": 1769195248411, "updated_at": 1769231248411}
+  ],
+  "departments": [
+    {"department_id": 1, "department_name": "研发部", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"department_id": 2, "department_name": "测试部", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"department_id": 3, "department_name": "产品部", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"department_id": 4, "department_name": "设计部", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "roles": [
+    {"role_id": 1, "role_name": "超级管理员", "role_code": "ADMIN", "permissions": [1, 2, 3, 4, 5, 6, 7, 8], "limit_cpu_cores": 512, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"role_id": 2, "role_name": "项目经理", "role_code": "PM", "permissions": [1, 2, 3, 4, 5, 6, 7, 8], "limit_cpu_cores": 256, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"role_id": 3, "role_name": "开发工程师", "role_code": "ENGINEER", "permissions": [1, 2, 3, 4, 5], "limit_cpu_cores": 128, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"role_id": 4, "role_name": "测试工程师", "role_code": "QA", "permissions": [1, 3, 4], "limit_cpu_cores": 64, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"role_id": 5, "role_name": "产品经理", "role_code": "PRODUCT", "permissions": [1, 2, 6], "limit_cpu_cores": 32, "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "permissions": [
+    {"permission_id": 1, "permission_name": "查看仪表盘", "permission_code": "VIEW_DASHBOARD", "permission_desc": "查看系统仪表盘", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 2, "permission_name": "管理配置", "permission_code": "MANAGE_CONFIG", "permission_desc": "管理系统配置", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 3, "permission_name": "查看结果", "permission_code": "VIEW_RESULTS", "permission_desc": "查看仿真结果", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 4, "permission_name": "创建工单", "permission_code": "CREATE_ORDER", "permission_desc": "创建仿真工单", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 5, "permission_name": "编辑工单", "permission_code": "EDIT_ORDER", "permission_desc": "编辑仿真工单", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 6, "permission_name": "管理用户", "permission_code": "MANAGE_USERS", "permission_desc": "管理用户权限", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 7, "permission_name": "系统设置", "permission_code": "SYSTEM_SETTINGS", "permission_desc": "修改系统设置", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"permission_id": 8, "permission_name": "删除数据", "permission_code": "DELETE_DATA", "permission_desc": "删除系统数据", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "user_roles": [
+    {"user_id": 10001, "role_id": 1},
+    {"user_id": 10002, "role_id": 2},
+    {"user_id": 10003, "role_id": 3},
+    {"user_id": 10004, "role_id": 4},
+    {"user_id": 10005, "role_id": 4},
+    {"user_id": 10006, "role_id": 5},
+    {"user_id": 10007, "role_id": 5},
+    {"user_id": 10008, "role_id": 3},
+    {"user_id": 10009, "role_id": 3},
+    {"user_id": 10010, "role_id": 3}
+  ]
+}
+

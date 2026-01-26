@@ -338,6 +338,7 @@ class StatusDef(db.Model):
     code = db.Column(db.String(30), unique=True, comment='状态编码')
     type = db.Column(db.String(20), comment='类型: PROCESS/FINAL')
     color = db.Column(db.String(100), comment='颜色样式')
+    icon = db.Column(db.String(100), comment='图标样式')
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
@@ -349,7 +350,9 @@ class StatusDef(db.Model):
             'id': self.id,
             'name': self.name,
             'code': self.code,
-            'type': self.type,
+            'statusType': self.type,
+            'colorTag': self.color,
+            'icon': self.icon,
             'color': self.color,
             'valid': self.valid,
             'sort': self.sort

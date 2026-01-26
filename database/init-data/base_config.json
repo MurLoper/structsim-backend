@@ -1,0 +1,99 @@
+{
+  "projects": [
+    {"project_id": "1751", "project_name": "折叠屏手机A", "created_at": 1769144848411, "updated_at": 1769231248411},
+    {"project_id": "1752", "project_name": "折叠屏手机B", "created_at": 1769058448411, "updated_at": 1769231248411},
+    {"project_id": "1753", "project_name": "折叠屏平板", "created_at": 1768972048411, "updated_at": 1769231248411},
+    {"project_id": "1754", "project_name": "智能手表", "created_at": 1768885648411, "updated_at": 1769231248411},
+    {"project_id": "1755", "project_name": "笔记本电脑", "created_at": 1768799248411, "updated_at": 1769231248411},
+    {"project_id": "1756", "project_name": "游戏主机", "created_at": 1768712848411, "updated_at": 1769231248411},
+    {"project_id": "1757", "project_name": "VR头显", "created_at": 1768626448411, "updated_at": 1769231248411},
+    {"project_id": "1758", "project_name": "智能音箱", "created_at": 1768540048411, "updated_at": 1769231248411},
+    {"project_id": "1759", "project_name": "车载显示屏", "created_at": 1768453648411, "updated_at": 1769231248411},
+    {"project_id": "1760", "project_name": "工业平板", "created_at": 1768367248411, "updated_at": 1769231248411}
+  ],
+  "sim_types": [
+    {"sim_type_id": 1, "sim_type_name": "跌落", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"sim_type_id": 2, "sim_type_name": "落球", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"sim_type_id": 3, "sim_type_name": "振动", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"sim_type_id": 4, "sim_type_name": "冲击", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"sim_type_id": 5, "sim_type_name": "热分析", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "model_levels": [
+    {"model_level_id": 1, "model_level_name": "整机", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"model_level_id": 2, "model_level_name": "单件", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"model_level_id": 3, "model_level_name": "部件", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "fold_types": [
+    {"fold_type_id": 0, "fold_type_name": "展开态", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"fold_type_id": 1, "fold_type_name": "折叠态", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"fold_type_id": 2, "fold_type_name": "半折叠态", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "solvers": [
+    {"solver_id": 0, "solver_name": "GPU求解器", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"solver_id": 39, "solver_name": "Abaqus2019", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"solver_id": 40, "solver_name": "Abaqus2020", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"solver_id": 41, "solver_name": "LS-DYNA", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"solver_id": 42, "solver_name": "ANSYS", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "solver_resources": [
+    {"resource_id": 1, "resource_name": "标准节点", "cpu_cores": 16, "memory_gb": 64, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resource_id": 2, "resource_name": "大内存节点", "cpu_cores": 32, "memory_gb": 256, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resource_id": 3, "resource_name": "GPU节点", "cpu_cores": 16, "memory_gb": 128, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resource_id": 4, "resource_name": "高性能节点", "cpu_cores": 64, "memory_gb": 512, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resource_id": 5, "resource_name": "测试节点", "cpu_cores": 8, "memory_gb": 32, "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "status_defs": [
+    {"status_id": 0, "status_name": "未开始", "status_code": "NOT_STARTED", "status_type": "PROCESS", "color_tag": "#808080", "icon": "icon-weikaishi", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 1, "status_name": "运行中", "status_code": "RUNNING", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-yunxingzhong", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 2, "status_name": "已完成", "status_code": "COMPLETED", "status_type": "FINAL", "color_tag": "#008000", "icon": "icon-yiwancheng", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 3, "status_name": "运行失败", "status_code": "FAILED", "status_type": "FINAL", "color_tag": "#FF0000", "icon": "icon-yunxingshibai", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 4, "status_name": "草稿箱", "status_code": "DRAFT", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-caogaoxiang", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 5, "status_name": "手动终止", "status_code": "CANCELLED", "status_type": "FINAL", "color_tag": "#FFA500", "icon": "icon-shoudongzhongzhi", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 6, "status_name": "启动中", "status_code": "STARTING", "status_type": "PROCESS", "color_tag": "#800080", "icon": "icon-qidongzhong", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"status_id": 7, "status_name": "小模块完成", "status_code": "PARTIAL_COMPLETED", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-xiaomokuaiwancheng", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "care_devices": [
+    {"device_id": 1, "device_name": "屏幕", "device_code": "SCREEN", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"device_id": 2, "device_name": "电池", "device_code": "BATTERY", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"device_id": 3, "device_name": "主板", "device_code": "MAINBOARD", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"device_id": 4, "device_name": "摄像头", "device_code": "CAMERA", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"device_id": 5, "device_name": "铰链", "device_code": "HINGE", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"device_id": 6, "device_name": "外壳", "device_code": "SHELL", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "param_defs": [
+    {"opt_param_id": 1, "param_name": "x_deg", "param_unit": "°", "param_desc": "X轴旋转角度", "param_default_min": 0, "param_default_max": 90, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 2, "param_name": "y_deg", "param_unit": "°", "param_desc": "Y轴旋转角度", "param_default_min": 0, "param_default_max": 360, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 3, "param_name": "z_deg", "param_unit": "°", "param_desc": "Z轴旋转角度", "param_default_min": 0, "param_default_max": 90, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 4, "param_name": "drop_height", "param_unit": "m", "param_desc": "跌落高度", "param_default_min": 0.5, "param_default_max": 2.0, "param_default_init": 1.0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 5, "param_name": "gravity", "param_unit": "m/s²", "param_desc": "重力加速度", "param_default_min": 9.8, "param_default_max": 9.8, "param_default_init": 9.8, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 6, "param_name": "init_velocity", "param_unit": "m/s", "param_desc": "初始速度", "param_default_min": 0, "param_default_max": 10, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 7, "param_name": "ball_mass", "param_unit": "kg", "param_desc": "球体质量", "param_default_min": 0.1, "param_default_max": 1.0, "param_default_init": 0.5, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 8, "param_name": "ball_radius", "param_unit": "mm", "param_desc": "球体半径", "param_default_min": 10, "param_default_max": 50, "param_default_init": 25, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 9, "param_name": "impact_x", "param_unit": "mm", "param_desc": "撞击点X坐标", "param_default_min": -100, "param_default_max": 100, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 10, "param_name": "impact_y", "param_unit": "mm", "param_desc": "撞击点Y坐标", "param_default_min": -100, "param_default_max": 100, "param_default_init": 0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 11, "param_name": "frequency", "param_unit": "Hz", "param_desc": "振动频率", "param_default_min": 10, "param_default_max": 2000, "param_default_init": 100, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 12, "param_name": "amplitude", "param_unit": "mm", "param_desc": "振幅", "param_default_min": 0.1, "param_default_max": 10, "param_default_init": 1.0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 13, "param_name": "duration", "param_unit": "s", "param_desc": "持续时间", "param_default_min": 1, "param_default_max": 60, "param_default_init": 10, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 14, "param_name": "youngs_modulus", "param_unit": "GPa", "param_desc": "杨氏模量", "param_default_min": 50, "param_default_max": 300, "param_default_init": 200, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 15, "param_name": "poisson_ratio", "param_unit": "", "param_desc": "泊松比", "param_default_min": 0.2, "param_default_max": 0.4, "param_default_init": 0.3, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 16, "param_name": "density", "param_unit": "kg/m³", "param_desc": "密度", "param_default_min": 1000, "param_default_max": 8000, "param_default_init": 7850, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 17, "param_name": "ambient_temp", "param_unit": "°C", "param_desc": "环境温度", "param_default_min": -40, "param_default_max": 85, "param_default_init": 25, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 18, "param_name": "heat_flux", "param_unit": "W/m²", "param_desc": "热流密度", "param_default_min": 0, "param_default_max": 10000, "param_default_init": 1000, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 19, "param_name": "mesh_size", "param_unit": "mm", "param_desc": "网格尺寸", "param_default_min": 0.5, "param_default_max": 5.0, "param_default_init": 2.0, "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"opt_param_id": 20, "param_name": "time_step", "param_unit": "ms", "param_desc": "时间步长", "param_default_min": 0.01, "param_default_max": 1.0, "param_default_init": 0.1, "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "output_defs": [
+    {"resp_param_id": 1, "output_type": "LEP1", "component": "35", "description": "X方向位移", "set": "push", "target_type": "min", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 2, "output_type": "LEP2", "component": "35", "description": "Y方向位移", "set": "push", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 3, "output_type": "LEP3", "component": "35", "description": "Z方向位移", "set": "push", "target_type": "min", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 4, "output_type": "RF1", "component": "35", "description": "X方向反力", "set": "push", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 5, "output_type": "RF2", "component": "35", "description": "Y方向反力", "set": "push", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 6, "output_type": "RF3", "component": "35", "description": "Z方向反力", "set": "push", "target_type": "min", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 7, "output_type": "S11", "component": "18", "description": "主应力1", "set": "stress", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 8, "output_type": "S22", "component": "18", "description": "主应力2", "set": "stress", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 9, "output_type": "MISES", "component": "18", "description": "Von Mises应力", "set": "stress", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 10, "output_type": "TEMP", "component": "35", "description": "温度", "set": "thermal", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
+    {"resp_param_id": 11, "output_type": "HFL", "component": "35", "description": "热流", "set": "thermal", "target_type": "min", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ]
+}
+
