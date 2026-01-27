@@ -256,6 +256,10 @@ class ConfigService:
     def get_status_defs(self) -> List[Dict]:
         return self._list(self.status_def_repo)
 
+    def update_status_def(self, id: int, data: Dict) -> Dict:
+        """更新状态定义"""
+        return self._update(self.status_def_repo, id, data, "状态定义")
+
     def get_automation_modules(self, category: Optional[str] = None) -> List[Dict]:
         if category:
             items = self.automation_module_repo.find_by_category(category)

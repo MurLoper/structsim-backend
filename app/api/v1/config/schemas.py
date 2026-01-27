@@ -245,6 +245,17 @@ class SolverResourceUpdate(BaseModel):
     sort: Optional[int] = Field(None, ge=0)
 
 
+# ============ 状态定义 ============
+class StatusDefUpdate(BaseModel):
+    """更新状态定义请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    color: Optional[str] = Field(None, max_length=100, alias='colorTag')
+    icon: Optional[str] = Field(None, max_length=100)
+
+    class Config:
+        populate_by_name = True
+
+
 # ============ 部门 ============
 class DepartmentCreate(BaseModel):
     """创建部门请求"""

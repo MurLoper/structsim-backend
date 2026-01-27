@@ -20,7 +20,8 @@ from .schemas import (
     ModelLevelCreate, ModelLevelUpdate,
     CareDeviceCreate, CareDeviceUpdate,
     SolverResourceCreate, SolverResourceUpdate,
-    DepartmentCreate, DepartmentUpdate
+    DepartmentCreate, DepartmentUpdate,
+    StatusDefUpdate
 )
 from .service import config_service
 
@@ -380,6 +381,19 @@ def list_status_defs():
     """获取状态定义"""
     data = config_service.get_status_defs()
     return success(data)
+
+
+@config_bp.route('/status-defs/<int:id>', methods=['PUT'])
+def update_status_def(id: int):
+    """更新状态定义"""
+    try:
+        validated = StatusDefUpdate(**request.get_json())
+        result = config_service.update_status_def(id, validated.model_dump(exclude_none=True))
+        return success(result, "更新成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
 
 @config_bp.route('/automation-modules', methods=['GET'])
