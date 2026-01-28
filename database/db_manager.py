@@ -174,17 +174,20 @@ def seed_permissions():
     if not data:
         return
 
+    count = 0
     for item in data.get('permissions', []):
-        db.session.add(Permission(
-            id=item['permission_id'],
-            name=item['permission_name'],
-            code=item['permission_code'],
-            type='PAGE',
-            valid=1,
-            sort=item['permission_id'] * 10
-        ))
+        if not Permission.query.get(item['permission_id']):
+            db.session.add(Permission(
+                id=item['permission_id'],
+                name=item['permission_name'],
+                code=item['permission_code'],
+                type='PAGE',
+                valid=1,
+                sort=item['permission_id'] * 10
+            ))
+            count += 1
     db.session.commit()
-    print(f"  ✓ 权限: {len(data.get('permissions', []))} 条")
+    print(f"  ✓ 权限: {count} 条 (跳过 {len(data.get('permissions', [])) - count} 条已存在)")
 
 
 def seed_roles():
@@ -194,18 +197,21 @@ def seed_roles():
     if not data:
         return
 
+    count = 0
     for item in data.get('roles', []):
-        db.session.add(Role(
-            id=item['role_id'],
-            name=item['role_name'],
-            code=item.get('role_code', item['role_name'].upper()),
-            description=item.get('description', ''),
-            permission_ids=item.get('permissions', []),
-            valid=1,
-            sort=item['role_id'] * 10
-        ))
+        if not Role.query.get(item['role_id']):
+            db.session.add(Role(
+                id=item['role_id'],
+                name=item['role_name'],
+                code=item.get('role_code', item['role_name'].upper()),
+                description=item.get('description', ''),
+                permission_ids=item.get('permissions', []),
+                valid=1,
+                sort=item['role_id'] * 10
+            ))
+            count += 1
     db.session.commit()
-    print(f"  ✓ 角色: {len(data.get('roles', []))} 条")
+    print(f"  ✓ 角色: {count} 条 (跳过 {len(data.get('roles', [])) - count} 条已存在)")
 
 
 def seed_departments():
@@ -215,17 +221,20 @@ def seed_departments():
     if not data:
         return
 
+    count = 0
     for item in data.get('departments', []):
-        db.session.add(Department(
-            id=item['department_id'],
-            name=item['department_name'],
-            code=item.get('department_code', item['department_name'].upper()),
-            parent_id=item.get('parent_id', 0),
-            valid=1,
-            sort=item['department_id'] * 10
-        ))
+        if not Department.query.get(item['department_id']):
+            db.session.add(Department(
+                id=item['department_id'],
+                name=item['department_name'],
+                code=item.get('department_code', item['department_name'].upper()),
+                parent_id=item.get('parent_id', 0),
+                valid=1,
+                sort=item['department_id'] * 10
+            ))
+            count += 1
     db.session.commit()
-    print(f"  ✓ 部门: {len(data.get('departments', []))} 条")
+    print(f"  ✓ 部门: {count} 条 (跳过 {len(data.get('departments', [])) - count} 条已存在)")
 
 
 def seed_users():
@@ -248,23 +257,26 @@ def seed_users():
     # 构建部门ID到名称的映射
     dept_map = {d['department_id']: d['department_name'] for d in data.get('departments', [])}
 
+    count = 0
     for item in data.get('users', []):
         user_id = item['user_id']
-        dept_id = item.get('department', 1)
-        dept_name = dept_map.get(dept_id, '研发部')
-        db.session.add(User(
-            id=user_id,
-            username=item['user_name'],
-            email=item['user_email'],
-            name=item.get('real_name', item['user_name']),
-            role_ids=user_role_map.get(user_id, []),
-            department=dept_name,
-            valid=1,
-            preferences={'lang': 1, 'theme': 1},
-            created_at=ts
-        ))
+        if not User.query.get(user_id):
+            dept_id = item.get('department', 1)
+            dept_name = dept_map.get(dept_id, '研发部')
+            db.session.add(User(
+                id=user_id,
+                username=item['user_name'],
+                email=item['user_email'],
+                name=item.get('real_name', item['user_name']),
+                role_ids=user_role_map.get(user_id, []),
+                department=dept_name,
+                valid=1,
+                preferences={'lang': 1, 'theme': 1},
+                created_at=ts
+            ))
+            count += 1
     db.session.commit()
-    print(f"  ✓ 用户: {len(data.get('users', []))} 条")
+    print(f"  ✓ 用户: {count} 条 (跳过 {len(data.get('users', [])) - count} 条已存在)")
 
     # 打印用户信息
     print("\n  测试用户账号:")
@@ -285,117 +297,156 @@ def seed_base_config():
     ts = get_timestamp()
 
     # 项目
+    count = 0
     for item in data.get('projects', []):
-        db.session.add(Project(
-            id=int(item['project_id']),
-            name=item['project_name'],
-            code=f"PRJ_{item['project_id']}",
-            valid=1, sort=100, created_at=ts, updated_at=ts
-        ))
-    print(f"  ✓ 项目: {len(data.get('projects', []))} 条")
+        pid = int(item['project_id'])
+        if not Project.query.get(pid):
+            db.session.add(Project(
+                id=pid,
+                name=item['project_name'],
+                code=f"PRJ_{item['project_id']}",
+                valid=1, sort=100, created_at=ts, updated_at=ts
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 项目: {count} 条")
 
     # 仿真类型
+    count = 0
     for item in data.get('sim_types', []):
-        db.session.add(SimType(
-            id=item['sim_type_id'],
-            name=item['sim_type_name'],
-            code=item['sim_type_name'].upper(),
-            valid=1, sort=item['sim_type_id'] * 10
-        ))
-    print(f"  ✓ 仿真类型: {len(data.get('sim_types', []))} 条")
+        if not SimType.query.get(item['sim_type_id']):
+            db.session.add(SimType(
+                id=item['sim_type_id'],
+                name=item['sim_type_name'],
+                code=item['sim_type_name'].upper(),
+                valid=1, sort=item['sim_type_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 仿真类型: {count} 条")
 
     # 模型层级
+    count = 0
     for item in data.get('model_levels', []):
-        db.session.add(ModelLevel(
-            id=item['model_level_id'],
-            name=item['model_level_name'],
-            code=item['model_level_name'].upper(),
-            valid=1, sort=item['model_level_id'] * 10
-        ))
-    print(f"  ✓ 模型层级: {len(data.get('model_levels', []))} 条")
+        if not ModelLevel.query.get(item['model_level_id']):
+            db.session.add(ModelLevel(
+                id=item['model_level_id'],
+                name=item['model_level_name'],
+                code=item['model_level_name'].upper(),
+                valid=1, sort=item['model_level_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 模型层级: {count} 条")
 
     # 折叠状态
+    count = 0
     for item in data.get('fold_types', []):
-        db.session.add(FoldType(
-            id=item['fold_type_id'],
-            name=item['fold_type_name'],
-            code=item['fold_type_name'].upper(),
-            valid=1, sort=item['fold_type_id'] * 10
-        ))
-    print(f"  ✓ 折叠状态: {len(data.get('fold_types', []))} 条")
+        if not FoldType.query.get(item['fold_type_id']):
+            db.session.add(FoldType(
+                id=item['fold_type_id'],
+                name=item['fold_type_name'],
+                code=item['fold_type_name'].upper(),
+                valid=1, sort=item['fold_type_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 折叠状态: {count} 条")
 
     # 求解器
+    count = 0
     for item in data.get('solvers', []):
-        db.session.add(Solver(
-            id=item['solver_id'],
-            name=item['solver_name'],
-            code=item['solver_name'].upper().replace(' ', '_'),
-            valid=1, sort=item['solver_id'] * 10
-        ))
-    print(f"  ✓ 求解器: {len(data.get('solvers', []))} 条")
+        if not Solver.query.get(item['solver_id']):
+            db.session.add(Solver(
+                id=item['solver_id'],
+                name=item['solver_name'],
+                code=item['solver_name'].upper().replace(' ', '_'),
+                valid=1, sort=item['solver_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 求解器: {count} 条")
 
     # 求解器资源
+    count = 0
     for item in data.get('solver_resources', []):
-        db.session.add(SolverResource(
-            id=item['resource_id'],
-            name=item['resource_name'],
-            cpu_cores=item.get('cpu_cores', 16),
-            memory_gb=item.get('memory_gb', 64),
-            valid=1
-        ))
-    print(f"  ✓ 求解器资源: {len(data.get('solver_resources', []))} 条")
+        if not SolverResource.query.get(item['resource_id']):
+            db.session.add(SolverResource(
+                id=item['resource_id'],
+                name=item['resource_name'],
+                cpu_cores=item.get('cpu_cores', 16),
+                memory_gb=item.get('memory_gb', 64),
+                valid=1
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 求解器资源: {count} 条")
 
     # 状态定义（包含icon字段）
+    count = 0
     for item in data.get('status_defs', []):
-        db.session.add(StatusDef(
-            id=item['status_id'],
-            name=item['status_name'],
-            code=item.get('status_code', item['status_name'].upper()),
-            type=item.get('status_type', 'PROCESS'),
-            color=item.get('color_tag', '#808080'),
-            icon=item.get('icon', ''),
-            valid=1, sort=item['status_id'] * 10
-        ))
-    print(f"  ✓ 状态定义: {len(data.get('status_defs', []))} 条")
+        if not StatusDef.query.get(item['status_id']):
+            db.session.add(StatusDef(
+                id=item['status_id'],
+                name=item['status_name'],
+                code=item.get('status_code', item['status_name'].upper()),
+                type=item.get('status_type', 'PROCESS'),
+                color=item.get('color_tag', '#808080'),
+                icon=item.get('icon', ''),
+                valid=1, sort=item['status_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 状态定义: {count} 条")
 
     # 关注设备
+    count = 0
     for item in data.get('care_devices', []):
-        db.session.add(CareDevice(
-            id=item['device_id'],
-            name=item['device_name'],
-            code=item.get('device_code', item['device_name'].upper()),
-            valid=1
-        ))
-    print(f"  ✓ 关注设备: {len(data.get('care_devices', []))} 条")
+        if not CareDevice.query.get(item['device_id']):
+            db.session.add(CareDevice(
+                id=item['device_id'],
+                name=item['device_name'],
+                code=item.get('device_code', item['device_name'].upper()),
+                valid=1
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 关注设备: {count} 条")
 
     # 参数定义
+    count = 0
     for item in data.get('param_defs', []):
-        db.session.add(ParamDef(
-            id=item['opt_param_id'],
-            name=item.get('param_desc', item['param_name']),
-            key=item['param_name'],
-            val_type=1,
-            unit=item.get('param_unit', ''),
-            min_val=item.get('param_default_min'),
-            max_val=item.get('param_default_max'),
-            default_val=str(item.get('param_default_init', '')),
-            precision=6, required=1, valid=1,
-            sort=item['opt_param_id'] * 10
-        ))
-    print(f"  ✓ 参数定义: {len(data.get('param_defs', []))} 条")
+        if not ParamDef.query.get(item['opt_param_id']):
+            db.session.add(ParamDef(
+                id=item['opt_param_id'],
+                name=item.get('param_desc', item['param_name']),
+                key=item['param_name'],
+                val_type=1,
+                unit=item.get('param_unit', ''),
+                min_val=item.get('param_default_min'),
+                max_val=item.get('param_default_max'),
+                default_val=str(item.get('param_default_init', '')),
+                precision=6, required=1, valid=1,
+                sort=item['opt_param_id'] * 10
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 参数定义: {count} 条")
 
     # 输出定义
+    count = 0
     for item in data.get('output_defs', []):
-        db.session.add(OutputDef(
-            id=item['resp_param_id'],
-            name=item.get('description', item['output_type']),
-            code=item['output_type'],
-            val_type=1, unit='', valid=1,
-            sort=item['resp_param_id'] * 10
-        ))
-    print(f"  ✓ 输出定义: {len(data.get('output_defs', []))} 条")
-
+        if not OutputDef.query.get(item['resp_param_id']):
+            db.session.add(OutputDef(
+                id=item['resp_param_id'],
+                name=item.get('description', item['output_type']),
+                code=item['output_type'],
+                val_type=1, unit='', valid=1,
+                sort=item['resp_param_id'] * 10
+            ))
+            count += 1
     db.session.commit()
+    print(f"  ✓ 输出定义: {count} 条")
     print("✅ 基础配置导入完成")
 
 
