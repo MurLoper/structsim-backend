@@ -450,6 +450,40 @@ def seed_base_config():
             count += 1
     db.session.commit()
     print(f"  ✓ 输出定义: {count} 条")
+
+    # 自动化模块
+    count = 0
+    for item in data.get('automation_modules', []):
+        if not AutomationModule.query.get(item['module_id']):
+            db.session.add(AutomationModule(
+                id=item['module_id'],
+                name=item['module_name'],
+                code=item['module_code'],
+                category=item.get('category', 'GENERAL'),
+                timeout_sec=item.get('timeout_sec', 7200),
+                valid=1
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 自动化模块: {count} 条")
+
+    # 工作流
+    count = 0
+    for item in data.get('workflows', []):
+        if not Workflow.query.get(item['workflow_id']):
+            db.session.add(Workflow(
+                id=item['workflow_id'],
+                name=item['workflow_name'],
+                code=item['workflow_code'],
+                type=item.get('workflow_type', 'ROUND'),
+                nodes=item.get('nodes', []),
+                edges=item.get('edges', []),
+                valid=1
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 工作流: {count} 条")
+
     print("✅ 基础配置导入完成")
 
 
@@ -665,13 +699,23 @@ def seed_rounds_data():
             # 根据仿真类型生成对应的输出结果
             outputs = {k: fn() for k, fn in output_config.items()}
 
-            # 确定状态
+            # 确定状态和流程节点
             if i <= result.completed_rounds:
                 status = 2  # 已完成
+                flow_cur_node_id = 7  # 最后一个节点
+                flow_node_progress = {"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}
             elif i <= result.completed_rounds + result.failed_rounds:
                 status = 3  # 失败
+                # 随机在某个节点失败
+                failed_node = random.randint(3, 6)
+                flow_cur_node_id = failed_node
+                flow_node_progress = {f"node_{j}": 100 if j < failed_node else (random.randint(10, 90) if j == failed_node else 0) for j in range(1, 8)}
             else:
                 status = 1  # 运行中
+                # 随机在某个节点运行中
+                running_node = random.randint(1, 6)
+                flow_cur_node_id = running_node
+                flow_node_progress = {f"node_{j}": 100 if j < running_node else (random.randint(10, 90) if j == running_node else 0) for j in range(1, 8)}
 
             batch.append(Round(
                 sim_type_result_id=result.id,
@@ -681,6 +725,8 @@ def seed_rounds_data():
                 params=params,
                 outputs=outputs if status == 2 else None,
                 status=status,
+                flow_cur_node_id=flow_cur_node_id,
+                flow_node_progress=flow_node_progress,
                 started_at=ts - (result.total_rounds - i) * 60,
                 finished_at=ts - (result.total_rounds - i) * 60 + 30 if status == 2 else None,
                 created_at=ts,

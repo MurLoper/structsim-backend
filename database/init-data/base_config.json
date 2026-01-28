@@ -94,6 +94,58 @@
     {"resp_param_id": 9, "output_type": "MISES", "component": "18", "description": "Von Mises应力", "set": "stress", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
     {"resp_param_id": 10, "output_type": "TEMP", "component": "35", "description": "温度", "set": "thermal", "target_type": "max", "created_at": 1769231248411, "updated_at": 1769231248411},
     {"resp_param_id": 11, "output_type": "HFL", "component": "35", "description": "热流", "set": "thermal", "target_type": "min", "created_at": 1769231248411, "updated_at": 1769231248411}
+  ],
+  "automation_modules": [
+    {"module_id": 1, "module_name": "模型预处理", "module_code": "MODEL_PREPROCESS", "category": "PREPROCESS", "timeout_sec": 1800},
+    {"module_id": 2, "module_name": "网格划分", "module_code": "MESH_GENERATION", "category": "PREPROCESS", "timeout_sec": 3600},
+    {"module_id": 3, "module_name": "边界条件设置", "module_code": "BOUNDARY_SETUP", "category": "PREPROCESS", "timeout_sec": 600},
+    {"module_id": 4, "module_name": "求解器提交", "module_code": "SOLVER_SUBMIT", "category": "SOLVE", "timeout_sec": 300},
+    {"module_id": 5, "module_name": "求解计算", "module_code": "SOLVER_RUN", "category": "SOLVE", "timeout_sec": 7200},
+    {"module_id": 6, "module_name": "结果提取", "module_code": "RESULT_EXTRACT", "category": "POSTPROCESS", "timeout_sec": 1800},
+    {"module_id": 7, "module_name": "结果分析", "module_code": "RESULT_ANALYSIS", "category": "POSTPROCESS", "timeout_sec": 600},
+    {"module_id": 8, "module_name": "报告生成", "module_code": "REPORT_GENERATE", "category": "POSTPROCESS", "timeout_sec": 300}
+  ],
+  "workflows": [
+    {
+      "workflow_id": 1,
+      "workflow_name": "标准仿真流程",
+      "workflow_code": "STANDARD_SIM",
+      "workflow_type": "ROUND",
+      "nodes": [
+        {"id": "node_1", "moduleId": 1, "name": "模型预处理", "position": {"x": 100, "y": 100}},
+        {"id": "node_2", "moduleId": 2, "name": "网格划分", "position": {"x": 250, "y": 100}},
+        {"id": "node_3", "moduleId": 3, "name": "边界条件", "position": {"x": 400, "y": 100}},
+        {"id": "node_4", "moduleId": 4, "name": "提交求解", "position": {"x": 550, "y": 100}},
+        {"id": "node_5", "moduleId": 5, "name": "求解计算", "position": {"x": 700, "y": 100}},
+        {"id": "node_6", "moduleId": 6, "name": "结果提取", "position": {"x": 850, "y": 100}},
+        {"id": "node_7", "moduleId": 7, "name": "结果分析", "position": {"x": 1000, "y": 100}}
+      ],
+      "edges": [
+        {"id": "e1", "source": "node_1", "target": "node_2"},
+        {"id": "e2", "source": "node_2", "target": "node_3"},
+        {"id": "e3", "source": "node_3", "target": "node_4"},
+        {"id": "e4", "source": "node_4", "target": "node_5"},
+        {"id": "e5", "source": "node_5", "target": "node_6"},
+        {"id": "e6", "source": "node_6", "target": "node_7"}
+      ]
+    },
+    {
+      "workflow_id": 2,
+      "workflow_name": "快速仿真流程",
+      "workflow_code": "QUICK_SIM",
+      "workflow_type": "ROUND",
+      "nodes": [
+        {"id": "node_1", "moduleId": 3, "name": "边界条件", "position": {"x": 100, "y": 100}},
+        {"id": "node_2", "moduleId": 4, "name": "提交求解", "position": {"x": 250, "y": 100}},
+        {"id": "node_3", "moduleId": 5, "name": "求解计算", "position": {"x": 400, "y": 100}},
+        {"id": "node_4", "moduleId": 6, "name": "结果提取", "position": {"x": 550, "y": 100}}
+      ],
+      "edges": [
+        {"id": "e1", "source": "node_1", "target": "node_2"},
+        {"id": "e2", "source": "node_2", "target": "node_3"},
+        {"id": "e3", "source": "node_3", "target": "node_4"}
+      ]
+    }
   ]
 }
 
