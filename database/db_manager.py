@@ -156,6 +156,8 @@ def show_status():
             '角色': Role.query.count(),
             '权限': Permission.query.count(),
             '订单': Order.query.count(),
+            '仿真类型结果': SimTypeResult.query.count(),
+            '轮次数据': Round.query.count(),
         }
         for name, count in stats.items():
             print(f"  {name}: {count} 条")
@@ -451,6 +453,253 @@ def seed_base_config():
     print("✅ 基础配置导入完成")
 
 
+def seed_orders_and_results():
+    """导入订单和仿真结果模拟数据"""
+    print("\n📊 导入订单和仿真结果模拟数据...")
+    data = load_json('orders_mock.json')
+    if not data:
+        print("⚠️  orders_mock.json 不存在，跳过")
+        return
+
+    ts = get_timestamp()
+
+    # 导入订单
+    count = 0
+    for item in data.get('orders', []):
+        if not Order.query.get(item['id']):
+            db.session.add(Order(
+                id=item['id'],
+                order_no=item['order_no'],
+                project_id=item['project_id'],
+                origin_file_type=item.get('origin_file_type', 1),
+                origin_file_name=item.get('origin_file_name'),
+                origin_file_path=item.get('origin_file_path'),
+                fold_type_id=item.get('fold_type_id'),
+                participant_uids=item.get('participant_uids', []),
+                remark=item.get('remark', ''),
+                sim_type_ids=item.get('sim_type_ids', []),
+                status=item.get('status', 0),
+                progress=item.get('progress', 0),
+                created_by=item.get('created_by', 1),
+                created_at=ts,
+                updated_at=ts
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 订单: {count} 条")
+
+    # 导入仿真类型结果
+    count = 0
+    for item in data.get('sim_type_results', []):
+        if not SimTypeResult.query.get(item['id']):
+            db.session.add(SimTypeResult(
+                id=item['id'],
+                order_id=item['order_id'],
+                sim_type_id=item['sim_type_id'],
+                status=item.get('status', 0),
+                progress=item.get('progress', 0),
+                total_rounds=item.get('total_rounds', 0),
+                completed_rounds=item.get('completed_rounds', 0),
+                failed_rounds=item.get('failed_rounds', 0),
+                best_exists=item.get('best_exists', 0),
+                best_round_index=item.get('best_round_index'),
+                created_at=ts,
+                updated_at=ts
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 仿真类型结果: {count} 条")
+
+    # 为已完成的仿真类型结果生成轮次数据
+    seed_rounds_data()
+    print("✅ 订单和仿真结果导入完成")
+
+
+def seed_rounds_data():
+    """生成轮次模拟数据（优化批量插入，不同仿真类型使用不同参数/输出组合）"""
+    import random
+    print("  📈 生成轮次数据...")
+
+    ts = get_timestamp()
+    sim_type_results = SimTypeResult.query.filter(SimTypeResult.total_rounds > 0).all()
+
+    # 不同仿真类型的参数配置（8个参数/仿真类型）
+    SIM_TYPE_PARAMS = {
+        1: {  # 跌落仿真
+            "1": lambda: round(random.uniform(0, 90), 2),      # x_deg
+            "2": lambda: round(random.uniform(0, 360), 2),     # y_deg
+            "3": lambda: round(random.uniform(0, 90), 2),      # z_deg
+            "4": lambda: round(random.uniform(0.5, 2.0), 2),   # drop_height
+            "5": lambda: round(random.uniform(0, 5), 2),       # surface_friction
+            "6": lambda: round(random.uniform(0, 10), 2),      # init_velocity
+            "14": lambda: round(random.uniform(50, 300), 1),   # youngs_modulus
+            "15": lambda: round(random.uniform(0.2, 0.5), 3),  # poisson_ratio
+        },
+        2: {  # 落球仿真
+            "7": lambda: round(random.uniform(0.1, 1.0), 3),   # ball_mass
+            "8": lambda: round(random.uniform(10, 50), 1),     # ball_radius
+            "9": lambda: round(random.uniform(-100, 100), 1),  # impact_x
+            "10": lambda: round(random.uniform(-100, 100), 1), # impact_y
+            "4": lambda: round(random.uniform(0.5, 2.0), 2),   # drop_height
+            "6": lambda: round(random.uniform(0, 10), 2),      # init_velocity
+            "14": lambda: round(random.uniform(50, 300), 1),   # youngs_modulus
+            "16": lambda: round(random.uniform(7000, 8000), 0),# density
+        },
+        3: {  # 振动仿真
+            "11": lambda: round(random.uniform(10, 2000), 1),  # frequency
+            "12": lambda: round(random.uniform(0.1, 10), 2),   # amplitude
+            "13": lambda: round(random.uniform(1, 60), 1),     # duration
+            "1": lambda: round(random.uniform(0, 90), 2),      # x_deg
+            "2": lambda: round(random.uniform(0, 360), 2),     # y_deg
+            "3": lambda: round(random.uniform(0, 90), 2),      # z_deg
+            "19": lambda: round(random.uniform(0.01, 0.1), 3), # damping_ratio
+            "20": lambda: round(random.uniform(1, 10), 1),     # cycles
+        },
+        4: {  # 冲击仿真
+            "4": lambda: round(random.uniform(0.5, 2.0), 2),   # drop_height
+            "6": lambda: round(random.uniform(0, 10), 2),      # init_velocity
+            "14": lambda: round(random.uniform(50, 300), 1),   # youngs_modulus
+            "1": lambda: round(random.uniform(0, 90), 2),      # x_deg
+            "2": lambda: round(random.uniform(0, 360), 2),     # y_deg
+            "13": lambda: round(random.uniform(0.001, 0.1), 4),# duration
+            "21": lambda: round(random.uniform(100, 1000), 0), # impact_force
+            "22": lambda: round(random.uniform(0.1, 1.0), 2),  # contact_area
+        },
+        5: {  # 热分析
+            "17": lambda: round(random.uniform(-40, 85), 1),   # ambient_temp
+            "18": lambda: round(random.uniform(0, 10000), 1),  # heat_flux
+            "13": lambda: round(random.uniform(1, 60), 1),     # duration
+            "23": lambda: round(random.uniform(0.1, 50), 2),   # thermal_conductivity
+            "24": lambda: round(random.uniform(100, 1000), 0), # specific_heat
+            "25": lambda: round(random.uniform(0.1, 1.0), 2),  # emissivity
+            "26": lambda: round(random.uniform(1, 100), 1),    # convection_coeff
+            "27": lambda: round(random.uniform(20, 100), 1),   # initial_temp
+        },
+    }
+
+    # 不同仿真类型的输出配置（6个输出/仿真类型）
+    SIM_TYPE_OUTPUTS = {
+        1: {  # 跌落仿真 - 位移、应力、应变
+            "1": lambda: round(random.uniform(-5, 5), 4),      # LEP1
+            "2": lambda: round(random.uniform(-5, 5), 4),      # LEP2
+            "3": lambda: round(random.uniform(-2, 2), 4),      # LEP3
+            "9": lambda: round(random.uniform(100, 800), 2),   # MISES
+            "7": lambda: round(random.uniform(50, 500), 2),    # S11
+            "12": lambda: round(random.uniform(0, 0.05), 5),   # PEEQ
+        },
+        2: {  # 落球仿真 - 反力、应力、能量
+            "4": lambda: round(random.uniform(0, 1000), 2),    # RF1
+            "5": lambda: round(random.uniform(0, 1000), 2),    # RF2
+            "6": lambda: round(random.uniform(0, 500), 2),     # RF3
+            "7": lambda: round(random.uniform(50, 500), 2),    # S11
+            "9": lambda: round(random.uniform(100, 800), 2),   # MISES
+            "13": lambda: round(random.uniform(0, 100), 2),    # ALLKE
+        },
+        3: {  # 振动仿真 - 位移、主应力、加速度
+            "1": lambda: round(random.uniform(-10, 10), 4),    # LEP1
+            "2": lambda: round(random.uniform(-10, 10), 4),    # LEP2
+            "7": lambda: round(random.uniform(50, 500), 2),    # S11
+            "8": lambda: round(random.uniform(30, 400), 2),    # S22
+            "14": lambda: round(random.uniform(0, 1000), 2),   # A1 (acceleration)
+            "15": lambda: round(random.uniform(0, 50), 2),     # natural_freq
+        },
+        4: {  # 冲击仿真 - 反力、应力、能量
+            "4": lambda: round(random.uniform(0, 2000), 2),    # RF1
+            "5": lambda: round(random.uniform(0, 2000), 2),    # RF2
+            "9": lambda: round(random.uniform(200, 1200), 2),  # MISES
+            "12": lambda: round(random.uniform(0, 0.1), 5),    # PEEQ
+            "13": lambda: round(random.uniform(0, 500), 2),    # ALLKE
+            "16": lambda: round(random.uniform(0, 1000), 2),   # ALLIE
+        },
+        5: {  # 热分析 - 温度、热流、梯度
+            "10": lambda: round(random.uniform(-40, 150), 2),  # TEMP
+            "11": lambda: round(random.uniform(0, 5000), 2),   # HFL
+            "17": lambda: round(random.uniform(0, 100), 2),    # NT11 (nodal temp)
+            "18": lambda: round(random.uniform(0, 500), 2),    # RFL (reaction flux)
+            "19": lambda: round(random.uniform(0, 50), 3),     # TEMP_GRAD_X
+            "20": lambda: round(random.uniform(0, 50), 3),     # TEMP_GRAD_Y
+        },
+    }
+
+    # 默认配置（兜底）- 8个参数
+    DEFAULT_PARAMS = {
+        "1": lambda: round(random.uniform(0, 90), 2),
+        "2": lambda: round(random.uniform(0, 360), 2),
+        "3": lambda: round(random.uniform(0, 90), 2),
+        "4": lambda: round(random.uniform(0.5, 2.0), 2),
+        "5": lambda: round(random.uniform(0, 5), 2),
+        "6": lambda: round(random.uniform(0, 10), 2),
+        "14": lambda: round(random.uniform(50, 300), 1),
+        "15": lambda: round(random.uniform(0.2, 0.5), 3),
+    }
+    # 默认配置（兜底）- 6个输出
+    DEFAULT_OUTPUTS = {
+        "1": lambda: round(random.uniform(-5, 5), 4),
+        "2": lambda: round(random.uniform(-5, 5), 4),
+        "3": lambda: round(random.uniform(-2, 2), 4),
+        "9": lambda: round(random.uniform(100, 800), 2),
+        "7": lambda: round(random.uniform(50, 500), 2),
+        "12": lambda: round(random.uniform(0, 0.05), 5),
+    }
+
+    total_rounds = 0
+    batch_size = 500
+
+    for result in sim_type_results:
+        existing = Round.query.filter_by(sim_type_result_id=result.id).count()
+        if existing > 0:
+            print(f"    跳过 SimTypeResult {result.id}（已有 {existing} 条）")
+            continue
+
+        sim_type_id = result.sim_type_id
+        param_config = SIM_TYPE_PARAMS.get(sim_type_id, DEFAULT_PARAMS)
+        output_config = SIM_TYPE_OUTPUTS.get(sim_type_id, DEFAULT_OUTPUTS)
+
+        print(f"    生成 SimTypeResult {result.id} (sim_type={sim_type_id}): {result.total_rounds} 轮次...")
+        batch = []
+
+        for i in range(1, result.total_rounds + 1):
+            # 根据仿真类型生成对应的参数值
+            params = {k: fn() for k, fn in param_config.items()}
+
+            # 根据仿真类型生成对应的输出结果
+            outputs = {k: fn() for k, fn in output_config.items()}
+
+            # 确定状态
+            if i <= result.completed_rounds:
+                status = 2  # 已完成
+            elif i <= result.completed_rounds + result.failed_rounds:
+                status = 3  # 失败
+            else:
+                status = 1  # 运行中
+
+            batch.append(Round(
+                sim_type_result_id=result.id,
+                order_id=result.order_id,
+                sim_type_id=result.sim_type_id,
+                round_index=i,
+                params=params,
+                outputs=outputs if status == 2 else None,
+                status=status,
+                started_at=ts - (result.total_rounds - i) * 60,
+                finished_at=ts - (result.total_rounds - i) * 60 + 30 if status == 2 else None,
+                created_at=ts,
+                updated_at=ts
+            ))
+            total_rounds += 1
+
+            if len(batch) >= batch_size:
+                db.session.bulk_save_objects(batch)
+                db.session.commit()
+                batch = []
+
+        if batch:
+            db.session.bulk_save_objects(batch)
+            db.session.commit()
+
+    print(f"  ✓ 轮次数据: {total_rounds} 条")
+
+
 def seed_all():
     """导入所有数据"""
     seed_permissions()
@@ -458,6 +707,7 @@ def seed_all():
     seed_departments()
     seed_users()
     seed_base_config()
+    seed_orders_and_results()
 
 
 # ============ 主函数 ============

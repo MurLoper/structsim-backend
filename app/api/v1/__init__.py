@@ -10,6 +10,7 @@ from .config import config_bp, param_groups_bp, cond_out_groups_bp, config_relat
 from .auth import auth_bp
 from .orders import orders_bp, init_config_bp
 from .rbac import rbac_bp
+from .results.routes import results_bp
 
 v1_bp.register_blueprint(config_bp)
 v1_bp.register_blueprint(param_groups_bp)
@@ -19,4 +20,5 @@ v1_bp.register_blueprint(auth_bp)
 v1_bp.register_blueprint(orders_bp)
 v1_bp.register_blueprint(init_config_bp)
 v1_bp.register_blueprint(rbac_bp)
+v1_bp.register_blueprint(results_bp)
 

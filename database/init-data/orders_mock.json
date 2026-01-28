@@ -1,0 +1,152 @@
+{
+  "orders": [
+    {
+      "id": 1001,
+      "order_no": "ORD-2025-001",
+      "project_id": 1751,
+      "origin_file_type": 1,
+      "origin_file_name": "phone_model_v1.inp",
+      "origin_file_path": "/models/phone/v1/phone_model_v1.inp",
+      "fold_type_id": 0,
+      "participant_uids": [1, 2],
+      "remark": "折叠屏手机A跌落仿真测试 - 贝叶斯优化",
+      "sim_type_ids": [1, 2, 3],
+      "status": 2,
+      "progress": 100,
+      "created_by": 1
+    },
+    {
+      "id": 1002,
+      "order_no": "ORD-2025-002",
+      "project_id": 1751,
+      "origin_file_type": 1,
+      "origin_file_name": "phone_model_v2.inp",
+      "origin_file_path": "/models/phone/v2/phone_model_v2.inp",
+      "fold_type_id": 1,
+      "participant_uids": [1, 3],
+      "remark": "折叠屏手机A折叠态跌落测试",
+      "sim_type_ids": [1, 3],
+      "status": 2,
+      "progress": 100,
+      "created_by": 1
+    },
+    {
+      "id": 1003,
+      "order_no": "ORD-2025-003",
+      "project_id": 1752,
+      "origin_file_type": 1,
+      "origin_file_name": "phone_b_model.inp",
+      "origin_file_path": "/models/phone_b/phone_b_model.inp",
+      "fold_type_id": 0,
+      "participant_uids": [2],
+      "remark": "折叠屏手机B振动测试",
+      "sim_type_ids": [3, 4],
+      "status": 1,
+      "progress": 45,
+      "created_by": 2
+    },
+    {
+      "id": 1004,
+      "order_no": "ORD-2025-004",
+      "project_id": 1753,
+      "origin_file_type": 1,
+      "origin_file_name": "tablet_model.inp",
+      "origin_file_path": "/models/tablet/tablet_model.inp",
+      "fold_type_id": 2,
+      "participant_uids": [1, 2, 3],
+      "remark": "折叠屏平板热分析",
+      "sim_type_ids": [5],
+      "status": 0,
+      "progress": 0,
+      "created_by": 3
+    }
+  ],
+  "sim_type_results": [
+    {
+      "id": 1,
+      "order_id": 1001,
+      "sim_type_id": 1,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 2000,
+      "completed_rounds": 2000,
+      "failed_rounds": 0,
+      "best_exists": 1,
+      "best_round_index": 1847
+    },
+    {
+      "id": 2,
+      "order_id": 1001,
+      "sim_type_id": 2,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 1500,
+      "completed_rounds": 1500,
+      "failed_rounds": 0,
+      "best_exists": 1,
+      "best_round_index": 1156
+    },
+    {
+      "id": 3,
+      "order_id": 1001,
+      "sim_type_id": 3,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 800,
+      "completed_rounds": 800,
+      "failed_rounds": 0,
+      "best_exists": 1,
+      "best_round_index": 623
+    },
+    {
+      "id": 4,
+      "order_id": 1002,
+      "sim_type_id": 1,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 500,
+      "completed_rounds": 500,
+      "failed_rounds": 0
+    },
+    {
+      "id": 5,
+      "order_id": 1002,
+      "sim_type_id": 3,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 300,
+      "completed_rounds": 300,
+      "failed_rounds": 0
+    },
+    {
+      "id": 6,
+      "order_id": 1003,
+      "sim_type_id": 3,
+      "status": 1,
+      "progress": 60,
+      "total_rounds": 200,
+      "completed_rounds": 120,
+      "failed_rounds": 5
+    },
+    {
+      "id": 7,
+      "order_id": 1003,
+      "sim_type_id": 4,
+      "status": 1,
+      "progress": 30,
+      "total_rounds": 150,
+      "completed_rounds": 45,
+      "failed_rounds": 3
+    },
+    {
+      "id": 8,
+      "order_id": 1004,
+      "sim_type_id": 5,
+      "status": 0,
+      "progress": 0,
+      "total_rounds": 50,
+      "completed_rounds": 0,
+      "failed_rounds": 0
+    }
+  ]
+}
