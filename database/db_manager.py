@@ -87,12 +87,13 @@ def init_database():
 
 
 def clean_database():
-    """清理所有数据"""
+    """清理所有数据（支持 MySQL 和 SQLite）"""
     print("\n🗑️  清理所有数据...")
     try:
-        # 禁用外键检查
-        db.session.execute(text('SET FOREIGN_KEY_CHECKS = 0'))
-        
+        # 检测数据库类型
+        db_url = str(db.engine.url)
+        is_sqlite = 'sqlite' in db_url
+
         # 需要清空的表列表
         tables = [
             'order_results', 'rounds', 'sim_type_results', 'orders',
@@ -109,15 +110,28 @@ def clean_database():
             'users', 'roles', 'permissions', 'departments', 'menus',
             'user_project_permissions'
         ]
-        
-        for table in tables:
-            try:
-                db.session.execute(text(f'TRUNCATE TABLE {table}'))
-                print(f"  ✓ 清空表: {table}")
-            except Exception:
-                pass
-        
-        db.session.execute(text('SET FOREIGN_KEY_CHECKS = 1'))
+
+        if is_sqlite:
+            # SQLite: 使用 DELETE 并禁用外键约束
+            db.session.execute(text('PRAGMA foreign_keys = OFF'))
+            for table in tables:
+                try:
+                    db.session.execute(text(f'DELETE FROM {table}'))
+                    print(f"  ✓ 清空表: {table}")
+                except Exception:
+                    pass
+            db.session.execute(text('PRAGMA foreign_keys = ON'))
+        else:
+            # MySQL: 使用 TRUNCATE
+            db.session.execute(text('SET FOREIGN_KEY_CHECKS = 0'))
+            for table in tables:
+                try:
+                    db.session.execute(text(f'TRUNCATE TABLE {table}'))
+                    print(f"  ✓ 清空表: {table}")
+                except Exception:
+                    pass
+            db.session.execute(text('SET FOREIGN_KEY_CHECKS = 1'))
+
         db.session.commit()
         print("✅ 数据清理完成")
         return True
@@ -231,15 +245,20 @@ def seed_users():
             user_role_map[uid] = []
         user_role_map[uid].append(ur['role_id'])
 
+    # 构建部门ID到名称的映射
+    dept_map = {d['department_id']: d['department_name'] for d in data.get('departments', [])}
+
     for item in data.get('users', []):
         user_id = item['user_id']
+        dept_id = item.get('department', 1)
+        dept_name = dept_map.get(dept_id, '研发部')
         db.session.add(User(
             id=user_id,
             username=item['user_name'],
             email=item['user_email'],
             name=item.get('real_name', item['user_name']),
             role_ids=user_role_map.get(user_id, []),
-            department_id=item.get('department', 1),
+            department=dept_name,
             valid=1,
             preferences={'lang': 1, 'theme': 1},
             created_at=ts

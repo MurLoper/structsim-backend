@@ -2,6 +2,13 @@
 
 本目录包含数据库初始化、迁移和管理所需的所有文件。
 
+## 支持的数据库
+
+- **SQLite** (默认，开发/测试环境)
+- **MySQL** (生产环境)
+
+脚本会自动检测当前配置的数据库类型，使用对应的 SQL 语法。
+
 ## 目录结构
 
 ```
@@ -106,7 +113,19 @@ python database/migrations/migrate_status_config.py
 检查 `.env` 或 `config.py` 中的数据库配置：
 
 ```python
+# SQLite (默认)
+SQLALCHEMY_DATABASE_URI = 'sqlite:///structsim.db'
+
+# MySQL
 SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://user:pass@localhost/structsim'
+```
+
+### Q: 如何使用 SQLite 进行本地测试？
+
+默认配置已使用 SQLite，直接运行即可：
+
+```bash
+python database/db_manager.py reset -f
 ```
 
 ### Q: 如何完全重置数据库？
