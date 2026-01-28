@@ -557,6 +557,25 @@ def seed_rounds_data():
     ts = get_timestamp()
     sim_type_results = SimTypeResult.query.filter(SimTypeResult.total_rounds > 0).all()
 
+    # 错误信息模板
+    ERROR_MESSAGES = [
+        "求解器异常退出，错误码: SOLVER_CRASH_001",
+        "网格质量检查失败: 存在负体积单元",
+        "材料参数超出有效范围",
+        "接触算法收敛失败，迭代次数超限",
+        "内存不足，无法完成计算",
+        "模型文件损坏或格式不正确",
+        "边界条件设置冲突",
+        "时间步长过大导致数值不稳定",
+        "节点位移超出允许范围",
+        "应力值超过材料极限",
+        "热传导计算发散",
+        "动态分析时间积分失败",
+        "接触穿透检测异常",
+        "单元刚度矩阵奇异",
+        "载荷施加顺序错误",
+    ]
+
     # 不同仿真类型的参数配置（8个参数/仿真类型）
     SIM_TYPE_PARAMS = {
         1: {  # 跌落仿真
@@ -700,6 +719,9 @@ def seed_rounds_data():
             outputs = {k: fn() for k, fn in output_config.items()}
 
             # 确定状态和流程节点
+            error_msg = None
+            stuck_module_id = None
+
             if i <= result.completed_rounds:
                 status = 2  # 已完成
                 flow_cur_node_id = 7  # 最后一个节点
@@ -710,6 +732,9 @@ def seed_rounds_data():
                 failed_node = random.randint(3, 6)
                 flow_cur_node_id = failed_node
                 flow_node_progress = {f"node_{j}": 100 if j < failed_node else (random.randint(10, 90) if j == failed_node else 0) for j in range(1, 8)}
+                # 添加错误信息
+                error_msg = random.choice(ERROR_MESSAGES)
+                stuck_module_id = failed_node
             else:
                 status = 1  # 运行中
                 # 随机在某个节点运行中
@@ -727,6 +752,8 @@ def seed_rounds_data():
                 status=status,
                 flow_cur_node_id=flow_cur_node_id,
                 flow_node_progress=flow_node_progress,
+                stuck_module_id=stuck_module_id,
+                error_msg=error_msg,
                 started_at=ts - (result.total_rounds - i) * 60,
                 finished_at=ts - (result.total_rounds - i) * 60 + 30 if status == 2 else None,
                 created_at=ts,
@@ -758,6 +785,13 @@ def seed_all():
 
 # ============ 主函数 ============
 
+# 预定义数据库配置
+DB_CONFIGS = {
+    'sqlite': 'sqlite:///structsim.db',
+    'mysql': 'mysql+pymysql://root:password@localhost:3306/structsim?charset=utf8mb4',
+}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='StructSim 数据库管理工具',
@@ -769,13 +803,30 @@ def main():
   python database/db_manager.py clean         清理所有数据
   python database/db_manager.py reset         重置数据库（清理+创建+导入）
   python database/db_manager.py status        查看数据库状态
+
+数据库切换:
+  python database/db_manager.py reset -f --db sqlite   使用 SQLite 数据库
+  python database/db_manager.py reset -f --db mysql    使用 MySQL 数据库
+
+环境变量:
+  DATABASE_URL=mysql+pymysql://user:pass@host:3306/db  自定义数据库连接
         """
     )
     parser.add_argument('command', choices=['init', 'seed', 'clean', 'reset', 'status'],
                         help='要执行的命令')
     parser.add_argument('--force', '-f', action='store_true',
                         help='强制执行，不提示确认')
+    parser.add_argument('--db', choices=['sqlite', 'mysql'], default=None,
+                        help='指定数据库类型 (默认使用环境变量 DATABASE_URL 或 sqlite)')
     args = parser.parse_args()
+
+    # 如果指定了 --db 参数，设置环境变量
+    import os
+    if args.db:
+        db_url = DB_CONFIGS.get(args.db)
+        if db_url:
+            os.environ['DATABASE_URL'] = db_url
+            print(f"📌 使用数据库: {args.db.upper()}")
 
     app = create_app()
 
@@ -783,6 +834,12 @@ def main():
         print("\n" + "=" * 60)
         print("🚀 StructSim 数据库管理工具")
         print("=" * 60)
+
+        # 显示当前数据库连接信息
+        current_db = str(db.engine.url)
+        db_type = 'SQLite' if 'sqlite' in current_db else 'MySQL'
+        print(f"📊 数据库类型: {db_type}")
+        print(f"📍 连接地址: {current_db}")
 
         try:
             if args.command == 'init':

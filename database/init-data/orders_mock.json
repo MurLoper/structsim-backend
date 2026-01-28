@@ -9,7 +9,7 @@
       "origin_file_path": "/models/phone/v1/phone_model_v1.inp",
       "fold_type_id": 0,
       "participant_uids": [1, 2],
-      "remark": "折叠屏手机A跌落仿真测试 - 贝叶斯优化",
+      "remark": "【全部完成】折叠屏手机A跌落仿真测试 - 贝叶斯优化",
       "sim_type_ids": [1, 2, 3],
       "status": 2,
       "progress": 100,
@@ -24,8 +24,8 @@
       "origin_file_path": "/models/phone/v2/phone_model_v2.inp",
       "fold_type_id": 1,
       "participant_uids": [1, 3],
-      "remark": "折叠屏手机A折叠态跌落测试",
-      "sim_type_ids": [1, 3],
+      "remark": "【完成但有失败】折叠屏手机A折叠态跌落测试 - 部分轮次失败",
+      "sim_type_ids": [1, 2, 3],
       "status": 2,
       "progress": 100,
       "created_by": 1
@@ -39,10 +39,10 @@
       "origin_file_path": "/models/phone_b/phone_b_model.inp",
       "fold_type_id": 0,
       "participant_uids": [2],
-      "remark": "折叠屏手机B振动测试",
+      "remark": "【运行中-少量运行】折叠屏手机B振动测试 - 大部分完成少量运行中",
       "sim_type_ids": [3, 4],
       "status": 1,
-      "progress": 45,
+      "progress": 85,
       "created_by": 2
     },
     {
@@ -54,11 +54,41 @@
       "origin_file_path": "/models/tablet/tablet_model.inp",
       "fold_type_id": 2,
       "participant_uids": [1, 2, 3],
-      "remark": "折叠屏平板热分析",
+      "remark": "【运行中-有失败】折叠屏平板综合测试 - 运行中且有失败",
+      "sim_type_ids": [1, 3, 5],
+      "status": 1,
+      "progress": 60,
+      "created_by": 3
+    },
+    {
+      "id": 1005,
+      "order_no": "ORD-2025-005",
+      "project_id": 1751,
+      "origin_file_type": 1,
+      "origin_file_name": "phone_stress_test.inp",
+      "origin_file_path": "/models/phone/stress/phone_stress_test.inp",
+      "fold_type_id": 0,
+      "participant_uids": [1],
+      "remark": "【大量失败】手机压力测试 - 多数轮次失败",
+      "sim_type_ids": [1, 4],
+      "status": 3,
+      "progress": 100,
+      "created_by": 1
+    },
+    {
+      "id": 1006,
+      "order_no": "ORD-2025-006",
+      "project_id": 1752,
+      "origin_file_type": 1,
+      "origin_file_name": "phone_b_thermal.inp",
+      "origin_file_path": "/models/phone_b/thermal/phone_b_thermal.inp",
+      "fold_type_id": 1,
+      "participant_uids": [2, 3],
+      "remark": "【待运行】折叠屏手机B热分析 - 等待执行",
       "sim_type_ids": [5],
       "status": 0,
       "progress": 0,
-      "created_by": 3
+      "created_by": 2
     }
   ],
   "sim_type_results": [
@@ -68,11 +98,11 @@
       "sim_type_id": 1,
       "status": 2,
       "progress": 100,
-      "total_rounds": 2000,
-      "completed_rounds": 2000,
+      "total_rounds": 500,
+      "completed_rounds": 500,
       "failed_rounds": 0,
       "best_exists": 1,
-      "best_round_index": 1847
+      "best_round_index": 347
     },
     {
       "id": 2,
@@ -80,11 +110,11 @@
       "sim_type_id": 2,
       "status": 2,
       "progress": 100,
-      "total_rounds": 1500,
-      "completed_rounds": 1500,
+      "total_rounds": 400,
+      "completed_rounds": 400,
       "failed_rounds": 0,
       "best_exists": 1,
-      "best_round_index": 1156
+      "best_round_index": 256
     },
     {
       "id": 3,
@@ -92,11 +122,11 @@
       "sim_type_id": 3,
       "status": 2,
       "progress": 100,
-      "total_rounds": 800,
-      "completed_rounds": 800,
+      "total_rounds": 300,
+      "completed_rounds": 300,
       "failed_rounds": 0,
       "best_exists": 1,
-      "best_round_index": 623
+      "best_round_index": 223
     },
     {
       "id": 4,
@@ -104,43 +134,103 @@
       "sim_type_id": 1,
       "status": 2,
       "progress": 100,
-      "total_rounds": 500,
-      "completed_rounds": 500,
-      "failed_rounds": 0
+      "total_rounds": 200,
+      "completed_rounds": 185,
+      "failed_rounds": 15
     },
     {
       "id": 5,
       "order_id": 1002,
-      "sim_type_id": 3,
+      "sim_type_id": 2,
       "status": 2,
       "progress": 100,
-      "total_rounds": 300,
-      "completed_rounds": 300,
-      "failed_rounds": 0
+      "total_rounds": 150,
+      "completed_rounds": 142,
+      "failed_rounds": 8
     },
     {
       "id": 6,
-      "order_id": 1003,
+      "order_id": 1002,
       "sim_type_id": 3,
-      "status": 1,
-      "progress": 60,
-      "total_rounds": 200,
-      "completed_rounds": 120,
-      "failed_rounds": 5
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 100,
+      "completed_rounds": 97,
+      "failed_rounds": 3
     },
     {
       "id": 7,
       "order_id": 1003,
-      "sim_type_id": 4,
-      "status": 1,
-      "progress": 30,
-      "total_rounds": 150,
-      "completed_rounds": 45,
-      "failed_rounds": 3
+      "sim_type_id": 3,
+      "status": 2,
+      "progress": 100,
+      "total_rounds": 200,
+      "completed_rounds": 195,
+      "failed_rounds": 5
     },
     {
       "id": 8,
+      "order_id": 1003,
+      "sim_type_id": 4,
+      "status": 1,
+      "progress": 85,
+      "total_rounds": 150,
+      "completed_rounds": 125,
+      "failed_rounds": 3
+    },
+    {
+      "id": 9,
       "order_id": 1004,
+      "sim_type_id": 1,
+      "status": 1,
+      "progress": 70,
+      "total_rounds": 100,
+      "completed_rounds": 60,
+      "failed_rounds": 10
+    },
+    {
+      "id": 10,
+      "order_id": 1004,
+      "sim_type_id": 3,
+      "status": 1,
+      "progress": 55,
+      "total_rounds": 80,
+      "completed_rounds": 40,
+      "failed_rounds": 5
+    },
+    {
+      "id": 11,
+      "order_id": 1004,
+      "sim_type_id": 5,
+      "status": 1,
+      "progress": 45,
+      "total_rounds": 60,
+      "completed_rounds": 25,
+      "failed_rounds": 3
+    },
+    {
+      "id": 12,
+      "order_id": 1005,
+      "sim_type_id": 1,
+      "status": 3,
+      "progress": 100,
+      "total_rounds": 100,
+      "completed_rounds": 25,
+      "failed_rounds": 75
+    },
+    {
+      "id": 13,
+      "order_id": 1005,
+      "sim_type_id": 4,
+      "status": 3,
+      "progress": 100,
+      "total_rounds": 80,
+      "completed_rounds": 20,
+      "failed_rounds": 60
+    },
+    {
+      "id": 14,
+      "order_id": 1006,
       "sim_type_id": 5,
       "status": 0,
       "progress": 0,
