@@ -382,7 +382,7 @@ def seed_base_config():
     db.session.commit()
     print(f"  ✓ 求解器资源: {count} 条")
 
-    # 状态定义（包含icon字段）
+    # 状态定义（包含icon字段，使用Lucide图标名称）
     count = 0
     for item in data.get('status_defs', []):
         if not StatusDef.query.get(item['status_id']):
@@ -393,7 +393,8 @@ def seed_base_config():
                 type=item.get('status_type', 'PROCESS'),
                 color=item.get('color_tag', '#808080'),
                 icon=item.get('icon', ''),
-                valid=1, sort=item['status_id'] * 10
+                valid=1,
+                sort=item.get('sort', item['status_id'] * 10)
             ))
             count += 1
     db.session.commit()

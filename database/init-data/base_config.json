@@ -43,14 +43,14 @@
     {"resource_id": 5, "resource_name": "测试节点", "cpu_cores": 8, "memory_gb": 32, "created_at": 1769231248411, "updated_at": 1769231248411}
   ],
   "status_defs": [
-    {"status_id": 0, "status_name": "未开始", "status_code": "NOT_STARTED", "status_type": "PROCESS", "color_tag": "#808080", "icon": "icon-weikaishi", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 1, "status_name": "运行中", "status_code": "RUNNING", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-yunxingzhong", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 2, "status_name": "已完成", "status_code": "COMPLETED", "status_type": "FINAL", "color_tag": "#008000", "icon": "icon-yiwancheng", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 3, "status_name": "运行失败", "status_code": "FAILED", "status_type": "FINAL", "color_tag": "#FF0000", "icon": "icon-yunxingshibai", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 4, "status_name": "草稿箱", "status_code": "DRAFT", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-caogaoxiang", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 5, "status_name": "手动终止", "status_code": "CANCELLED", "status_type": "FINAL", "color_tag": "#FFA500", "icon": "icon-shoudongzhongzhi", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 6, "status_name": "启动中", "status_code": "STARTING", "status_type": "PROCESS", "color_tag": "#800080", "icon": "icon-qidongzhong", "created_at": 1769231248411, "updated_at": 1769231248411},
-    {"status_id": 7, "status_name": "小模块完成", "status_code": "PARTIAL_COMPLETED", "status_type": "PROCESS", "color_tag": "#0000FF", "icon": "icon-xiaomokuaiwancheng", "created_at": 1769231248411, "updated_at": 1769231248411}
+    {"status_id": 0, "status_name": "未开始", "status_code": "NOT_STARTED", "status_type": "PROCESS", "color_tag": "#6b7280", "icon": "Clock"},
+    {"status_id": 1, "status_name": "运行中", "status_code": "RUNNING", "status_type": "PROCESS", "color_tag": "#f59e0b", "icon": "Hourglass"},
+    {"status_id": 2, "status_name": "已完成", "status_code": "COMPLETED", "status_type": "FINAL", "color_tag": "#4ec110", "icon": "CheckCircle"},
+    {"status_id": 3, "status_name": "运行失败", "status_code": "FAILED", "status_type": "FINAL", "color_tag": "#FF0000", "icon": "XCircle"},
+    {"status_id": 4, "status_name": "草稿箱", "status_code": "DRAFT", "status_type": "PROCESS", "color_tag": "#8798b0", "icon": "RotateCcw"},
+    {"status_id": 5, "status_name": "手动终止", "status_code": "CANCELLED", "status_type": "FINAL", "color_tag": "#595040", "icon": "Ban"},
+    {"status_id": 6, "status_name": "启动中", "status_code": "STARTING", "status_type": "PROCESS", "color_tag": "#edaf02", "icon": "Timer"},
+    {"status_id": 7, "status_name": "小模块完成", "status_code": "PARTIAL_COMPLETED", "status_type": "PROCESS", "color_tag": "#84cc16", "icon": "CircleCheck"}
   ],
   "care_devices": [
     {"device_id": 1, "device_name": "屏幕", "device_code": "SCREEN", "created_at": 1769231248411, "updated_at": 1769231248411},
