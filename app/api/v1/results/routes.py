@@ -46,7 +46,7 @@ def get_rounds(sim_type_result_id: int):
         # 从查询参数构建验证对象
         query_params = {
             'page': request.args.get('page', 1, type=int),
-            'pageSize': request.args.get('pageSize', 100, type=int),
+            'page_size': request.args.get('pageSize', 100, type=int),
             'status': request.args.get('status', type=int)
         }
         validated = RoundsQueryParams(**query_params)
@@ -54,7 +54,7 @@ def get_rounds(sim_type_result_id: int):
         data = results_service.get_rounds(
             sim_type_result_id=sim_type_result_id,
             page=validated.page,
-            page_size=validated.pageSize,
+            page_size=validated.page_size,
             status=validated.status
         )
         return success(data)
