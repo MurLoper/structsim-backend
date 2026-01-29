@@ -5,9 +5,10 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
-class SimTypeResult(db.Model):
+class SimTypeResult(db.Model, ToDictMixin):
     """单仿真类型结果表"""
     __tablename__ = 'sim_type_results'
     
@@ -42,30 +43,9 @@ class SimTypeResult(db.Model):
     __table_args__ = (
         db.Index('idx_order_simtype', 'order_id', 'sim_type_id'),
     )
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'orderId': self.order_id,
-            'simTypeId': self.sim_type_id,
-            'status': self.status,
-            'progress': self.progress,
-            'curNodeId': self.cur_node_id,
-            'stuckNodeId': self.stuck_node_id,
-            'stuckModuleId': self.stuck_module_id,
-            'bestExists': self.best_exists,
-            'bestRuleId': self.best_rule_id,
-            'bestRoundIndex': self.best_round_index,
-            'bestMetrics': self.best_metrics,
-            'totalRounds': self.total_rounds,
-            'completedRounds': self.completed_rounds,
-            'failedRounds': self.failed_rounds,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
 
-class Round(db.Model):
+class Round(db.Model, ToDictMixin):
     """轮次数据表 - 可能有大量数据，需要分页"""
     __tablename__ = 'rounds'
     
@@ -108,37 +88,16 @@ class Round(db.Model):
         db.Index('idx_simresult_round', 'sim_type_result_id', 'round_index'),
         db.Index('idx_order_simtype_round', 'order_id', 'sim_type_id', 'round_index'),
     )
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeResultId': self.sim_type_result_id,
-            'orderId': self.order_id,
-            'simTypeId': self.sim_type_id,
-            'roundIndex': self.round_index,
-            'params': self.params,
-            'outputs': self.outputs,
-            'status': self.status,
-            'flowCurNodeId': self.flow_cur_node_id,
-            'flowNodeProgress': self.flow_node_progress,
-            'stuckModuleId': self.stuck_module_id,
-            'errorCode': self.error_code,
-            'errorMsg': self.error_msg,
-            'startedAt': self.started_at,
-            'finishedAt': self.finished_at,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
-    
+
     def to_list_dict(self):
         """列表展示用的精简字典"""
         return {
             'id': self.id,
-            'roundIndex': self.round_index,
+            'round_index': self.round_index,
             'params': self.params,
             'outputs': self.outputs,
             'status': self.status,
-            'flowCurNodeId': self.flow_cur_node_id,
-            'stuckModuleId': self.stuck_module_id
+            'flow_cur_node_id': self.flow_cur_node_id,
+            'stuck_module_id': self.stuck_module_id
         }
 

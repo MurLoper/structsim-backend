@@ -38,8 +38,8 @@ class ConfigRelationsService:
             sim_type = self.project_sim_type_repo.find_sim_type_by_id(rel.sim_type_id)
             data = rel.to_dict()
             if sim_type:
-                data['simTypeName'] = sim_type.name
-                data['simTypeCode'] = sim_type.code
+                data['sim_type_name'] = sim_type.name
+                data['sim_type_code'] = sim_type.code
             results.append(data)
         return results
     
@@ -49,17 +49,18 @@ class ConfigRelationsService:
         if not project:
             raise NotFoundError(f"项目 {project_id} 不存在")
         
-        sim_type_id = data['simTypeId']
+        sim_type_id = data.get('sim_type_id') or data.get('simTypeId')
         sim_type = self.project_sim_type_repo.find_sim_type_by_id(sim_type_id)
         if not sim_type:
             raise NotFoundError(f"仿真类型 {sim_type_id} 不存在")
-        
+
         existing = self.project_sim_type_repo.find_by_project_and_sim_type(project_id, sim_type_id)
         if existing:
             raise BusinessError(f"仿真类型 {sim_type_id} 已关联到项目")
-        
+
         # 如果设置为默认，先取消其他默认
-        if data.get('isDefault', 0) == 1:
+        is_default = data.get('is_default') or data.get('isDefault', 0)
+        if is_default == 1:
             default_rel = self.project_sim_type_repo.find_default_by_project(project_id)
             if default_rel:
                 self.project_sim_type_repo.update(default_rel, {'is_default': 0})
@@ -67,17 +68,17 @@ class ConfigRelationsService:
         rel_data = {
             'project_id': project_id,
             'sim_type_id': sim_type_id,
-            'is_default': data.get('isDefault', 0),
+            'is_default': is_default,
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
-        
+
         try:
             rel = self.project_sim_type_repo.create(rel_data)
             db.session.commit()
             result = rel.to_dict()
-            result['simTypeName'] = sim_type.name
-            result['simTypeCode'] = sim_type.code
+            result['sim_type_name'] = sim_type.name
+            result['sim_type_code'] = sim_type.code
             return result
         except Exception as e:
             db.session.rollback()
@@ -129,8 +130,8 @@ class ConfigRelationsService:
             param_group = self.sim_type_param_group_repo.find_param_group_by_id(rel.param_group_id)
             data = rel.to_dict()
             if param_group:
-                data['paramGroupName'] = param_group.name
-                data['paramGroupDescription'] = param_group.description
+                data['param_group_name'] = param_group.name
+                data['param_group_description'] = param_group.description
             results.append(data)
         return results
     
@@ -140,17 +141,18 @@ class ConfigRelationsService:
         if not sim_type:
             raise NotFoundError(f"仿真类型 {sim_type_id} 不存在")
         
-        param_group_id = data['paramGroupId']
+        param_group_id = data.get('param_group_id') or data.get('paramGroupId')
         param_group = self.sim_type_param_group_repo.find_param_group_by_id(param_group_id)
         if not param_group:
             raise NotFoundError(f"参数组合 {param_group_id} 不存在")
-        
+
         existing = self.sim_type_param_group_repo.find_by_sim_type_and_param_group(sim_type_id, param_group_id)
         if existing:
             raise BusinessError(f"参数组合 {param_group_id} 已关联到仿真类型")
 
         # 如果设置为默认，先取消其他默认
-        if data.get('isDefault', 0) == 1:
+        is_default = data.get('is_default') or data.get('isDefault', 0)
+        if is_default == 1:
             default_rel = self.sim_type_param_group_repo.find_default_by_sim_type(sim_type_id)
             if default_rel:
                 self.sim_type_param_group_repo.update(default_rel, {'is_default': 0})
@@ -158,7 +160,7 @@ class ConfigRelationsService:
         rel_data = {
             'sim_type_id': sim_type_id,
             'param_group_id': param_group_id,
-            'is_default': data.get('isDefault', 0),
+            'is_default': is_default,
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -167,8 +169,8 @@ class ConfigRelationsService:
             rel = self.sim_type_param_group_repo.create(rel_data)
             db.session.commit()
             result = rel.to_dict()
-            result['paramGroupName'] = param_group.name
-            result['paramGroupDescription'] = param_group.description
+            result['param_group_name'] = param_group.name
+            result['param_group_description'] = param_group.description
             return result
         except Exception as e:
             db.session.rollback()
@@ -220,8 +222,8 @@ class ConfigRelationsService:
             cond_out_group = self.sim_type_cond_out_group_repo.find_cond_out_group_by_id(rel.cond_out_group_id)
             data = rel.to_dict()
             if cond_out_group:
-                data['condOutGroupName'] = cond_out_group.name
-                data['condOutGroupDescription'] = cond_out_group.description
+                data['cond_out_group_name'] = cond_out_group.name
+                data['cond_out_group_description'] = cond_out_group.description
             results.append(data)
         return results
 
@@ -231,7 +233,7 @@ class ConfigRelationsService:
         if not sim_type:
             raise NotFoundError(f"仿真类型 {sim_type_id} 不存在")
 
-        cond_out_group_id = data['condOutGroupId']
+        cond_out_group_id = data.get('cond_out_group_id') or data.get('condOutGroupId')
         cond_out_group = self.sim_type_cond_out_group_repo.find_cond_out_group_by_id(cond_out_group_id)
         if not cond_out_group:
             raise NotFoundError(f"工况输出组合 {cond_out_group_id} 不存在")
@@ -241,7 +243,8 @@ class ConfigRelationsService:
             raise BusinessError(f"工况输出组合 {cond_out_group_id} 已关联到仿真类型")
 
         # 如果设置为默认，先取消其他默认
-        if data.get('isDefault', 0) == 1:
+        is_default = data.get('is_default') or data.get('isDefault', 0)
+        if is_default == 1:
             default_rel = self.sim_type_cond_out_group_repo.find_default_by_sim_type(sim_type_id)
             if default_rel:
                 self.sim_type_cond_out_group_repo.update(default_rel, {'is_default': 0})
@@ -249,7 +252,7 @@ class ConfigRelationsService:
         rel_data = {
             'sim_type_id': sim_type_id,
             'cond_out_group_id': cond_out_group_id,
-            'is_default': data.get('isDefault', 0),
+            'is_default': is_default,
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -258,8 +261,8 @@ class ConfigRelationsService:
             rel = self.sim_type_cond_out_group_repo.create(rel_data)
             db.session.commit()
             result = rel.to_dict()
-            result['condOutGroupName'] = cond_out_group.name
-            result['condOutGroupDescription'] = cond_out_group.description
+            result['cond_out_group_name'] = cond_out_group.name
+            result['cond_out_group_description'] = cond_out_group.description
             return result
         except Exception as e:
             db.session.rollback()
@@ -311,9 +314,9 @@ class ConfigRelationsService:
             solver = self.sim_type_solver_repo.find_solver_by_id(rel.solver_id)
             data = rel.to_dict()
             if solver:
-                data['solverName'] = solver.name
-                data['solverCode'] = solver.code
-                data['solverVersion'] = solver.version
+                data['solver_name'] = solver.name
+                data['solver_code'] = solver.code
+                data['solver_version'] = solver.version
             results.append(data)
         return results
 
@@ -323,7 +326,7 @@ class ConfigRelationsService:
         if not sim_type:
             raise NotFoundError(f"仿真类型 {sim_type_id} 不存在")
 
-        solver_id = data['solverId']
+        solver_id = data.get('solver_id') or data.get('solverId')
         solver = self.sim_type_solver_repo.find_solver_by_id(solver_id)
         if not solver:
             raise NotFoundError(f"求解器 {solver_id} 不存在")
@@ -333,7 +336,8 @@ class ConfigRelationsService:
             raise BusinessError(f"求解器 {solver_id} 已关联到仿真类型")
 
         # 如果设置为默认，先取消其他默认
-        if data.get('isDefault', 0) == 1:
+        is_default = data.get('is_default') or data.get('isDefault', 0)
+        if is_default == 1:
             default_rel = self.sim_type_solver_repo.find_default_by_sim_type(sim_type_id)
             if default_rel:
                 self.sim_type_solver_repo.update(default_rel, {'is_default': 0})
@@ -341,7 +345,7 @@ class ConfigRelationsService:
         rel_data = {
             'sim_type_id': sim_type_id,
             'solver_id': solver_id,
-            'is_default': data.get('isDefault', 0),
+            'is_default': is_default,
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -350,9 +354,9 @@ class ConfigRelationsService:
             rel = self.sim_type_solver_repo.create(rel_data)
             db.session.commit()
             result = rel.to_dict()
-            result['solverName'] = solver.name
-            result['solverCode'] = solver.code
-            result['solverVersion'] = solver.version
+            result['solver_name'] = solver.name
+            result['solver_code'] = solver.code
+            result['solver_version'] = solver.version
             return result
         except Exception as e:
             db.session.rollback()
@@ -434,11 +438,11 @@ class ConfigRelationsService:
                 continue
 
             sim_type_dict = serialize_model(sim_type)
-            sim_type_dict['isDefault'] = bool(rel.is_default)
+            sim_type_dict['is_default'] = bool(rel.is_default)
 
             # 获取参数组合（带参数详情）
             param_groups = self._get_param_groups_with_params()
-            sim_type_dict['paramGroups'] = param_groups
+            sim_type_dict['param_groups'] = param_groups
 
             # 获取可用求解器
             solver_repo = SolverRepository()
@@ -474,7 +478,7 @@ class ConfigRelationsService:
                 if param:
                     param_dict = serialize_model(param)
                     if rel.default_value:
-                        param_dict['defaultValue'] = rel.default_value
+                        param_dict['default_value'] = rel.default_value
                     params.append(param_dict)
 
             group_dict['params'] = params
@@ -526,16 +530,16 @@ class ConfigRelationsService:
         fold_types = fold_type_repo.find_all_valid()
 
         return {
-            'simType': serialize_model(sim_type),
-            'foldType': fold_type,
-            'paramGroups': param_groups,
-            'defaultParamGroup': param_groups[0] if param_groups else None,
+            'sim_type': serialize_model(sim_type),
+            'fold_type': fold_type,
+            'param_groups': param_groups,
+            'default_param_group': param_groups[0] if param_groups else None,
             'solvers': serialize_models(solvers),
-            'defaultSolver': serialize_model(solvers[0]) if solvers else None,
-            'solverResources': serialize_models(resources),
-            'defaultResource': serialize_model(resources[0]) if resources else None,
-            'modelLevels': serialize_models(levels),
-            'foldTypes': serialize_models(fold_types)
+            'default_solver': serialize_model(solvers[0]) if solvers else None,
+            'solver_resources': serialize_models(resources),
+            'default_resource': serialize_model(resources[0]) if resources else None,
+            'model_levels': serialize_models(levels),
+            'fold_types': serialize_models(fold_types)
         }
 
     def get_default_config_for_order(

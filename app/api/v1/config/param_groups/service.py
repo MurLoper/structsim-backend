@@ -42,10 +42,10 @@ class ParamGroupService:
             param_def = self.rel_repo.find_param_def_by_id(rel.param_def_id)
             param_data = rel.to_dict()
             if param_def:
-                param_data['paramName'] = param_def.name
-                param_data['paramKey'] = param_def.key
+                param_data['param_name'] = param_def.name
+                param_data['param_key'] = param_def.key
                 param_data['unit'] = param_def.unit
-                param_data['valType'] = param_def.val_type
+                param_data['val_type'] = param_def.val_type
             params.append(param_data)
         
         result = group.to_dict()
@@ -114,10 +114,10 @@ class ParamGroupService:
             param_def = self.rel_repo.find_param_def_by_id(rel.param_def_id)
             param_data = rel.to_dict()
             if param_def:
-                param_data['paramName'] = param_def.name
-                param_data['paramKey'] = param_def.key
+                param_data['param_name'] = param_def.name
+                param_data['param_key'] = param_def.key
                 param_data['unit'] = param_def.unit
-                param_data['valType'] = param_def.val_type
+                param_data['val_type'] = param_def.val_type
             params.append(param_data)
         
         return params

@@ -4,11 +4,13 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
-class User(db.Model):
+class User(db.Model, ToDictMixin):
     """用户表"""
     __tablename__ = 'users'
+    _exclude_fields = {'password_hash'}  # 排除敏感字段
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), unique=True, nullable=False, comment='用户名')
@@ -37,25 +39,7 @@ class User(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            'name': self.name,
-            'avatar': self.avatar,
-            'phone': self.phone,
-            'department': self.department,
-            'roleIds': self.role_ids,
-            'valid': self.valid,
-            'preferences': self.preferences,
-            'recentProjectIds': self.recent_project_ids,
-            'recentSimTypeIds': self.recent_sim_type_ids,
-            'lastLoginAt': self.last_login_at,
-            'createdAt': self.created_at
-        }
-    
+
     def to_public_dict(self):
         """公开信息（用于参与人选择等）"""
         return {
@@ -67,7 +51,7 @@ class User(db.Model):
         }
 
 
-class Role(db.Model):
+class Role(db.Model, ToDictMixin):
     """角色表"""
     __tablename__ = 'roles'
     
@@ -86,20 +70,9 @@ class Role(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'description': self.description,
-            'permissionIds': self.permission_ids,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 
 
-class Permission(db.Model):
+class Permission(db.Model, ToDictMixin):
     """权限表"""
     __tablename__ = 'permissions'
     
@@ -116,21 +89,9 @@ class Permission(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'type': self.type,
-            'resource': self.resource,
-            'description': self.description,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 
 
-class Menu(db.Model):
+class Menu(db.Model, ToDictMixin):
     """菜单表"""
     __tablename__ = 'menus'
     
@@ -151,17 +112,4 @@ class Menu(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'parentId': self.parent_id,
-            'name': self.name,
-            'titleI18nKey': self.title_i18n_key,
-            'icon': self.icon,
-            'path': self.path,
-            'permissionId': self.permission_id,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 

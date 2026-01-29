@@ -2,8 +2,9 @@
 序列化工具 - 统一的命名转换和数据序列化
 实现 snake_case ↔ camelCase 自动转换
 """
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 import re
+from flask import g, request
 
 
 def to_camel_case(snake_str: str) -> str:
@@ -150,12 +151,50 @@ class ModelSerializer:
 
 
 # 便捷函数
-def serialize_model(model_instance, camel_case: bool = True) -> Dict:
-    """序列化单个模型实例"""
+def serialize_model(model_instance, camel_case: bool = False) -> Dict:
+    """序列化单个模型实例 - 默认返回snake_case，由中间件统一转换为camelCase"""
     return ModelSerializer.to_dict(model_instance, camel_case)
 
 
-def serialize_models(model_instances: List, camel_case: bool = True) -> List[Dict]:
-    """序列化模型实例列表"""
+def serialize_models(model_instances: List, camel_case: bool = False) -> List[Dict]:
+    """序列化模型实例列表 - 默认返回snake_case，由中间件统一转换为camelCase"""
     return ModelSerializer.to_dict_list(model_instances, camel_case)
+
+
+def get_snake_json() -> Optional[Dict]:
+    """
+    获取已转换为snake_case的请求JSON数据
+
+    在before_request中间件已将camelCase转换为snake_case并存储在g.snake_json中
+
+    Returns:
+        转换后的snake_case字典，如果没有JSON数据则返回None
+
+    Example:
+        # 前端传入: {"projectId": 1, "simTypeIds": [1, 2]}
+        # 返回: {"project_id": 1, "sim_type_ids": [1, 2]}
+    """
+    if hasattr(g, 'snake_json'):
+        return g.snake_json
+
+    # 如果中间件未处理，手动转换
+    try:
+        json_data = request.get_json(silent=True)
+        if json_data:
+            return dict_keys_to_snake(json_data)
+    except Exception:
+        pass
+    return None
+
+
+def get_original_json() -> Optional[Dict]:
+    """
+    获取原始的请求JSON数据（camelCase格式）
+
+    Returns:
+        原始的camelCase字典
+    """
+    if hasattr(g, 'original_json'):
+        return g.original_json
+    return request.get_json(silent=True)
 

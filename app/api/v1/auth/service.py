@@ -75,9 +75,9 @@ class AuthService:
 
         user_data = user.to_dict()
         user_data.update({
-            'roleIds': user.role_ids or [],
+            'role_ids': user.role_ids or [],
             'permissions': permission_codes,
-            'permissionCodes': permission_codes
+            'permission_codes': permission_codes
         })
         
         return {
@@ -103,9 +103,9 @@ class AuthService:
         permission_codes = self._get_permission_codes(user.role_ids)
         user_data = user.to_dict()
         user_data.update({
-            'roleIds': user.role_ids or [],
+            'role_ids': user.role_ids or [],
             'permissions': permission_codes,
-            'permissionCodes': permission_codes
+            'permission_codes': permission_codes
         })
         
         return user_data

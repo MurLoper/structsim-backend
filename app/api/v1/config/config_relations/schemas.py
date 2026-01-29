@@ -10,94 +10,94 @@ from pydantic import BaseModel, Field
 
 class ProjectSimTypeRelCreateRequest(BaseModel):
     """创建项目-仿真类型关联请求"""
-    simTypeId: int = Field(..., description="仿真类型ID")
-    isDefault: Optional[int] = Field(0, description="是否为默认仿真类型")
+    sim_type_id: int = Field(..., description="仿真类型ID")
+    is_default: Optional[int] = Field(0, description="是否为默认仿真类型")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class ProjectSimTypeRelResponse(BaseModel):
     """项目-仿真类型关联响应"""
     id: int
-    projectId: int
-    simTypeId: int
-    isDefault: int
+    project_id: int
+    sim_type_id: int
+    is_default: int
     sort: int
-    createdAt: int
+    created_at: int
     # 仿真类型信息
-    simTypeName: Optional[str] = None
-    simTypeCode: Optional[str] = None
+    sim_type_name: Optional[str] = None
+    sim_type_code: Optional[str] = None
 
 
 # ============ 仿真类型-参数组合关联 ============
 
 class SimTypeParamGroupRelCreateRequest(BaseModel):
     """创建仿真类型-参数组合关联请求"""
-    paramGroupId: int = Field(..., description="参数组合ID")
-    isDefault: Optional[int] = Field(0, description="是否为默认参数组合")
+    param_group_id: int = Field(..., description="参数组合ID")
+    is_default: Optional[int] = Field(0, description="是否为默认参数组合")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class SimTypeParamGroupRelResponse(BaseModel):
     """仿真类型-参数组合关联响应"""
     id: int
-    simTypeId: int
-    paramGroupId: int
-    isDefault: int
+    sim_type_id: int
+    param_group_id: int
+    is_default: int
     sort: int
-    createdAt: int
+    created_at: int
     # 参数组合信息
-    paramGroupName: Optional[str] = None
-    paramGroupDescription: Optional[str] = None
+    param_group_name: Optional[str] = None
+    param_group_description: Optional[str] = None
 
 
 # ============ 仿真类型-工况输出组合关联 ============
 
 class SimTypeCondOutGroupRelCreateRequest(BaseModel):
     """创建仿真类型-工况输出组合关联请求"""
-    condOutGroupId: int = Field(..., description="工况输出组合ID")
-    isDefault: Optional[int] = Field(0, description="是否为默认工况输出组合")
+    cond_out_group_id: int = Field(..., description="工况输出组合ID")
+    is_default: Optional[int] = Field(0, description="是否为默认工况输出组合")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class SimTypeCondOutGroupRelResponse(BaseModel):
     """仿真类型-工况输出组合关联响应"""
     id: int
-    simTypeId: int
-    condOutGroupId: int
-    isDefault: int
+    sim_type_id: int
+    cond_out_group_id: int
+    is_default: int
     sort: int
-    createdAt: int
+    created_at: int
     # 工况输出组合信息
-    condOutGroupName: Optional[str] = None
-    condOutGroupDescription: Optional[str] = None
+    cond_out_group_name: Optional[str] = None
+    cond_out_group_description: Optional[str] = None
 
 
 # ============ 仿真类型-求解器关联 ============
 
 class SimTypeSolverRelCreateRequest(BaseModel):
     """创建仿真类型-求解器关联请求"""
-    solverId: int = Field(..., description="求解器ID")
-    isDefault: Optional[int] = Field(0, description="是否为默认求解器")
+    solver_id: int = Field(..., description="求解器ID")
+    is_default: Optional[int] = Field(0, description="是否为默认求解器")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class SimTypeSolverRelResponse(BaseModel):
     """仿真类型-求解器关联响应"""
     id: int
-    simTypeId: int
-    solverId: int
-    isDefault: int
+    sim_type_id: int
+    solver_id: int
+    is_default: int
     sort: int
-    createdAt: int
+    created_at: int
     # 求解器信息
-    solverName: Optional[str] = None
-    solverCode: Optional[str] = None
-    solverVersion: Optional[str] = None
+    solver_name: Optional[str] = None
+    solver_code: Optional[str] = None
+    solver_version: Optional[str] = None
 
 
 # ============ 设置默认配置请求 ============
 
 class SetDefaultRequest(BaseModel):
     """设置默认配置请求"""
-    isDefault: int = Field(1, description="是否为默认，1=是，0=否")
+    is_default: int = Field(1, description="是否为默认，1=是，0=否")
 

@@ -4,9 +4,10 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
-class Project(db.Model):
+class Project(db.Model, ToDictMixin):
     """项目表"""
     __tablename__ = 'projects'
     
@@ -21,23 +22,9 @@ class Project(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'defaultSimTypeId': self.default_sim_type_id,
-            'defaultSolverId': self.default_solver_id,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
 
-class SimType(db.Model):
+class SimType(db.Model, ToDictMixin):
     """仿真类型表"""
     __tablename__ = 'sim_types'
     
@@ -57,26 +44,9 @@ class SimType(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'category': self.category,
-            'defaultParamTplSetId': self.default_param_tpl_set_id,
-            'defaultCondOutSetId': self.default_cond_out_set_id,
-            'defaultSolverId': self.default_solver_id,
-            'supportAlgMask': self.support_alg_mask,
-            'nodeIcon': self.node_icon,
-            'colorTag': self.color_tag,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
 
-class ParamDef(db.Model):
+class ParamDef(db.Model, ToDictMixin):
     """参数定义表 - 全局基础参数"""
     __tablename__ = 'param_defs'
     
@@ -97,26 +67,9 @@ class ParamDef(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'key': self.key,
-            'valType': self.val_type,
-            'unit': self.unit,
-            'minVal': self.min_val,
-            'maxVal': self.max_val,
-            'precision': self.precision,
-            'defaultVal': self.default_val,
-            'enumOptions': self.enum_options,
-            'required': self.required,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 
 
-class ParamTplSet(db.Model):
+class ParamTplSet(db.Model, ToDictMixin):
     """参数模板集"""
     __tablename__ = 'param_tpl_sets'
     
@@ -129,19 +82,9 @@ class ParamTplSet(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeId': self.sim_type_id,
-            'name': self.name,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
 
-class ParamTplItem(db.Model):
+class ParamTplItem(db.Model, ToDictMixin):
     """参数模板明细"""
     __tablename__ = 'param_tpl_items'
 
@@ -155,18 +98,8 @@ class ParamTplItem(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'tplSetId': self.tpl_set_id,
-            'tplName': self.tpl_name,
-            'paramVals': self.param_vals,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 
-
-class ConditionDef(db.Model):
+class ConditionDef(db.Model, ToDictMixin):
     """工况定义表"""
     __tablename__ = 'condition_defs'
 
@@ -183,23 +116,8 @@ class ConditionDef(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'category': self.category,
-            'unit': self.unit,
-            'conditionSchema': self.condition_schema,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
-
-class OutputDef(db.Model):
+class OutputDef(db.Model, ToDictMixin):
     """输出定义表"""
     __tablename__ = 'output_defs'
 
@@ -215,20 +133,8 @@ class OutputDef(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'valType': self.val_type,
-            'unit': self.unit,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class CondOutSet(db.Model):
+class CondOutSet(db.Model, ToDictMixin):
     """工况输出集"""
     __tablename__ = 'cond_out_sets'
 
@@ -244,20 +150,8 @@ class CondOutSet(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeId': self.sim_type_id,
-            'name': self.name,
-            'condItems': self.cond_items,
-            'outputIds': self.output_ids,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class Solver(db.Model):
+class Solver(db.Model, ToDictMixin):
     """求解器配置表"""
     __tablename__ = 'solvers'
 
@@ -279,26 +173,8 @@ class Solver(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'version': self.version,
-            'cpuCoreMin': self.cpu_core_min,
-            'cpuCoreMax': self.cpu_core_max,
-            'cpuCoreDefault': self.cpu_core_default,
-            'memoryMin': self.memory_min,
-            'memoryMax': self.memory_max,
-            'memoryDefault': self.memory_default,
-            'paramsSchema': self.params_schema,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class Workflow(db.Model):
+class Workflow(db.Model, ToDictMixin):
     """工作流配置表"""
     __tablename__ = 'workflows'
 
@@ -314,19 +190,6 @@ class Workflow(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'type': self.type,
-            'nodes': self.nodes,
-            'edges': self.edges,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
 
 class StatusDef(db.Model):
@@ -350,8 +213,8 @@ class StatusDef(db.Model):
             'id': self.id,
             'name': self.name,
             'code': self.code,
-            'statusType': self.type,
-            'colorTag': self.color,
+            'status_type': self.type,
+            'color_tag': self.color,
             'icon': self.icon,
             'color': self.color,
             'valid': self.valid,
@@ -359,7 +222,7 @@ class StatusDef(db.Model):
         }
 
 
-class AutomationModule(db.Model):
+class AutomationModule(db.Model, ToDictMixin):
     """自动化模块配置表"""
     __tablename__ = 'automation_modules'
 
@@ -378,23 +241,8 @@ class AutomationModule(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'category': self.category,
-            'version': self.version,
-            'timeoutSec': self.timeout_sec,
-            'retryMax': self.retry_max,
-            'retryBackoffSec': self.retry_backoff_sec,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class FoldType(db.Model):
+class FoldType(db.Model, ToDictMixin):
     """姿态/折叠类型配置表"""
     __tablename__ = 'fold_types'
 
@@ -409,19 +257,8 @@ class FoldType(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'angle': self.angle,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class ModelLevel(db.Model):
+class ModelLevel(db.Model, ToDictMixin):
     """模型层级表"""
     __tablename__ = 'model_levels'
 
@@ -435,18 +272,8 @@ class ModelLevel(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class CareDevice(db.Model):
+class CareDevice(db.Model, ToDictMixin):
     """关注器件表"""
     __tablename__ = 'care_devices'
 
@@ -461,19 +288,8 @@ class CareDevice(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'category': self.category,
-            'valid': self.valid,
-            'sort': self.sort,
-            'remark': self.remark
-        }
 
-
-class SolverResource(db.Model):
+class SolverResource(db.Model, ToDictMixin):
     """求解器资源池表"""
     __tablename__ = 'solver_resources'
 
@@ -489,20 +305,8 @@ class SolverResource(db.Model):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'description': self.description,
-            'cpuCores': self.cpu_cores,
-            'memoryGb': self.memory_gb,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 
-
-class Department(db.Model):
+class Department(db.Model, ToDictMixin):
     """部门表"""
     __tablename__ = 'departments'
 
@@ -515,14 +319,4 @@ class Department(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'code': self.code,
-            'parentId': self.parent_id,
-            'valid': self.valid,
-            'sort': self.sort
-        }
 

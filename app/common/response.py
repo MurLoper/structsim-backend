@@ -40,13 +40,13 @@ def error(
 
 
 def paginated(
-    items: list, 
-    total: int, 
-    page: int, 
+    items: list,
+    total: int,
+    page: int,
     page_size: int,
     msg: str = "ok"
 ) -> Response:
-    """分页响应"""
+    """分页响应 - 使用snake_case，由全局中间件统一转换为camelCase"""
     return jsonify({
         "code": ErrorCode.SUCCESS,
         "msg": msg,

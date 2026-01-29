@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
     avatar: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
-    roleIds: Optional[List[int]] = None
+    role_ids: Optional[List[int]] = None
     valid: Optional[int] = Field(default=1, ge=0, le=1)
 
 
@@ -25,7 +25,7 @@ class UserUpdate(BaseModel):
     avatar: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
-    roleIds: Optional[List[int]] = None
+    role_ids: Optional[List[int]] = None
     valid: Optional[int] = Field(default=None, ge=0, le=1)
 
 
@@ -34,7 +34,7 @@ class RoleCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     code: Optional[str] = Field(None, max_length=30)
     description: Optional[str] = Field(None, max_length=200)
-    permissionIds: Optional[List[int]] = None
+    permission_ids: Optional[List[int]] = None
     valid: Optional[int] = Field(default=1, ge=0, le=1)
     sort: Optional[int] = Field(default=100, ge=0)
 
@@ -43,7 +43,7 @@ class RoleUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
     code: Optional[str] = Field(None, max_length=30)
     description: Optional[str] = Field(None, max_length=200)
-    permissionIds: Optional[List[int]] = None
+    permission_ids: Optional[List[int]] = None
     valid: Optional[int] = Field(default=None, ge=0, le=1)
     sort: Optional[int] = Field(default=None, ge=0)
 

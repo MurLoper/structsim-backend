@@ -47,9 +47,9 @@ class CondOutGroupService:
             cond_def = self.cond_rel_repo.find_condition_def_by_id(rel.condition_def_id)
             cond_data = rel.to_dict()
             if cond_def:
-                cond_data['conditionName'] = cond_def.name
-                cond_data['conditionCode'] = cond_def.code
-                cond_data['conditionSchema'] = cond_def.condition_schema  # 改为 conditionSchema
+                cond_data['condition_name'] = cond_def.name
+                cond_data['condition_code'] = cond_def.code
+                cond_data['condition_schema'] = cond_def.condition_schema
             conditions.append(cond_data)
         
         # 获取组合包含的输出
@@ -59,10 +59,10 @@ class CondOutGroupService:
             output_def = self.output_rel_repo.find_output_def_by_id(rel.output_def_id)
             output_data = rel.to_dict()
             if output_def:
-                output_data['outputName'] = output_def.name
-                output_data['outputCode'] = output_def.code
+                output_data['output_name'] = output_def.name
+                output_data['output_code'] = output_def.code
                 output_data['unit'] = output_def.unit
-                output_data['valType'] = output_def.val_type
+                output_data['val_type'] = output_def.val_type
             outputs.append(output_data)
         
         result = group.to_dict()
@@ -210,10 +210,10 @@ class CondOutGroupService:
             output_def = self.output_rel_repo.find_output_def_by_id(rel.output_def_id)
             output_data = rel.to_dict()
             if output_def:
-                output_data['outputName'] = output_def.name
-                output_data['outputCode'] = output_def.code
+                output_data['output_name'] = output_def.name
+                output_data['output_code'] = output_def.code
                 output_data['unit'] = output_def.unit
-                output_data['valType'] = output_def.val_type
+                output_data['val_type'] = output_def.val_type
             outputs.append(output_data)
 
         return outputs

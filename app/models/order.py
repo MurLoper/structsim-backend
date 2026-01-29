@@ -4,6 +4,7 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
 class Order(db.Model):
@@ -60,46 +61,46 @@ class Order(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'orderNo': self.order_no,
-            'projectId': self.project_id,
-            'originFile': {
+            'order_no': self.order_no,
+            'project_id': self.project_id,
+            'origin_file': {
                 'type': self.origin_file_type,
                 'name': self.origin_file_name,
                 'path': self.origin_file_path,
-                'fileId': self.origin_file_id
+                'file_id': self.origin_file_id
             },
-            'foldTypeId': self.fold_type_id,
-            'participantUids': self.participant_uids,
+            'fold_type_id': self.fold_type_id,
+            'participant_uids': self.participant_uids,
             'remark': self.remark,
-            'simTypeIds': self.sim_type_ids,
-            'optParam': self.opt_param,
-            'workflowId': self.workflow_id,
+            'sim_type_ids': self.sim_type_ids,
+            'opt_param': self.opt_param,
+            'workflow_id': self.workflow_id,
             'status': self.status,
             'progress': self.progress,
-            'curNodeId': self.cur_node_id,
-            'submitCheck': self.submit_check,
-            'clientMeta': self.client_meta,
-            'createdBy': self.created_by,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
+            'cur_node_id': self.cur_node_id,
+            'submit_check': self.submit_check,
+            'client_meta': self.client_meta,
+            'created_by': self.created_by,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
         }
     
     def to_list_dict(self):
         """列表展示用的精简字典"""
         return {
             'id': self.id,
-            'orderNo': self.order_no,
-            'projectId': self.project_id,
-            'simTypeIds': self.sim_type_ids,
+            'order_no': self.order_no,
+            'project_id': self.project_id,
+            'sim_type_ids': self.sim_type_ids,
             'status': self.status,
             'progress': self.progress,
-            'createdBy': self.created_by,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
+            'created_by': self.created_by,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
         }
 
 
-class OrderResult(db.Model):
+class OrderResult(db.Model, ToDictMixin):
     """订单结果概览表"""
     __tablename__ = 'order_results'
     
@@ -118,16 +119,4 @@ class OrderResult(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'orderId': self.order_id,
-            'status': self.status,
-            'progress': self.progress,
-            'curNodeId': self.cur_node_id,
-            'simTypeResultIds': self.sim_type_result_ids,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 

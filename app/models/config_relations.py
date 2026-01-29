@@ -4,9 +4,10 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
-class ParamGroup(db.Model):
+class ParamGroup(db.Model, ToDictMixin):
     """参数组合表 - 将多个参数定义组合成可复用的参数组"""
     __tablename__ = 'param_groups'
     
@@ -18,20 +19,9 @@ class ParamGroup(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'valid': self.valid,
-            'sort': self.sort,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
 
-class ConditionOutputGroup(db.Model):
+class ConditionOutputGroup(db.Model, ToDictMixin):
     """工况输出组合表 - 将工况和输出组合成可复用的配置组"""
     __tablename__ = 'condition_output_groups'
     
@@ -43,20 +33,9 @@ class ConditionOutputGroup(db.Model):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'valid': self.valid,
-            'sort': self.sort,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
 
-class ProjectSimTypeRel(db.Model):
+class ProjectSimTypeRel(db.Model, ToDictMixin):
     """项目-仿真类型关联表"""
     __tablename__ = 'project_sim_type_rels'
     
@@ -66,19 +45,9 @@ class ProjectSimTypeRel(db.Model):
     is_default = db.Column(db.SmallInteger, default=0, comment='是否为默认仿真类型')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'projectId': self.project_id,
-            'simTypeId': self.sim_type_id,
-            'isDefault': self.is_default,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
 
-class SimTypeParamGroupRel(db.Model):
+class SimTypeParamGroupRel(db.Model, ToDictMixin):
     """仿真类型-参数组合关联表"""
     __tablename__ = 'sim_type_param_group_rels'
     
@@ -88,19 +57,9 @@ class SimTypeParamGroupRel(db.Model):
     is_default = db.Column(db.SmallInteger, default=0, comment='是否为默认参数组合')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeId': self.sim_type_id,
-            'paramGroupId': self.param_group_id,
-            'isDefault': self.is_default,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
 
-class SimTypeCondOutGroupRel(db.Model):
+class SimTypeCondOutGroupRel(db.Model, ToDictMixin):
     """仿真类型-工况输出组合关联表"""
     __tablename__ = 'sim_type_cond_out_group_rels'
     
@@ -111,19 +70,9 @@ class SimTypeCondOutGroupRel(db.Model):
     is_default = db.Column(db.SmallInteger, default=0, comment='是否为默认工况输出组合')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeId': self.sim_type_id,
-            'condOutGroupId': self.cond_out_group_id,
-            'isDefault': self.is_default,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
 
-class SimTypeSolverRel(db.Model):
+class SimTypeSolverRel(db.Model, ToDictMixin):
     """仿真类型-求解器关联表"""
     __tablename__ = 'sim_type_solver_rels'
 
@@ -134,18 +83,8 @@ class SimTypeSolverRel(db.Model):
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'simTypeId': self.sim_type_id,
-            'solverId': self.solver_id,
-            'isDefault': self.is_default,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
-
-class ParamGroupParamRel(db.Model):
+class ParamGroupParamRel(db.Model, ToDictMixin):
     """参数组合-参数关联表"""
     __tablename__ = 'param_group_param_rels'
 
@@ -156,18 +95,8 @@ class ParamGroupParamRel(db.Model):
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'paramGroupId': self.param_group_id,
-            'paramDefId': self.param_def_id,
-            'defaultValue': self.default_value,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
-
-class CondOutGroupConditionRel(db.Model):
+class CondOutGroupConditionRel(db.Model, ToDictMixin):
     """工况输出组合-工况关联表"""
     __tablename__ = 'cond_out_group_condition_rels'
 
@@ -180,18 +109,8 @@ class CondOutGroupConditionRel(db.Model):
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'condOutGroupId': self.cond_out_group_id,
-            'conditionDefId': self.condition_def_id,
-            'configData': self.config_data,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 
-
-class CondOutGroupOutputRel(db.Model):
+class CondOutGroupOutputRel(db.Model, ToDictMixin):
     """工况输出组合-输出关联表"""
     __tablename__ = 'cond_out_group_output_rels'
 
@@ -203,12 +122,4 @@ class CondOutGroupOutputRel(db.Model):
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'condOutGroupId': self.cond_out_group_id,
-            'outputDefId': self.output_def_id,
-            'sort': self.sort,
-            'createdAt': self.created_at
-        }
 

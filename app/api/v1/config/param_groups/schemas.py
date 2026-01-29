@@ -28,30 +28,30 @@ class ParamGroupResponse(BaseModel):
     description: Optional[str]
     valid: int
     sort: int
-    createdAt: int
-    updatedAt: int
+    created_at: int
+    updated_at: int
 
 
 class AddParamToGroupRequest(BaseModel):
     """添加参数到组合请求"""
-    paramDefId: int = Field(..., description="参数定义ID")
-    defaultValue: Optional[str] = Field(None, max_length=200, description="默认值")
+    param_def_id: int = Field(..., description="参数定义ID")
+    default_value: Optional[str] = Field(None, max_length=200, description="默认值")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class ParamInGroupResponse(BaseModel):
     """组合中的参数响应"""
     id: int
-    paramGroupId: int
-    paramDefId: int
-    defaultValue: Optional[str]
+    param_group_id: int
+    param_def_id: int
+    default_value: Optional[str]
     sort: int
-    createdAt: int
+    created_at: int
     # 参数定义信息
-    paramName: Optional[str] = None
-    paramKey: Optional[str] = None
+    param_name: Optional[str] = None
+    param_key: Optional[str] = None
     unit: Optional[str] = None
-    valType: Optional[int] = None
+    val_type: Optional[int] = None
 
 
 class ParamGroupDetailResponse(BaseModel):
@@ -61,7 +61,7 @@ class ParamGroupDetailResponse(BaseModel):
     description: Optional[str]
     valid: int
     sort: int
-    createdAt: int
-    updatedAt: int
+    created_at: int
+    updated_at: int
     params: List[ParamInGroupResponse] = []
 

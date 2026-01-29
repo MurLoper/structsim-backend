@@ -28,49 +28,49 @@ class CondOutGroupResponse(BaseModel):
     description: Optional[str]
     valid: int
     sort: int
-    createdAt: int
-    updatedAt: int
+    created_at: int
+    updated_at: int
 
 
 class AddConditionToGroupRequest(BaseModel):
     """添加工况到组合请求"""
-    conditionDefId: int = Field(..., description="工况定义ID")
-    configData: Optional[Dict[str, Any]] = Field(None, description="工况配置数据")
+    condition_def_id: int = Field(..., description="工况定义ID")
+    config_data: Optional[Dict[str, Any]] = Field(None, description="工况配置数据")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class AddOutputToGroupRequest(BaseModel):
     """添加输出到组合请求"""
-    outputDefId: int = Field(..., description="输出定义ID")
+    output_def_id: int = Field(..., description="输出定义ID")
     sort: Optional[int] = Field(100, description="排序")
 
 
 class ConditionInGroupResponse(BaseModel):
     """组合中的工况响应"""
     id: int
-    condOutGroupId: int
-    conditionDefId: int
-    configData: Optional[Dict[str, Any]]
+    cond_out_group_id: int
+    condition_def_id: int
+    config_data: Optional[Dict[str, Any]]
     sort: int
-    createdAt: int
+    created_at: int
     # 工况定义信息
-    conditionName: Optional[str] = None
-    conditionCode: Optional[str] = None
-    conditionSchema: Optional[Dict[str, Any]] = None  # 改名避免与 BaseModel.schema 冲突
+    condition_name: Optional[str] = None
+    condition_code: Optional[str] = None
+    condition_schema: Optional[Dict[str, Any]] = None
 
 
 class OutputInGroupResponse(BaseModel):
     """组合中的输出响应"""
     id: int
-    condOutGroupId: int
-    outputDefId: int
+    cond_out_group_id: int
+    output_def_id: int
     sort: int
-    createdAt: int
+    created_at: int
     # 输出定义信息
-    outputName: Optional[str] = None
-    outputCode: Optional[str] = None
+    output_name: Optional[str] = None
+    output_code: Optional[str] = None
     unit: Optional[str] = None
-    valType: Optional[int] = None
+    val_type: Optional[int] = None
 
 
 class CondOutGroupDetailResponse(BaseModel):
@@ -80,8 +80,8 @@ class CondOutGroupDetailResponse(BaseModel):
     description: Optional[str]
     valid: int
     sort: int
-    createdAt: int
-    updatedAt: int
+    created_at: int
+    updated_at: int
     conditions: List[ConditionInGroupResponse] = []
     outputs: List[OutputInGroupResponse] = []
 

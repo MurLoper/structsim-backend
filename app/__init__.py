@@ -11,6 +11,7 @@ from config import config
 from app.extensions import db, migrate, jwt, init_extensions
 from app.common import error
 from app.common.errors import BusinessError
+from app.common.serializers import dict_keys_to_snake, dict_keys_to_camel
 from app.constants import ErrorCode
 from app.openapi import OPENAPI_SPEC
 
@@ -52,11 +53,21 @@ def create_app(config_name=None):
             payload['body_keys'] = []
         return payload
 
-    # 请求前处理：生成trace_id
+    # 请求前处理：生成trace_id，转换请求参数为snake_case
     @app.before_request
     def before_request():
         g.trace_id = request.headers.get('X-Trace-ID', str(uuid.uuid4())[:8])
         g.request_start = time.time()
+
+        # 将请求JSON body中的camelCase转换为snake_case
+        if request.is_json and request.data:
+            try:
+                original_json = request.get_json(silent=True)
+                if original_json:
+                    g.original_json = original_json
+                    g.snake_json = dict_keys_to_snake(original_json)
+            except Exception:
+                pass
 
     @app.after_request
     def after_request(response):
@@ -64,6 +75,19 @@ def create_app(config_name=None):
         context = build_request_context()
         context.update({'status': response.status_code, 'duration_ms': round(duration_ms, 2)})
         logger.info(json.dumps({'event': 'request', **context}, ensure_ascii=False))
+
+        # 将响应JSON中的snake_case转换为camelCase
+        if response.content_type and 'application/json' in response.content_type:
+            try:
+                data = response.get_json()
+                if data and isinstance(data, dict):
+                    # 转换data字段内容为camelCase
+                    if 'data' in data and data['data'] is not None:
+                        data['data'] = dict_keys_to_camel(data['data'])
+                    response.set_data(json.dumps(data, ensure_ascii=False))
+            except Exception:
+                pass
+
         return response
 
     # 全局异常处理

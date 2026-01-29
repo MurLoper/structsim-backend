@@ -3,9 +3,10 @@
 """
 from datetime import datetime
 from app import db
+from app.models.base import ToDictMixin
 
 
-class UserProjectPermission(db.Model):
+class UserProjectPermission(db.Model, ToDictMixin):
     """用户项目权限表"""
     __tablename__ = 'user_project_permissions'
     
@@ -24,17 +25,4 @@ class UserProjectPermission(db.Model):
     __table_args__ = (
         db.UniqueConstraint('user_id', 'project_id', name='uk_user_project'),
     )
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'userId': self.user_id,
-            'projectId': self.project_id,
-            'canView': self.can_view,
-            'canSubmit': self.can_submit,
-            'canManage': self.can_manage,
-            'valid': self.valid,
-            'createdAt': self.created_at,
-            'updatedAt': self.updated_at
-        }
 
