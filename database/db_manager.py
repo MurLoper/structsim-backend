@@ -121,18 +121,25 @@ def clean_database():
                 except Exception:
                     pass
             db.session.execute(text('PRAGMA foreign_keys = ON'))
+            db.session.commit()
         else:
-            # MySQL: 使用 TRUNCATE
-            db.session.execute(text('SET FOREIGN_KEY_CHECKS = 0'))
-            for table in tables:
-                try:
-                    db.session.execute(text(f'TRUNCATE TABLE {table}'))
-                    print(f"  ✓ 清空表: {table}")
-                except Exception:
-                    pass
-            db.session.execute(text('SET FOREIGN_KEY_CHECKS = 1'))
+            # MySQL: 使用原始连接执行 TRUNCATE（DDL语句）
+            # 先提交当前事务，避免冲突
+            db.session.commit()
+            with db.engine.connect() as conn:
+                conn.execute(text('SET FOREIGN_KEY_CHECKS = 0'))
+                conn.commit()
+                for table in tables:
+                    try:
+                        conn.execute(text(f'TRUNCATE TABLE `{table}`'))
+                        conn.commit()
+                        print(f"  ✓ 清空表: {table}")
+                    except Exception as e:
+                        # 表可能不存在，忽略错误
+                        pass
+                conn.execute(text('SET FOREIGN_KEY_CHECKS = 1'))
+                conn.commit()
 
-        db.session.commit()
         print("✅ 数据清理完成")
         return True
     except Exception as e:
@@ -178,7 +185,7 @@ def seed_permissions():
 
     count = 0
     for item in data.get('permissions', []):
-        if not Permission.query.get(item['permission_id']):
+        if not db.session.get(Permission, item['permission_id']):
             db.session.add(Permission(
                 id=item['permission_id'],
                 name=item['permission_name'],
@@ -201,7 +208,7 @@ def seed_roles():
 
     count = 0
     for item in data.get('roles', []):
-        if not Role.query.get(item['role_id']):
+        if not db.session.get(Role, item['role_id']):
             db.session.add(Role(
                 id=item['role_id'],
                 name=item['role_name'],
@@ -225,7 +232,7 @@ def seed_departments():
 
     count = 0
     for item in data.get('departments', []):
-        if not Department.query.get(item['department_id']):
+        if not db.session.get(Department, item['department_id']):
             db.session.add(Department(
                 id=item['department_id'],
                 name=item['department_name'],
@@ -262,7 +269,7 @@ def seed_users():
     count = 0
     for item in data.get('users', []):
         user_id = item['user_id']
-        if not User.query.get(user_id):
+        if not db.session.get(User, user_id):
             dept_id = item.get('department', 1)
             dept_name = dept_map.get(dept_id, '研发部')
             db.session.add(User(
@@ -302,7 +309,7 @@ def seed_base_config():
     count = 0
     for item in data.get('projects', []):
         pid = int(item['project_id'])
-        if not Project.query.get(pid):
+        if not db.session.get(Project, pid):
             db.session.add(Project(
                 id=pid,
                 name=item['project_name'],
@@ -316,7 +323,7 @@ def seed_base_config():
     # 仿真类型
     count = 0
     for item in data.get('sim_types', []):
-        if not SimType.query.get(item['sim_type_id']):
+        if not db.session.get(SimType, item['sim_type_id']):
             db.session.add(SimType(
                 id=item['sim_type_id'],
                 name=item['sim_type_name'],
@@ -330,7 +337,7 @@ def seed_base_config():
     # 模型层级
     count = 0
     for item in data.get('model_levels', []):
-        if not ModelLevel.query.get(item['model_level_id']):
+        if not db.session.get(ModelLevel, item['model_level_id']):
             db.session.add(ModelLevel(
                 id=item['model_level_id'],
                 name=item['model_level_name'],
@@ -344,7 +351,7 @@ def seed_base_config():
     # 折叠状态
     count = 0
     for item in data.get('fold_types', []):
-        if not FoldType.query.get(item['fold_type_id']):
+        if not db.session.get(FoldType, item['fold_type_id']):
             db.session.add(FoldType(
                 id=item['fold_type_id'],
                 name=item['fold_type_name'],
@@ -358,7 +365,7 @@ def seed_base_config():
     # 求解器
     count = 0
     for item in data.get('solvers', []):
-        if not Solver.query.get(item['solver_id']):
+        if not db.session.get(Solver, item['solver_id']):
             db.session.add(Solver(
                 id=item['solver_id'],
                 name=item['solver_name'],
@@ -372,7 +379,7 @@ def seed_base_config():
     # 求解器资源
     count = 0
     for item in data.get('solver_resources', []):
-        if not SolverResource.query.get(item['resource_id']):
+        if not db.session.get(SolverResource, item['resource_id']):
             db.session.add(SolverResource(
                 id=item['resource_id'],
                 name=item['resource_name'],
@@ -387,7 +394,7 @@ def seed_base_config():
     # 状态定义（包含icon字段，使用Lucide图标名称）
     count = 0
     for item in data.get('status_defs', []):
-        if not StatusDef.query.get(item['status_id']):
+        if not db.session.get(StatusDef, item['status_id']):
             db.session.add(StatusDef(
                 id=item['status_id'],
                 name=item['status_name'],
@@ -405,7 +412,7 @@ def seed_base_config():
     # 关注设备
     count = 0
     for item in data.get('care_devices', []):
-        if not CareDevice.query.get(item['device_id']):
+        if not db.session.get(CareDevice, item['device_id']):
             db.session.add(CareDevice(
                 id=item['device_id'],
                 name=item['device_name'],
@@ -419,7 +426,7 @@ def seed_base_config():
     # 参数定义
     count = 0
     for item in data.get('param_defs', []):
-        if not ParamDef.query.get(item['opt_param_id']):
+        if not db.session.get(ParamDef, item['opt_param_id']):
             db.session.add(ParamDef(
                 id=item['opt_param_id'],
                 name=item.get('param_desc', item['param_name']),
@@ -439,7 +446,7 @@ def seed_base_config():
     # 输出定义
     count = 0
     for item in data.get('output_defs', []):
-        if not OutputDef.query.get(item['resp_param_id']):
+        if not db.session.get(OutputDef, item['resp_param_id']):
             db.session.add(OutputDef(
                 id=item['resp_param_id'],
                 name=item.get('description', item['output_type']),
@@ -454,7 +461,7 @@ def seed_base_config():
     # 自动化模块
     count = 0
     for item in data.get('automation_modules', []):
-        if not AutomationModule.query.get(item['module_id']):
+        if not db.session.get(AutomationModule, item['module_id']):
             db.session.add(AutomationModule(
                 id=item['module_id'],
                 name=item['module_name'],
@@ -470,7 +477,7 @@ def seed_base_config():
     # 工作流
     count = 0
     for item in data.get('workflows', []):
-        if not Workflow.query.get(item['workflow_id']):
+        if not db.session.get(Workflow, item['workflow_id']):
             db.session.add(Workflow(
                 id=item['workflow_id'],
                 name=item['workflow_name'],
@@ -497,50 +504,71 @@ def seed_orders_and_results():
 
     ts = get_timestamp()
 
-    # 导入订单
+    # 加载用户数据，建立 created_by 映射（mock数据中1,2,3映射到实际用户ID）
+    users_data = load_json('users.json')
+    user_ids = [u['user_id'] for u in users_data.get('users', [])]
+    default_user_id = user_ids[0] if user_ids else 10001
+
+    def map_user_id(mock_id):
+        """将mock数据中的小ID映射到实际用户ID"""
+        if mock_id is None:
+            return default_user_id
+        # mock_id 1,2,3... 映射到 user_ids 列表中对应位置
+        idx = mock_id - 1
+        if 0 <= idx < len(user_ids):
+            return user_ids[idx]
+        return default_user_id
+
+    # 导入订单（使用 no_autoflush 避免查询时触发 flush）
     count = 0
-    for item in data.get('orders', []):
-        if not Order.query.get(item['id']):
-            db.session.add(Order(
-                id=item['id'],
-                order_no=item['order_no'],
-                project_id=item['project_id'],
-                origin_file_type=item.get('origin_file_type', 1),
-                origin_file_name=item.get('origin_file_name'),
-                origin_file_path=item.get('origin_file_path'),
-                fold_type_id=item.get('fold_type_id'),
-                participant_uids=item.get('participant_uids', []),
-                remark=item.get('remark', ''),
-                sim_type_ids=item.get('sim_type_ids', []),
-                status=item.get('status', 0),
-                progress=item.get('progress', 0),
-                created_by=item.get('created_by', 1),
-                created_at=ts,
-                updated_at=ts
-            ))
-            count += 1
+    with db.session.no_autoflush:
+        for item in data.get('orders', []):
+            if not db.session.get(Order, item['id']):
+                # fold_type_id 为 0 时设为 None，避免外键约束失败
+                fold_type_id = item.get('fold_type_id')
+                if fold_type_id == 0:
+                    fold_type_id = None
+                db.session.add(Order(
+                    id=item['id'],
+                    order_no=item['order_no'],
+                    project_id=item['project_id'],
+                    origin_file_type=item.get('origin_file_type', 1),
+                    origin_file_name=item.get('origin_file_name'),
+                    origin_file_path=item.get('origin_file_path'),
+                    fold_type_id=fold_type_id,
+                    participant_uids=[map_user_id(uid) for uid in item.get('participant_uids', [])],
+                    remark=item.get('remark', ''),
+                    sim_type_ids=item.get('sim_type_ids', []),
+                    status=item.get('status', 0),
+                    progress=item.get('progress', 0),
+                    created_by=map_user_id(item.get('created_by')),
+                    created_at=ts,
+                    updated_at=ts
+                ))
+                count += 1
     db.session.commit()
     print(f"  ✓ 订单: {count} 条")
 
     # 导入仿真类型结果
     count = 0
-    for item in data.get('sim_type_results', []):
-        if not SimTypeResult.query.get(item['id']):
-            db.session.add(SimTypeResult(
-                id=item['id'],
-                order_id=item['order_id'],
-                sim_type_id=item['sim_type_id'],
-                status=item.get('status', 0),
-                progress=item.get('progress', 0),
-                total_rounds=item.get('total_rounds', 0),
-                completed_rounds=item.get('completed_rounds', 0),
-                failed_rounds=item.get('failed_rounds', 0),
-                best_exists=item.get('best_exists', 0),
-                best_round_index=item.get('best_round_index'),
-                created_at=ts,
-                updated_at=ts
-            ))
-            count += 1
+    with db.session.no_autoflush:
+        for item in data.get('sim_type_results', []):
+            if not db.session.get(SimTypeResult, item['id']):
+                db.session.add(SimTypeResult(
+                    id=item['id'],
+                    order_id=item['order_id'],
+                    sim_type_id=item['sim_type_id'],
+                    status=item.get('status', 0),
+                    progress=item.get('progress', 0),
+                    total_rounds=item.get('total_rounds', 0),
+                    completed_rounds=item.get('completed_rounds', 0),
+                    failed_rounds=item.get('failed_rounds', 0),
+                    best_exists=item.get('best_exists', 0),
+                    best_round_index=item.get('best_round_index'),
+                    created_at=ts,
+                    updated_at=ts
+                ))
+                count += 1
     db.session.commit()
     print(f"  ✓ 仿真类型结果: {count} 条")
 
