@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash
 
 from app.common.errors import NotFoundError, BusinessError
 from app.constants import ErrorCode
-from app.models.auth import Role, Permission
+from app.models.auth import Role, Permission, Menu
 from .repository import auth_repository
 
 
@@ -19,6 +19,14 @@ class AuthService:
     
     def __init__(self):
         self.repository = auth_repository
+
+    def _get_role_codes(self, role_ids: Optional[List[int]]) -> List[str]:
+        """获取角色编码列表"""
+        role_ids = list(role_ids or [])
+        if not role_ids:
+            return []
+        roles = Role.query.filter(Role.id.in_(role_ids), Role.valid == 1).all()
+        return [r.code for r in roles if r.code]
 
     def _get_permission_codes(self, role_ids: Optional[List[int]]) -> List[str]:
         role_ids = list(role_ids or [])
@@ -40,27 +48,33 @@ class AuthService:
     
     def login(self, email: str, password: Optional[str] = None) -> Dict:
         """
-        用户登录
+        用户登录（模拟大网SSO登录）
         Args:
             email: 用户邮箱
-            password: 密码（演示环境可选）
+            password: 密码（可选，模拟模式下不验证）
         Returns:
             包含token和用户信息的字典
         Raises:
             NotFoundError: 用户不存在
-            BusinessError: 密码错误
+            BusinessError: 账号被禁用
+        Note:
+            当前为模拟模式，不验证密码。
+            实际生产环境应对接大网SSO/Keycloak进行认证。
         """
         user = self.repository.get_user_by_email(email)
-        
+
         if not user:
             raise NotFoundError("用户不存在")
-        
-        # 演示环境：跳过密码验证
-        # 生产环境：取消注释以下代码
-        # if password and not check_password_hash(user.password_hash, password):
-        #     raise BusinessError(ErrorCode.VALIDATION_ERROR, "密码错误")
+
+        # 检查账号状态
+        if user.valid != 1:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
+
+        # 模拟模式：不验证密码，直接通过
+        # 生产环境应替换为大网SSO/Keycloak认证
         
         permission_codes = self._get_permission_codes(user.role_ids)
+        role_codes = self._get_role_codes(user.role_ids)
 
         # 生成访问令牌
         access_token = create_access_token(
@@ -69,15 +83,16 @@ class AuthService:
                 'permissions': permission_codes
             }
         )
-        
+
         # 更新最后登录时间
         self.repository.update_last_login(user, int(time.time()))
 
         user_data = user.to_dict()
         user_data.update({
             'role_ids': user.role_ids or [],
+            'roleCodes': role_codes,
             'permissions': permission_codes,
-            'permission_codes': permission_codes
+            'permissionCodes': permission_codes
         })
         
         return {
@@ -101,11 +116,13 @@ class AuthService:
             raise NotFoundError("用户不存在")
 
         permission_codes = self._get_permission_codes(user.role_ids)
+        role_codes = self._get_role_codes(user.role_ids)
         user_data = user.to_dict()
         user_data.update({
             'role_ids': user.role_ids or [],
+            'roleCodes': role_codes,
             'permissions': permission_codes,
-            'permission_codes': permission_codes
+            'permissionCodes': permission_codes
         })
         
         return user_data
@@ -131,6 +148,62 @@ class AuthService:
         """
         # 这里可以添加token黑名单逻辑
         return {'message': '登出成功'}
+
+    def get_user_menus(self, user_id: int) -> List[Dict]:
+        """
+        获取用户有权限的菜单列表（树形结构）
+        Args:
+            user_id: 用户ID
+        Returns:
+            菜单树形列表
+        """
+        user = self.repository.get_user_by_id(user_id)
+        if not user:
+            raise NotFoundError("用户不存在")
+
+        # 获取用户权限编码列表
+        permission_codes = self._get_permission_codes(user.role_ids)
+        is_admin = 'ADMIN' in [r.code for r in Role.query.filter(
+            Role.id.in_(user.role_ids or []), Role.valid == 1
+        ).all() if r.code]
+
+        # 获取所有有效菜单
+        all_menus = Menu.query.filter(
+            Menu.valid == 1,
+            Menu.menu_type == 'MENU'
+        ).order_by(Menu.sort.asc(), Menu.id.asc()).all()
+
+        # 过滤用户有权限的菜单
+        if is_admin:
+            user_menus = all_menus
+        else:
+            user_menus = [
+                m for m in all_menus
+                if not m.permission_code or m.permission_code in permission_codes
+            ]
+
+        # 构建树形结构
+        return self._build_menu_tree(user_menus)
+
+    def _build_menu_tree(self, menus: List[Menu], parent_id: int = 0) -> List[Dict]:
+        """构建菜单树"""
+        tree = []
+        for menu in menus:
+            if menu.parent_id == parent_id:
+                node = {
+                    'id': menu.id,
+                    'name': menu.name,
+                    'titleI18nKey': menu.title_i18n_key,
+                    'icon': menu.icon,
+                    'path': menu.path,
+                    'component': menu.component,
+                    'hidden': menu.hidden == 1,
+                    'permissionCode': menu.permission_code,
+                    'sort': menu.sort,
+                    'children': self._build_menu_tree(menus, menu.id)
+                }
+                tree.append(node)
+        return tree
 
 
 # 单例实例

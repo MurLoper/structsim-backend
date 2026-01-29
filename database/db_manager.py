@@ -35,12 +35,12 @@ from app.models.config import (
     FoldType, ModelLevel, CareDevice, SolverResource, Department,
     ParamTplSet, ParamTplItem, CondOutSet, ConditionDef, AutomationModule, Workflow
 )
-from app.models.auth import User, Role, Permission
+from app.models.auth import User, Role, Permission, Menu
 from app.models.config_relations import ParamGroup, ParamGroupParamRel, ProjectSimTypeRel
 from app.models.order import Order, OrderResult
 from app.models.result import SimTypeResult, Round
 from werkzeug.security import generate_password_hash
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 
 # 数据文件路径
 INIT_DATA_DIR = SCRIPT_DIR / 'init-data'
@@ -73,6 +73,67 @@ def normalize_timestamp(ts) -> int:
 
 
 # ============ 数据库操作 ============
+
+def get_existing_columns(table_name: str) -> set:
+    """获取表的现有字段"""
+    try:
+        inspector = inspect(db.engine)
+        columns = inspector.get_columns(table_name)
+        return {col['name'] for col in columns}
+    except Exception:
+        return set()
+
+
+def ensure_table_columns():
+    """确保表结构完整（幂等操作）"""
+    print("\n🔧 检查并更新表结构...")
+
+    db_url = str(db.engine.url)
+    is_mysql = 'mysql' in db_url
+
+    # 定义需要检查的表和字段
+    # 格式: {表名: [(字段名, MySQL定义, SQLite定义), ...]}
+    schema_updates = {
+        'menus': [
+            ('component', 'VARCHAR(200) COMMENT "前端组件路径"', 'VARCHAR(200)'),
+            ('menu_type', 'VARCHAR(20) DEFAULT "MENU" COMMENT "菜单类型"', 'VARCHAR(20) DEFAULT "MENU"'),
+            ('hidden', 'SMALLINT DEFAULT 0 COMMENT "是否隐藏"', 'SMALLINT DEFAULT 0'),
+            ('permission_code', 'VARCHAR(50) COMMENT "所需权限编码"', 'VARCHAR(50)'),
+        ],
+        'users': [
+            ('password_hash', 'VARCHAR(256) COMMENT "密码哈希"', 'VARCHAR(256)'),
+        ],
+    }
+
+    updated = 0
+    for table, columns in schema_updates.items():
+        existing = get_existing_columns(table)
+        if not existing:
+            print(f"  ⚠️  表 {table} 不存在，将在 init 时创建")
+            continue
+
+        for col_name, mysql_def, sqlite_def in columns:
+            if col_name in existing:
+                continue
+
+            definition = mysql_def if is_mysql else sqlite_def
+            try:
+                if is_mysql:
+                    sql = f"ALTER TABLE `{table}` ADD COLUMN `{col_name}` {definition}"
+                else:
+                    sql = f"ALTER TABLE {table} ADD COLUMN {col_name} {definition}"
+                db.session.execute(text(sql))
+                db.session.commit()
+                print(f"  ✓ {table}.{col_name} 已添加")
+                updated += 1
+            except Exception as e:
+                print(f"  ⚠️  添加 {table}.{col_name} 失败: {e}")
+
+    if updated == 0:
+        print("  ✓ 表结构已是最新")
+    else:
+        print(f"  ✓ 更新了 {updated} 个字段")
+
 
 def init_database():
     """创建数据库表结构"""
@@ -184,8 +245,10 @@ def seed_permissions():
         return
 
     count = 0
+    updated = 0
     for item in data.get('permissions', []):
-        if not db.session.get(Permission, item['permission_id']):
+        existing = db.session.get(Permission, item['permission_id'])
+        if not existing:
             db.session.add(Permission(
                 id=item['permission_id'],
                 name=item['permission_name'],
@@ -195,8 +258,17 @@ def seed_permissions():
                 sort=item['permission_id'] * 10
             ))
             count += 1
+        else:
+            # 更新已存在的权限（确保code正确）
+            if existing.code != item['permission_code']:
+                existing.code = item['permission_code']
+                existing.name = item['permission_name']
+                updated += 1
     db.session.commit()
-    print(f"  ✓ 权限: {count} 条 (跳过 {len(data.get('permissions', [])) - count} 条已存在)")
+    msg = f"  ✓ 权限: 新增 {count} 条"
+    if updated > 0:
+        msg += f", 更新 {updated} 条"
+    print(msg)
 
 
 def seed_roles():
@@ -254,6 +326,8 @@ def seed_users():
         return
 
     ts = get_timestamp()
+    # 默认密码（所有测试用户统一密码）
+    default_password = 'Sim@2024'
 
     # 构建用户角色映射
     user_role_map = {}
@@ -272,7 +346,7 @@ def seed_users():
         if not db.session.get(User, user_id):
             dept_id = item.get('department', 1)
             dept_name = dept_map.get(dept_id, '研发部')
-            db.session.add(User(
+            user = User(
                 id=user_id,
                 username=item['user_name'],
                 email=item['user_email'],
@@ -282,17 +356,95 @@ def seed_users():
                 valid=1,
                 preferences={'lang': 1, 'theme': 1},
                 created_at=ts
-            ))
+            )
+            # 设置密码
+            user.set_password(default_password)
+            db.session.add(user)
             count += 1
     db.session.commit()
     print(f"  ✓ 用户: {count} 条 (跳过 {len(data.get('users', [])) - count} 条已存在)")
 
     # 打印用户信息
-    print("\n  测试用户账号:")
+    print(f"\n  测试用户账号 (默认密码: {default_password}):")
     for item in data.get('users', [])[:5]:
         print(f"    - {item['user_email']:30} ({item.get('real_name', item['user_name'])})")
     if len(data.get('users', [])) > 5:
         print(f"    ... 共 {len(data.get('users', []))} 个用户")
+
+
+def seed_menus():
+    """导入菜单数据"""
+    print("\n📋 导入菜单数据...")
+
+    menus_data = [
+        # 顶级菜单
+        {'id': 1, 'parent_id': 0, 'name': 'Dashboard', 'title_i18n_key': 'nav.dashboard',
+         'icon': 'LayoutDashboard', 'path': '/', 'component': 'pages/dashboard/Dashboard',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': None, 'sort': 10},
+
+        {'id': 2, 'parent_id': 0, 'name': 'Orders', 'title_i18n_key': 'nav.orders',
+         'icon': 'FileText', 'path': '/orders', 'component': 'pages/orders/OrderList',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_VIEW', 'sort': 20},
+
+        {'id': 3, 'parent_id': 0, 'name': 'New Simulation', 'title_i18n_key': 'nav.new_simulation',
+         'icon': 'Plus', 'path': '/submission', 'component': 'pages/submission/SubmissionPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_CREATE', 'sort': 30},
+
+        {'id': 4, 'parent_id': 0, 'name': 'Configuration', 'title_i18n_key': 'nav.configuration',
+         'icon': 'Settings', 'path': '/configuration', 'component': None,
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 40},
+
+        # 配置子菜单
+        {'id': 41, 'parent_id': 4, 'name': 'Projects', 'title_i18n_key': 'nav.config.projects',
+         'icon': 'Folder', 'path': '/configuration/projects', 'component': 'pages/configuration/ProjectsPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 41},
+
+        {'id': 42, 'parent_id': 4, 'name': 'Sim Types', 'title_i18n_key': 'nav.config.sim_types',
+         'icon': 'Cpu', 'path': '/configuration/sim-types', 'component': 'pages/configuration/SimTypesPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 42},
+
+        {'id': 43, 'parent_id': 4, 'name': 'Parameters', 'title_i18n_key': 'nav.config.parameters',
+         'icon': 'Sliders', 'path': '/configuration/parameters', 'component': 'pages/configuration/ParametersPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 43},
+
+        {'id': 44, 'parent_id': 4, 'name': 'Outputs', 'title_i18n_key': 'nav.config.outputs',
+         'icon': 'BarChart2', 'path': '/configuration/outputs', 'component': 'pages/configuration/OutputsPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 44},
+
+        {'id': 45, 'parent_id': 4, 'name': 'Solvers', 'title_i18n_key': 'nav.config.solvers',
+         'icon': 'Server', 'path': '/configuration/solvers', 'component': 'pages/configuration/SolversPage',
+         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 45},
+
+        # 隐藏页面（不在菜单显示但需要路由）
+        {'id': 100, 'parent_id': 0, 'name': 'Order Detail', 'title_i18n_key': 'nav.order_detail',
+         'icon': None, 'path': '/orders/:id', 'component': 'pages/orders/OrderDetail',
+         'menu_type': 'MENU', 'hidden': 1, 'permission_code': 'ORDER_VIEW', 'sort': 100},
+
+        {'id': 101, 'parent_id': 0, 'name': 'Results', 'title_i18n_key': 'nav.results',
+         'icon': None, 'path': '/results/:orderId/:simTypeId', 'component': 'pages/results/ResultsPage',
+         'menu_type': 'MENU', 'hidden': 1, 'permission_code': 'ORDER_VIEW', 'sort': 101},
+    ]
+
+    count = 0
+    for item in menus_data:
+        if not db.session.get(Menu, item['id']):
+            db.session.add(Menu(
+                id=item['id'],
+                parent_id=item['parent_id'],
+                name=item['name'],
+                title_i18n_key=item['title_i18n_key'],
+                icon=item['icon'],
+                path=item['path'],
+                component=item['component'],
+                menu_type=item['menu_type'],
+                hidden=item['hidden'],
+                permission_code=item['permission_code'],
+                valid=1,
+                sort=item['sort']
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 菜单: {count} 条 (跳过 {len(menus_data) - count} 条已存在)")
 
 
 def seed_base_config():
@@ -351,28 +503,45 @@ def seed_base_config():
     # 折叠状态
     count = 0
     for item in data.get('fold_types', []):
-        if not db.session.get(FoldType, item['fold_type_id']):
-            db.session.add(FoldType(
-                id=item['fold_type_id'],
-                name=item['fold_type_name'],
-                code=item['fold_type_name'].upper(),
-                valid=1, sort=item['fold_type_id'] * 10
-            ))
-            count += 1
+        fold_id = item['fold_type_id']
+        existing = db.session.get(FoldType, fold_id)
+        if existing:
+            continue
+        # 检查 code 是否已存在（用原始名称，不转大写）
+        code = item['fold_type_name']
+        exists_by_code = FoldType.query.filter_by(code=code).first()
+        if exists_by_code:
+            continue
+        db.session.add(FoldType(
+            id=fold_id,
+            name=item['fold_type_name'],
+            code=code,
+            valid=1, sort=fold_id * 10
+        ))
+        count += 1
+        db.session.flush()  # 立即写入避免批量冲突
     db.session.commit()
     print(f"  ✓ 折叠状态: {count} 条")
 
     # 求解器
     count = 0
     for item in data.get('solvers', []):
-        if not db.session.get(Solver, item['solver_id']):
-            db.session.add(Solver(
-                id=item['solver_id'],
-                name=item['solver_name'],
-                code=item['solver_name'].upper().replace(' ', '_'),
-                valid=1, sort=item['solver_id'] * 10
-            ))
-            count += 1
+        solver_id = item['solver_id']
+        existing = db.session.get(Solver, solver_id)
+        if existing:
+            continue
+        code = item['solver_name']
+        exists_by_code = Solver.query.filter_by(code=code).first()
+        if exists_by_code:
+            continue
+        db.session.add(Solver(
+            id=solver_id,
+            name=item['solver_name'],
+            code=code,
+            valid=1, sort=solver_id * 10
+        ))
+        count += 1
+        db.session.flush()
     db.session.commit()
     print(f"  ✓ 求解器: {count} 条")
 
@@ -803,10 +972,14 @@ def seed_rounds_data():
 
 def seed_all():
     """导入所有数据"""
+    # 先确保表结构完整
+    ensure_table_columns()
+
     seed_permissions()
     seed_roles()
     seed_departments()
     seed_users()
+    seed_menus()
     seed_base_config()
     seed_orders_and_results()
 
