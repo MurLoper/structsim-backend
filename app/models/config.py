@@ -320,3 +320,36 @@ class Department(db.Model, ToDictMixin):
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
+
+class ConditionConfig(db.Model, ToDictMixin):
+    """工况配置表 - 姿态+仿真类型的唯一组合"""
+    __tablename__ = 'condition_configs'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, comment='工况名称')
+    code = db.Column(db.String(50), comment='工况编码')
+    fold_type_id = db.Column(db.Integer, db.ForeignKey('fold_types.id'), nullable=False, comment='姿态ID')
+    sim_type_id = db.Column(db.Integer, db.ForeignKey('sim_types.id'), nullable=False, comment='仿真类型ID')
+    # 关联数组（JSON格式）
+    param_group_ids = db.Column(db.JSON, comment='参数组ID列表 [1,2,3]')
+    output_group_ids = db.Column(db.JSON, comment='输出组ID列表 [4,5,6]')
+    # 默认配置
+    default_param_group_id = db.Column(db.Integer, comment='默认参数组ID')
+    default_output_group_id = db.Column(db.Integer, comment='默认输出组ID')
+    default_solver_id = db.Column(db.Integer, comment='默认求解器ID')
+    # 通用字段
+    valid = db.Column(db.SmallInteger, default=1, comment='1=有效,0=禁用')
+    sort = db.Column(db.Integer, default=100, comment='排序')
+    remark = db.Column(db.Text, comment='备注')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+    # 唯一约束：姿态+仿真类型
+    __table_args__ = (
+        db.UniqueConstraint('fold_type_id', 'sim_type_id', name='uk_fold_sim'),
+        db.Index('idx_fold_type', 'fold_type_id'),
+        db.Index('idx_sim_type', 'sim_type_id'),
+    )
+
+

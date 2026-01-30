@@ -12,6 +12,7 @@ from app.extensions import db, migrate, jwt, init_extensions
 from app.common import error
 from app.common.errors import BusinessError
 from app.common.serializers import dict_keys_to_snake, dict_keys_to_camel
+from app.common.redis_client import redis_client
 from app.constants import ErrorCode
 from app.openapi import OPENAPI_SPEC
 
@@ -33,6 +34,13 @@ def create_app(config_name=None):
 
     # 初始化扩展
     init_extensions(app)
+
+    # 初始化 Redis（可选，如果配置了 Redis）
+    try:
+        redis_client.init_app(app)
+        logger.info("Redis 初始化成功")
+    except Exception as e:
+        logger.warning(f"Redis 初始化失败，将使用数据库直接查询: {e}")
 
     def build_request_context():
         payload = {

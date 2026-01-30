@@ -21,7 +21,8 @@ from app.models.config import (
     ModelLevel,
     CareDevice,
     SolverResource,
-    Department
+    Department,
+    ConditionConfig
 )
 
 # 配置关联关系模型
@@ -78,6 +79,7 @@ __all__ = [
     'CareDevice',
     'SolverResource',
     'Department',
+    'ConditionConfig',
     # 配置关联关系
     'ParamGroup',
     'ConditionOutputGroup',
