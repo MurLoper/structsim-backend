@@ -34,7 +34,9 @@ from app.models.config_relations import (
     SimTypeSolverRel,
     ParamGroupParamRel,
     CondOutGroupConditionRel,
-    CondOutGroupOutputRel
+    CondOutGroupOutputRel,
+    WorkingCondition,
+    FoldTypeSimTypeRel
 )
 
 # 订单模型
@@ -86,6 +88,8 @@ __all__ = [
     'ParamGroupParamRel',
     'CondOutGroupConditionRel',
     'CondOutGroupOutputRel',
+    'WorkingCondition',
+    'FoldTypeSimTypeRel',
     # 订单
     'Order',
     'OrderResult',

@@ -17,7 +17,12 @@ class OrdersRepository:
         page: int,
         page_size: int,
         status: Optional[int] = None,
-        project_id: Optional[int] = None
+        project_id: Optional[int] = None,
+        sim_type_id: Optional[int] = None,
+        order_no: Optional[str] = None,
+        created_by: Optional[int] = None,
+        start_date: Optional[int] = None,
+        end_date: Optional[int] = None
     ) -> Tuple[List[Order], int]:
         """
         分页获取订单列表
@@ -25,20 +30,30 @@ class OrdersRepository:
             (订单列表, 总数)
         """
         query = Order.query
-        
+
         if status is not None:
             query = query.filter_by(status=status)
         if project_id is not None:
             query = query.filter_by(project_id=project_id)
-        
+        if created_by is not None:
+            query = query.filter_by(created_by=created_by)
+        if order_no is not None:
+            query = query.filter(Order.order_no.ilike(f'%{order_no}%'))
+        if sim_type_id is not None:
+            query = query.filter(Order.sim_type_ids.contains([sim_type_id]))
+        if start_date is not None:
+            query = query.filter(Order.created_at >= start_date)
+        if end_date is not None:
+            query = query.filter(Order.created_at <= end_date)
+
         # 获取总数
         total = query.count()
-        
+
         # 分页查询
         orders = query.order_by(desc(Order.created_at)).offset(
             (page - 1) * page_size
         ).limit(page_size).all()
-        
+
         return orders, total
     
     @staticmethod

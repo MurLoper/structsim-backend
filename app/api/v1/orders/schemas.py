@@ -34,3 +34,8 @@ class OrderQuery(BaseModel):
     page_size: int = Field(20, ge=1, le=100, description="每页数量")
     status: Optional[int] = Field(None, description="订单状态")
     project_id: Optional[int] = Field(None, description="项目ID")
+    sim_type_id: Optional[int] = Field(None, description="仿真类型ID")
+    order_no: Optional[str] = Field(None, description="订单编号(模糊搜索)")
+    created_by: Optional[int] = Field(None, description="创建人ID")
+    start_date: Optional[int] = Field(None, description="开始日期时间戳")
+    end_date: Optional[int] = Field(None, description="结束日期时间戳")

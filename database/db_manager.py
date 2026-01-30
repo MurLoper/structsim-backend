@@ -36,7 +36,7 @@ from app.models.config import (
     ParamTplSet, ParamTplItem, CondOutSet, ConditionDef, AutomationModule, Workflow
 )
 from app.models.auth import User, Role, Permission, Menu
-from app.models.config_relations import ParamGroup, ParamGroupParamRel, ProjectSimTypeRel
+from app.models.config_relations import ParamGroup, ParamGroupParamRel, ProjectSimTypeRel, WorkingCondition, FoldTypeSimTypeRel
 from app.models.order import Order, OrderResult
 from app.models.result import SimTypeResult, Round
 from werkzeug.security import generate_password_hash
@@ -659,6 +659,41 @@ def seed_base_config():
             count += 1
     db.session.commit()
     print(f"  ✓ 工作流: {count} 条")
+
+    # 姿态-仿真类型关联
+    count = 0
+    for item in data.get('fold_type_sim_type_rels', []):
+        existing = FoldTypeSimTypeRel.query.filter_by(
+            fold_type_id=item['fold_type_id'],
+            sim_type_id=item['sim_type_id']
+        ).first()
+        if not existing:
+            db.session.add(FoldTypeSimTypeRel(
+                fold_type_id=item['fold_type_id'],
+                sim_type_id=item['sim_type_id'],
+                is_default=item.get('is_default', 0),
+                sort=item.get('sort', 100)
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 姿态-仿真类型关联: {count} 条")
+
+    # 工况配置
+    count = 0
+    for item in data.get('working_conditions', []):
+        if not db.session.get(WorkingCondition, item['id']):
+            db.session.add(WorkingCondition(
+                id=item['id'],
+                name=item['name'],
+                code=item['code'],
+                fold_type_id=item['fold_type_id'],
+                sim_type_id=item['sim_type_id'],
+                sort=item.get('sort', 100),
+                valid=1
+            ))
+            count += 1
+    db.session.commit()
+    print(f"  ✓ 工况配置: {count} 条")
 
     print("✅ 基础配置导入完成")
 

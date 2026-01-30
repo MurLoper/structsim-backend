@@ -146,6 +146,34 @@
         {"id": "e3", "source": "node_3", "target": "node_4"}
       ]
     }
+  ],
+  "fold_type_sim_type_rels": [
+    {"fold_type_id": 0, "sim_type_id": 1, "is_default": 1, "sort": 10},
+    {"fold_type_id": 0, "sim_type_id": 2, "is_default": 0, "sort": 20},
+    {"fold_type_id": 0, "sim_type_id": 3, "is_default": 0, "sort": 30},
+    {"fold_type_id": 0, "sim_type_id": 4, "is_default": 0, "sort": 40},
+    {"fold_type_id": 0, "sim_type_id": 5, "is_default": 0, "sort": 50},
+    {"fold_type_id": 1, "sim_type_id": 1, "is_default": 1, "sort": 10},
+    {"fold_type_id": 1, "sim_type_id": 2, "is_default": 0, "sort": 20},
+    {"fold_type_id": 1, "sim_type_id": 3, "is_default": 0, "sort": 30},
+    {"fold_type_id": 2, "sim_type_id": 1, "is_default": 1, "sort": 10},
+    {"fold_type_id": 2, "sim_type_id": 2, "is_default": 0, "sort": 20},
+    {"fold_type_id": 2, "sim_type_id": 4, "is_default": 0, "sort": 30},
+    {"fold_type_id": 2, "sim_type_id": 5, "is_default": 0, "sort": 40}
+  ],
+  "working_conditions": [
+    {"id": 1, "name": "展开态-跌落", "code": "OPEN_DROP", "fold_type_id": 0, "sim_type_id": 1, "sort": 10},
+    {"id": 2, "name": "展开态-落球", "code": "OPEN_BALL", "fold_type_id": 0, "sim_type_id": 2, "sort": 20},
+    {"id": 3, "name": "展开态-振动", "code": "OPEN_VIB", "fold_type_id": 0, "sim_type_id": 3, "sort": 30},
+    {"id": 4, "name": "展开态-冲击", "code": "OPEN_IMPACT", "fold_type_id": 0, "sim_type_id": 4, "sort": 40},
+    {"id": 5, "name": "展开态-热分析", "code": "OPEN_THERMAL", "fold_type_id": 0, "sim_type_id": 5, "sort": 50},
+    {"id": 6, "name": "折叠态-跌落", "code": "FOLD_DROP", "fold_type_id": 1, "sim_type_id": 1, "sort": 60},
+    {"id": 7, "name": "折叠态-落球", "code": "FOLD_BALL", "fold_type_id": 1, "sim_type_id": 2, "sort": 70},
+    {"id": 8, "name": "折叠态-振动", "code": "FOLD_VIB", "fold_type_id": 1, "sim_type_id": 3, "sort": 80},
+    {"id": 9, "name": "半折叠态-跌落", "code": "HALF_DROP", "fold_type_id": 2, "sim_type_id": 1, "sort": 90},
+    {"id": 10, "name": "半折叠态-落球", "code": "HALF_BALL", "fold_type_id": 2, "sim_type_id": 2, "sort": 100},
+    {"id": 11, "name": "半折叠态-冲击", "code": "HALF_IMPACT", "fold_type_id": 2, "sim_type_id": 4, "sort": 110},
+    {"id": 12, "name": "半折叠态-热分析", "code": "HALF_THERMAL", "fold_type_id": 2, "sim_type_id": 5, "sort": 120}
   ]
 }
 

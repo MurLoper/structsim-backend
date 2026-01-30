@@ -586,3 +586,61 @@ def delete_department(id: int):
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
+
+# ============ 工况配置 API ============
+@config_bp.route('/working-conditions', methods=['GET'])
+def list_working_conditions():
+    """获取所有工况配置"""
+    data = config_service.get_working_conditions()
+    return success(data)
+
+
+@config_bp.route('/working-conditions/by-fold-type/<int:fold_type_id>', methods=['GET'])
+def get_working_conditions_by_fold_type(fold_type_id: int):
+    """根据姿态ID获取工况配置"""
+    data = config_service.get_working_conditions_by_fold_type(fold_type_id)
+    return success(data)
+
+
+@config_bp.route('/fold-type-sim-type-rels', methods=['GET'])
+def list_fold_type_sim_type_rels():
+    """获取姿态-仿真类型关联列表"""
+    data = config_service.get_fold_type_sim_type_rels()
+    return success(data)
+
+
+@config_bp.route('/fold-type-sim-type-rels/by-fold-type/<int:fold_type_id>', methods=['GET'])
+def get_sim_types_by_fold_type(fold_type_id: int):
+    """根据姿态ID获取支持的仿真类型列表"""
+    data = config_service.get_sim_types_by_fold_type(fold_type_id)
+    return success(data)
+
+
+@config_bp.route('/fold-type-sim-type-rels/fold-type/<int:fold_type_id>/rels', methods=['GET'])
+def get_fold_type_sim_type_rels_detail(fold_type_id: int):
+    """获取指定姿态的仿真类型关联列表（带详情）"""
+    data = config_service.get_fold_type_sim_type_rels_by_fold_type(fold_type_id)
+    return success(data)
+
+
+@config_bp.route('/fold-type-sim-type-rels/fold-type/<int:fold_type_id>', methods=['POST'])
+def add_sim_type_to_fold_type(fold_type_id: int):
+    """添加姿态-仿真类型关联"""
+    data = request.get_json()
+    result = config_service.add_sim_type_to_fold_type(fold_type_id, data)
+    return success(result, "添加成功")
+
+
+@config_bp.route('/fold-type-sim-type-rels/fold-type/<int:fold_type_id>/default/<int:sim_type_id>', methods=['PUT'])
+def set_default_sim_type_for_fold_type(fold_type_id: int, sim_type_id: int):
+    """设置姿态的默认仿真类型"""
+    config_service.set_default_sim_type_for_fold_type(fold_type_id, sim_type_id)
+    return success(msg="设置成功")
+
+
+@config_bp.route('/fold-type-sim-type-rels/fold-type/<int:fold_type_id>/sim-type/<int:sim_type_id>', methods=['DELETE'])
+def remove_sim_type_from_fold_type(fold_type_id: int, sim_type_id: int):
+    """移除姿态-仿真类型关联"""
+    config_service.remove_sim_type_from_fold_type(fold_type_id, sim_type_id)
+    return success(msg="移除成功")
+

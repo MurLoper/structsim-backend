@@ -123,3 +123,45 @@ class CondOutGroupOutputRel(db.Model, ToDictMixin):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
 
+class WorkingCondition(db.Model, ToDictMixin):
+    """工况配置表 - 姿态+仿真类型的组合"""
+    __tablename__ = 'working_conditions'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, comment='工况名称')
+    code = db.Column(db.String(50), unique=True, comment='工况编码')
+    fold_type_id = db.Column(db.Integer, db.ForeignKey('fold_types.id'),
+                              nullable=False, comment='姿态类型ID')
+    sim_type_id = db.Column(db.Integer, db.ForeignKey('sim_types.id'),
+                             nullable=False, comment='仿真类型ID')
+    # 默认配置关联
+    default_param_group_id = db.Column(db.Integer, db.ForeignKey('param_groups.id'),
+                                        comment='默认参数组合ID')
+    default_cond_out_group_id = db.Column(db.Integer, db.ForeignKey('condition_output_groups.id'),
+                                           comment='默认工况输出组合ID')
+    default_solver_id = db.Column(db.Integer, db.ForeignKey('solvers.id'),
+                                   comment='默认求解器ID')
+    # 扩展配置
+    extra_config = db.Column(db.JSON, comment='扩展配置(JSON)')
+    valid = db.Column(db.SmallInteger, default=1, comment='1=有效,0=禁用')
+    sort = db.Column(db.Integer, default=100, comment='排序')
+    remark = db.Column(db.Text, comment='备注')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
+                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+
+
+class FoldTypeSimTypeRel(db.Model, ToDictMixin):
+    """姿态-仿真类型关联表 - 定义哪些姿态支持哪些仿真类型"""
+    __tablename__ = 'fold_type_sim_type_rels'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    fold_type_id = db.Column(db.Integer, db.ForeignKey('fold_types.id'),
+                              nullable=False, comment='姿态类型ID')
+    sim_type_id = db.Column(db.Integer, db.ForeignKey('sim_types.id'),
+                             nullable=False, comment='仿真类型ID')
+    is_default = db.Column(db.SmallInteger, default=0, comment='是否为该姿态的默认仿真类型')
+    sort = db.Column(db.Integer, default=100, comment='排序')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+
+

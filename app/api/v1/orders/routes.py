@@ -24,17 +24,27 @@ def get_orders():
         # 从查询参数构建验证对象
         query_params = {
             'page': request.args.get('page', 1, type=int),
-            'pageSize': request.args.get('pageSize', 20, type=int),
+            'page_size': request.args.get('pageSize', 20, type=int),
             'status': request.args.get('status', type=int),
-            'projectId': request.args.get('projectId', type=int)
+            'project_id': request.args.get('projectId', type=int),
+            'sim_type_id': request.args.get('simTypeId', type=int),
+            'order_no': request.args.get('orderNo', type=str),
+            'created_by': request.args.get('createdBy', type=int),
+            'start_date': request.args.get('startDate', type=int),
+            'end_date': request.args.get('endDate', type=int),
         }
         validated = OrderQuery(**query_params)
-        
+
         result = orders_service.get_orders(
             page=validated.page,
-            page_size=validated.pageSize,
+            page_size=validated.page_size,
             status=validated.status,
-            project_id=validated.projectId
+            project_id=validated.project_id,
+            sim_type_id=validated.sim_type_id,
+            order_no=validated.order_no,
+            created_by=validated.created_by,
+            start_date=validated.start_date,
+            end_date=validated.end_date,
         )
         return success(result)
     except ValidationError as e:

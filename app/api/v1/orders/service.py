@@ -30,7 +30,12 @@ class OrdersService:
         page: int = 1,
         page_size: int = 20,
         status: int = None,
-        project_id: int = None
+        project_id: int = None,
+        sim_type_id: int = None,
+        order_no: str = None,
+        created_by: int = None,
+        start_date: int = None,
+        end_date: int = None
     ) -> Dict:
         """
         获取订单列表（分页）
@@ -39,13 +44,26 @@ class OrdersService:
             page_size: 每页数量
             status: 订单状态筛选
             project_id: 项目ID筛选
+            sim_type_id: 仿真类型ID筛选
+            order_no: 订单编号模糊搜索
+            created_by: 创建人ID筛选
+            start_date: 开始日期时间戳
+            end_date: 结束日期时间戳
         Returns:
             包含订单列表和分页信息的字典
         """
         orders, total = self.repository.get_orders_paginated(
-            page, page_size, status, project_id
+            page=page,
+            page_size=page_size,
+            status=status,
+            project_id=project_id,
+            sim_type_id=sim_type_id,
+            order_no=order_no,
+            created_by=created_by,
+            start_date=start_date,
+            end_date=end_date
         )
-        
+
         return {
             'items': [order.to_list_dict() for order in orders],
             'total': total,

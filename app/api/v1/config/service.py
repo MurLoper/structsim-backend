@@ -354,6 +354,107 @@ class ConfigService:
         items = self.department_repo.find_by_parent_id(parent_id)
         return [item.to_dict() for item in items]
 
+    # ============ 工况配置 ============
+    def get_working_conditions(self) -> List[Dict]:
+        """获取所有工况配置"""
+        from app.models.config_relations import WorkingCondition
+        items = WorkingCondition.query.filter_by(valid=1).order_by(WorkingCondition.sort).all()
+        return [item.to_dict() for item in items]
+
+    def get_working_conditions_by_fold_type(self, fold_type_id: int) -> List[Dict]:
+        """根据姿态ID获取工况配置"""
+        from app.models.config_relations import WorkingCondition
+        items = WorkingCondition.query.filter_by(
+            fold_type_id=fold_type_id, valid=1
+        ).order_by(WorkingCondition.sort).all()
+        return [item.to_dict() for item in items]
+
+    def get_fold_type_sim_type_rels(self) -> List[Dict]:
+        """获取姿态-仿真类型关联列表"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        items = FoldTypeSimTypeRel.query.order_by(
+            FoldTypeSimTypeRel.fold_type_id, FoldTypeSimTypeRel.sort
+        ).all()
+        return [item.to_dict() for item in items]
+
+    def get_sim_types_by_fold_type(self, fold_type_id: int) -> List[Dict]:
+        """根据姿态ID获取支持的仿真类型列表"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        from app.models.config import SimType
+        rels = FoldTypeSimTypeRel.query.filter_by(
+            fold_type_id=fold_type_id
+        ).order_by(FoldTypeSimTypeRel.sort).all()
+
+        result = []
+        for rel in rels:
+            sim_type = SimType.query.get(rel.sim_type_id)
+            if sim_type and sim_type.valid == 1:
+                data = sim_type.to_dict()
+                data['isDefault'] = rel.is_default == 1
+                result.append(data)
+        return result
+
+    def add_sim_type_to_fold_type(self, fold_type_id: int, data: Dict) -> Dict:
+        """添加姿态-仿真类型关联"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        from app.extensions import db
+
+        rel = FoldTypeSimTypeRel(
+            fold_type_id=fold_type_id,
+            sim_type_id=data['simTypeId'],
+            is_default=data.get('isDefault', 0),
+            sort=data.get('sort', 100)
+        )
+        db.session.add(rel)
+        db.session.commit()
+        return rel.to_dict()
+
+    def set_default_sim_type_for_fold_type(self, fold_type_id: int, sim_type_id: int) -> None:
+        """设置姿态的默认仿真类型"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        from app.extensions import db
+
+        # 先将该姿态的所有关联设为非默认
+        FoldTypeSimTypeRel.query.filter_by(fold_type_id=fold_type_id).update({'is_default': 0})
+        # 设置指定的为默认
+        rel = FoldTypeSimTypeRel.query.filter_by(
+            fold_type_id=fold_type_id, sim_type_id=sim_type_id
+        ).first()
+        if rel:
+            rel.is_default = 1
+        db.session.commit()
+
+    def remove_sim_type_from_fold_type(self, fold_type_id: int, sim_type_id: int) -> None:
+        """移除姿态-仿真类型关联"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        from app.extensions import db
+
+        rel = FoldTypeSimTypeRel.query.filter_by(
+            fold_type_id=fold_type_id, sim_type_id=sim_type_id
+        ).first()
+        if rel:
+            db.session.delete(rel)
+            db.session.commit()
+
+    def get_fold_type_sim_type_rels_by_fold_type(self, fold_type_id: int) -> List[Dict]:
+        """获取指定姿态的仿真类型关联列表（带仿真类型详情）"""
+        from app.models.config_relations import FoldTypeSimTypeRel
+        from app.models.config import SimType
+
+        rels = FoldTypeSimTypeRel.query.filter_by(
+            fold_type_id=fold_type_id
+        ).order_by(FoldTypeSimTypeRel.sort).all()
+
+        result = []
+        for rel in rels:
+            sim_type = SimType.query.get(rel.sim_type_id)
+            data = rel.to_dict()
+            if sim_type:
+                data['simTypeName'] = sim_type.name
+                data['simTypeCode'] = sim_type.code
+            result.append(data)
+        return result
+
 
 # 单例实例
 config_service = ConfigService()
