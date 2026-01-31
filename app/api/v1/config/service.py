@@ -169,8 +169,35 @@ class ConfigService:
     def get_param_defs(self) -> List[Dict]:
         return self._list(self.param_def_repo)
 
+    def get_param_defs_paginated(self, page: int = 1, page_size: int = 20, keyword: str = None) -> Dict:
+        """分页查询参数定义"""
+        result = self.param_def_repo.find_paginated(page, page_size, keyword)
+        return {
+            'items': serialize_models(result['items']),
+            'total': result['total'],
+            'page': result['page'],
+            'pageSize': result['pageSize']
+        }
+
     def create_param_def(self, data: Dict) -> Dict:
         return self._create(self.param_def_repo, data)
+
+    def batch_create_param_defs(self, data_list: List[Dict]) -> Dict:
+        """批量创建参数定义"""
+        created = []
+        skipped = []
+        for data in data_list:
+            key = data.get('key', '').strip()
+            if not key:
+                skipped.append({'key': key, 'reason': 'key为空'})
+                continue
+            existing = self.param_def_repo.find_by_key(key)
+            if existing:
+                skipped.append({'key': key, 'reason': '已存在'})
+                continue
+            instance = self.param_def_repo.create(data)
+            created.append(serialize_model(instance))
+        return {'created': created, 'skipped': skipped}
 
     def update_param_def(self, id: int, data: Dict) -> Dict:
         return self._update(self.param_def_repo, id, data, "参数定义")
@@ -208,8 +235,35 @@ class ConfigService:
     def get_output_defs(self) -> List[Dict]:
         return self._list(self.output_def_repo)
 
+    def get_output_defs_paginated(self, page: int = 1, page_size: int = 20, keyword: str = None) -> Dict:
+        """分页查询输出定义"""
+        result = self.output_def_repo.find_paginated(page, page_size, keyword)
+        return {
+            'items': serialize_models(result['items']),
+            'total': result['total'],
+            'page': result['page'],
+            'pageSize': result['pageSize']
+        }
+
     def create_output_def(self, data: Dict) -> Dict:
         return self._create(self.output_def_repo, data)
+
+    def batch_create_output_defs(self, data_list: List[Dict]) -> Dict:
+        """批量创建输出定义"""
+        created = []
+        skipped = []
+        for data in data_list:
+            code = data.get('code', '').strip()
+            if not code:
+                skipped.append({'code': code, 'reason': 'code为空'})
+                continue
+            existing = self.output_def_repo.find_by_code(code)
+            if existing:
+                skipped.append({'code': code, 'reason': '已存在'})
+                continue
+            instance = self.output_def_repo.create(data)
+            created.append(serialize_model(instance))
+        return {'created': created, 'skipped': skipped}
 
     def update_output_def(self, id: int, data: Dict) -> Dict:
         return self._update(self.output_def_repo, id, data, "输出定义")
@@ -230,8 +284,9 @@ class ConfigService:
     def delete_fold_type(self, id: int) -> bool:
         return self._delete(self.fold_type_repo, id, "姿态类型")
 
-    # ============ 模板集查询 ============
+    # ============ 旧接口（已废弃，使用 param-groups 替代） ============
     def get_param_tpl_sets(self, sim_type_id: Optional[int] = None) -> List[Dict]:
+        """@deprecated 使用 param_groups API 替代"""
         if sim_type_id:
             items = self.param_tpl_set_repo.find_by_sim_type(sim_type_id)
         else:
@@ -401,8 +456,8 @@ class ConfigService:
 
         rel = FoldTypeSimTypeRel(
             fold_type_id=fold_type_id,
-            sim_type_id=data['simTypeId'],
-            is_default=data.get('isDefault', 0),
+            sim_type_id=data['sim_type_id'],
+            is_default=data.get('is_default', 0),
             sort=data.get('sort', 100)
         )
         db.session.add(rel)

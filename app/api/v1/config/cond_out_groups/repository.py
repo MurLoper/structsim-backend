@@ -31,7 +31,17 @@ class CondOutGroupRepository:
     def find_by_id(group_id: int) -> Optional[ConditionOutputGroup]:
         """根据ID查询工况输出组合"""
         return db.session.get(ConditionOutputGroup, group_id)
-    
+
+    @staticmethod
+    def find_by_name(name: str, exclude_id: Optional[int] = None) -> Optional[ConditionOutputGroup]:
+        """根据名称查询输出组合（用于同名校验）"""
+        query = select(ConditionOutputGroup).where(
+            and_(ConditionOutputGroup.name == name, ConditionOutputGroup.valid == 1)
+        )
+        if exclude_id:
+            query = query.where(ConditionOutputGroup.id != exclude_id)
+        return db.session.execute(query).scalar_one_or_none()
+
     @staticmethod
     def create(data: dict) -> ConditionOutputGroup:
         """创建工况输出组合"""
@@ -138,4 +148,27 @@ class CondOutGroupOutputRelRepository:
     def find_output_def_by_id(output_def_id: int) -> Optional[OutputDef]:
         """查询输出定义"""
         return db.session.get(OutputDef, output_def_id)
+
+    @staticmethod
+    def find_output_def_by_code(code: str) -> Optional[OutputDef]:
+        """根据code查询输出定义"""
+        query = select(OutputDef).where(OutputDef.code == code)
+        return db.session.execute(query).scalar_one_or_none()
+
+    @staticmethod
+    def search_output_defs(keyword: str) -> List[OutputDef]:
+        """模糊搜索输出定义（按code或name）"""
+        query = select(OutputDef).where(
+            (OutputDef.code.ilike(f'%{keyword}%')) |
+            (OutputDef.name.ilike(f'%{keyword}%'))
+        ).order_by(OutputDef.id.asc()).limit(20)
+        return db.session.execute(query).scalars().all()
+
+    @staticmethod
+    def create_output_def(data: dict) -> OutputDef:
+        """创建输出定义"""
+        output_def = OutputDef(**data)
+        db.session.add(output_def)
+        db.session.flush()
+        return output_def
 

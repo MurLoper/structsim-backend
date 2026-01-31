@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from .schemas import RoundsQueryParams, UpdateStatusRequest
 from .service import results_service
 
@@ -69,7 +70,7 @@ def get_rounds(sim_type_result_id: int):
 def update_sim_type_result_status(result_id: int):
     """更新仿真类型结果状态"""
     try:
-        data = request.get_json()
+        data = get_snake_json() or {}
         validated = UpdateStatusRequest(**data)
 
         result = results_service.update_sim_type_result_status(
@@ -89,7 +90,7 @@ def update_sim_type_result_status(result_id: int):
 def update_round_status(round_id: int):
     """更新轮次状态"""
     try:
-        data = request.get_json()
+        data = get_snake_json() or {}
         validated = UpdateStatusRequest(**data)
 
         result = results_service.update_round_status(

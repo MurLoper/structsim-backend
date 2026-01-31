@@ -72,11 +72,19 @@ class CondOutGroupService:
     
     def create_group(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """创建工况输出组合"""
+        # 同名校验
+        name = data.get('name', '').strip()
+        if not name:
+            raise BusinessError("组合名称不能为空")
+        existing = self.repo.find_by_name(name)
+        if existing:
+            raise BusinessError(f"输出组合名称「{name}」已存在")
+
         now = int(time.time())
         data['created_at'] = now
         data['updated_at'] = now
         data['valid'] = 1
-        
+
         try:
             group = self.repo.create(data)
             db.session.commit()
@@ -90,9 +98,16 @@ class CondOutGroupService:
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"工况输出组合 {group_id} 不存在")
-        
+
+        # 同名校验（排除自身）
+        name = data.get('name', '').strip()
+        if name:
+            existing = self.repo.find_by_name(name, exclude_id=group_id)
+            if existing:
+                raise BusinessError(f"输出组合名称「{name}」已存在")
+
         data['updated_at'] = int(time.time())
-        
+
         try:
             updated_group = self.repo.update(group, data)
             db.session.commit()
@@ -150,7 +165,7 @@ class CondOutGroupService:
         if not group:
             raise NotFoundError(f"工况输出组合 {group_id} 不存在")
 
-        condition_def_id = data['conditionDefId']
+        condition_def_id = data['condition_def_id']
         cond_def = self.cond_rel_repo.find_condition_def_by_id(condition_def_id)
         if not cond_def:
             raise NotFoundError(f"工况定义 {condition_def_id} 不存在")
@@ -163,7 +178,7 @@ class CondOutGroupService:
         rel_data = {
             'cond_out_group_id': group_id,
             'condition_def_id': condition_def_id,
-            'config_data': data.get('configData'),
+            'config_data': data.get('config_data'),
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -224,7 +239,7 @@ class CondOutGroupService:
         if not group:
             raise NotFoundError(f"工况输出组合 {group_id} 不存在")
 
-        output_def_id = data['outputDefId']
+        output_def_id = data['output_def_id']
         output_def = self.output_rel_repo.find_output_def_by_id(output_def_id)
         if not output_def:
             raise NotFoundError(f"输出定义 {output_def_id} 不存在")
@@ -271,4 +286,114 @@ class CondOutGroupService:
         except Exception as e:
             db.session.rollback()
             raise BusinessError(f"从组合移除输出失败: {str(e)}")
+
+    def clear_group_outputs(self, group_id: int) -> Dict[str, Any]:
+        """清空组合的所有输出"""
+        group = self.repo.find_by_id(group_id)
+        if not group:
+            raise NotFoundError(f"工况输出组合 {group_id} 不存在")
+
+        try:
+            output_rels = self.output_rel_repo.find_by_group_id(group_id)
+            count = len(output_rels)
+            for rel in output_rels:
+                self.output_rel_repo.delete(rel)
+            db.session.commit()
+            return {'clearedCount': count}
+        except Exception as e:
+            db.session.rollback()
+            raise BusinessError(f"清空输出失败: {str(e)}")
+
+    def search_outputs(self, keyword: str, group_id: Optional[int] = None) -> Dict[str, Any]:
+        """搜索输出定义"""
+        output_defs = self.output_rel_repo.search_output_defs(keyword)
+
+        existing_ids = set()
+        if group_id:
+            rels = self.output_rel_repo.find_by_group_id(group_id)
+            existing_ids = {rel.output_def_id for rel in rels}
+
+        results = []
+        for o in output_defs:
+            results.append({
+                'outputDefId': o.id,
+                'outputCode': o.code,
+                'outputName': o.name,
+                'unit': o.unit,
+                'valType': o.val_type,
+                'inGroup': o.id in existing_ids
+            })
+
+        return {
+            'outputs': results,
+            'total': len(results),
+            'keyword': keyword
+        }
+
+    def create_and_add_output(self, group_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+        """快速创建输出定义并添加到组合"""
+        group = self.repo.find_by_id(group_id)
+        if not group:
+            raise NotFoundError(f"工况输出组合 {group_id} 不存在")
+
+        code = data.get('code', '').strip()
+        if not code:
+            raise BusinessError("输出code不能为空")
+
+        try:
+            output_def = self.output_rel_repo.find_output_def_by_code(code)
+            created = False
+
+            if not output_def:
+                now = int(time.time())
+                new_output = {
+                    'code': code,
+                    'name': data.get('name') or code,
+                    'unit': data.get('unit'),
+                    'val_type': data.get('val_type', 1),
+                    'valid': 1,
+                    'sort': data.get('sort', 100),
+                    'created_at': now,
+                    'updated_at': now
+                }
+                output_def = self.output_rel_repo.create_output_def(new_output)
+                created = True
+
+            existing = self.output_rel_repo.find_by_group_and_output(group_id, output_def.id)
+            if existing:
+                db.session.commit()
+                return {
+                    'created': created,
+                    'added': False,
+                    'reason': '输出已在组合中',
+                    'output': {
+                        'outputDefId': output_def.id,
+                        'outputCode': output_def.code,
+                        'outputName': output_def.name
+                    }
+                }
+
+            rel_data = {
+                'cond_out_group_id': group_id,
+                'output_def_id': output_def.id,
+                'sort': data.get('rel_sort', 100),
+                'created_at': int(time.time())
+            }
+            self.output_rel_repo.create(rel_data)
+            db.session.commit()
+
+            return {
+                'created': created,
+                'added': True,
+                'output': {
+                    'outputDefId': output_def.id,
+                    'outputCode': output_def.code,
+                    'outputName': output_def.name,
+                    'unit': output_def.unit,
+                    'valType': output_def.val_type
+                }
+            }
+        except Exception as e:
+            db.session.rollback()
+            raise BusinessError(f"创建并添加输出失败: {str(e)}")
 

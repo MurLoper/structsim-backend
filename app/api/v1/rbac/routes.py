@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from app.common import success, error
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from app.constants import ErrorCode
 from .schemas import (
     UserCreate, UserUpdate,
@@ -30,7 +31,7 @@ def list_users():
 @jwt_required()
 def create_user():
     try:
-        validated = UserCreate(**request.get_json())
+        validated = UserCreate(**(get_snake_json() or {}))
         result = rbac_service.create_user(validated.model_dump())
         return success(result, "创建成功")
     except ValidationError as e:
@@ -43,7 +44,7 @@ def create_user():
 @jwt_required()
 def update_user(id: int):
     try:
-        validated = UserUpdate(**request.get_json())
+        validated = UserUpdate(**(get_snake_json() or {}))
         result = rbac_service.update_user(id, validated.model_dump(exclude_unset=True))
         return success(result, "更新成功")
     except ValidationError as e:
@@ -76,7 +77,7 @@ def list_roles():
 @jwt_required()
 def create_role():
     try:
-        validated = RoleCreate(**request.get_json())
+        validated = RoleCreate(**(get_snake_json() or {}))
         result = rbac_service.create_role(validated.model_dump())
         return success(result, "创建成功")
     except ValidationError as e:
@@ -87,7 +88,7 @@ def create_role():
 @jwt_required()
 def update_role(id: int):
     try:
-        validated = RoleUpdate(**request.get_json())
+        validated = RoleUpdate(**(get_snake_json() or {}))
         result = rbac_service.update_role(id, validated.model_dump(exclude_unset=True))
         return success(result, "更新成功")
     except ValidationError as e:
@@ -118,7 +119,7 @@ def list_permissions():
 @jwt_required()
 def create_permission():
     try:
-        validated = PermissionCreate(**request.get_json())
+        validated = PermissionCreate(**(get_snake_json() or {}))
         result = rbac_service.create_permission(validated.model_dump())
         return success(result, "创建成功")
     except ValidationError as e:
@@ -129,7 +130,7 @@ def create_permission():
 @jwt_required()
 def update_permission(id: int):
     try:
-        validated = PermissionUpdate(**request.get_json())
+        validated = PermissionUpdate(**(get_snake_json() or {}))
         result = rbac_service.update_permission(id, validated.model_dump(exclude_unset=True))
         return success(result, "更新成功")
     except ValidationError as e:

@@ -387,32 +387,32 @@ def seed_menus():
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_VIEW', 'sort': 20},
 
         {'id': 3, 'parent_id': 0, 'name': 'New Simulation', 'title_i18n_key': 'nav.new_simulation',
-         'icon': 'Plus', 'path': '/submission', 'component': 'pages/submission/SubmissionPage',
+         'icon': 'Plus', 'path': '/create', 'component': 'pages/submission/SubmissionPage',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_CREATE', 'sort': 30},
 
         {'id': 4, 'parent_id': 0, 'name': 'Configuration', 'title_i18n_key': 'nav.configuration',
-         'icon': 'Settings', 'path': '/configuration', 'component': None,
+         'icon': 'Settings', 'path': '/config', 'component': None,
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 40},
 
-        # 配置子菜单
-        {'id': 41, 'parent_id': 4, 'name': 'Projects', 'title_i18n_key': 'nav.config.projects',
-         'icon': 'Folder', 'path': '/configuration/projects', 'component': 'pages/configuration/ProjectsPage',
+        # 配置子菜单 - 新结构
+        {'id': 41, 'parent_id': 4, 'name': 'Basic Config', 'title_i18n_key': 'nav.config.basic',
+         'icon': 'Cube', 'path': '/config/basic', 'component': 'pages/configuration/BasicConfig',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 41},
 
-        {'id': 42, 'parent_id': 4, 'name': 'Sim Types', 'title_i18n_key': 'nav.config.sim_types',
-         'icon': 'Cpu', 'path': '/configuration/sim-types', 'component': 'pages/configuration/SimTypesPage',
+        {'id': 42, 'parent_id': 4, 'name': 'Groups Config', 'title_i18n_key': 'nav.config.groups',
+         'icon': 'Folder', 'path': '/config/groups', 'component': 'pages/configuration/GroupsConfig',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 42},
 
-        {'id': 43, 'parent_id': 4, 'name': 'Parameters', 'title_i18n_key': 'nav.config.parameters',
-         'icon': 'Sliders', 'path': '/configuration/parameters', 'component': 'pages/configuration/ParametersPage',
+        {'id': 43, 'parent_id': 4, 'name': 'Relations Config', 'title_i18n_key': 'nav.config.relations',
+         'icon': 'Link', 'path': '/config/relations', 'component': 'pages/configuration/RelationsConfig',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 43},
 
-        {'id': 44, 'parent_id': 4, 'name': 'Outputs', 'title_i18n_key': 'nav.config.outputs',
-         'icon': 'BarChart2', 'path': '/configuration/outputs', 'component': 'pages/configuration/OutputsPage',
+        {'id': 44, 'parent_id': 4, 'name': 'System Config', 'title_i18n_key': 'nav.config.system',
+         'icon': 'Server', 'path': '/config/system', 'component': 'pages/configuration/SystemConfig',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 44},
 
-        {'id': 45, 'parent_id': 4, 'name': 'Solvers', 'title_i18n_key': 'nav.config.solvers',
-         'icon': 'Server', 'path': '/configuration/solvers', 'component': 'pages/configuration/SolversPage',
+        {'id': 45, 'parent_id': 4, 'name': 'Permissions', 'title_i18n_key': 'nav.config.permissions',
+         'icon': 'Shield', 'path': '/config/permissions', 'component': 'pages/configuration/PermissionsConfig',
          'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 45},
 
         # 隐藏页面（不在菜单显示但需要路由）

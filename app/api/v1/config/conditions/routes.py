@@ -6,6 +6,7 @@ from flask import Blueprint, request
 from pydantic import ValidationError
 from app.common.response import success, error
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from app.constants.error_codes import ErrorCode
 from .schemas import ConditionConfigCreateRequest, ConditionConfigUpdateRequest
 from .service import ConditionConfigService
@@ -66,7 +67,7 @@ def get_conditions_by_fold_type(fold_type_id: int):
 def create_condition():
     """创建工况配置"""
     try:
-        req = ConditionConfigCreateRequest(**request.json)
+        req = ConditionConfigCreateRequest(**(get_snake_json() or {}))
         condition = service.create(req.model_dump())
         return success(data=condition, msg="创建成功")
     except ValidationError as e:
@@ -81,7 +82,7 @@ def create_condition():
 def update_condition(condition_id: int):
     """更新工况配置"""
     try:
-        req = ConditionConfigUpdateRequest(**request.json)
+        req = ConditionConfigUpdateRequest(**(get_snake_json() or {}))
         data = {k: v for k, v in req.model_dump().items() if v is not None}
         condition = service.update(condition_id, data)
         return success(data=condition, msg="更新成功")

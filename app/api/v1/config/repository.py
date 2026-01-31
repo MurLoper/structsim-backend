@@ -113,6 +113,41 @@ class SimTypeRepository(BaseRepository[SimType]):
 class ParamDefRepository(BaseRepository[ParamDef]):
     model_class = ParamDef
 
+    def find_paginated(self, page: int = 1, page_size: int = 20, keyword: str = None):
+        """分页查询参数定义"""
+        query = self.session.query(self.model_class).filter_by(valid=1)
+
+        if keyword:
+            keyword_filter = f'%{keyword}%'
+            query = query.filter(
+                (self.model_class.name.ilike(keyword_filter)) |
+                (self.model_class.key.ilike(keyword_filter))
+            )
+
+        total = query.count()
+        items = query.order_by(self.model_class.sort.asc(), self.model_class.id.asc()) \
+            .offset((page - 1) * page_size).limit(page_size).all()
+
+        return {'items': items, 'total': total, 'page': page, 'pageSize': page_size}
+
+    def find_by_key(self, key: str) -> Optional[ParamDef]:
+        """根据key查找参数定义"""
+        return self.session.query(self.model_class).filter_by(key=key, valid=1).first()
+
+    def batch_create(self, data_list: List[dict]) -> List[ParamDef]:
+        """批量创建参数定义"""
+        now = int(time.time())
+        instances = []
+        for data in data_list:
+            data.setdefault('valid', 1)
+            data.setdefault('created_at', now)
+            data.setdefault('updated_at', now)
+            instance = self.model_class(**data)
+            self.session.add(instance)
+            instances.append(instance)
+        self.session.commit()
+        return instances
+
 
 class SolverRepository(BaseRepository[Solver]):
     model_class = Solver
@@ -124,6 +159,41 @@ class ConditionDefRepository(BaseRepository[ConditionDef]):
 
 class OutputDefRepository(BaseRepository[OutputDef]):
     model_class = OutputDef
+
+    def find_paginated(self, page: int = 1, page_size: int = 20, keyword: str = None):
+        """分页查询输出定义"""
+        query = self.session.query(self.model_class).filter_by(valid=1)
+
+        if keyword:
+            keyword_filter = f'%{keyword}%'
+            query = query.filter(
+                (self.model_class.name.ilike(keyword_filter)) |
+                (self.model_class.code.ilike(keyword_filter))
+            )
+
+        total = query.count()
+        items = query.order_by(self.model_class.sort.asc(), self.model_class.id.asc()) \
+            .offset((page - 1) * page_size).limit(page_size).all()
+
+        return {'items': items, 'total': total, 'page': page, 'pageSize': page_size}
+
+    def find_by_code(self, code: str) -> Optional[OutputDef]:
+        """根据code查找输出定义"""
+        return self.session.query(self.model_class).filter_by(code=code, valid=1).first()
+
+    def batch_create(self, data_list: List[dict]) -> List[OutputDef]:
+        """批量创建输出定义"""
+        now = int(time.time())
+        instances = []
+        for data in data_list:
+            data.setdefault('valid', 1)
+            data.setdefault('created_at', now)
+            data.setdefault('updated_at', now)
+            instance = self.model_class(**data)
+            self.session.add(instance)
+            instances.append(instance)
+        self.session.commit()
+        return instances
 
 
 class FoldTypeRepository(BaseRepository[FoldType]):

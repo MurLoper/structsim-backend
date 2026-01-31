@@ -25,7 +25,17 @@ class ParamGroupRepository:
     def find_by_id(group_id: int) -> Optional[ParamGroup]:
         """根据ID查询参数组合"""
         return db.session.get(ParamGroup, group_id)
-    
+
+    @staticmethod
+    def find_by_name(name: str, exclude_id: Optional[int] = None) -> Optional[ParamGroup]:
+        """根据名称查询参数组合（用于同名校验）"""
+        query = select(ParamGroup).where(
+            and_(ParamGroup.name == name, ParamGroup.valid == 1)
+        )
+        if exclude_id:
+            query = query.where(ParamGroup.id != exclude_id)
+        return db.session.execute(query).scalar_one_or_none()
+
     @staticmethod
     def create(data: dict) -> ParamGroup:
         """创建参数组合"""
@@ -90,4 +100,33 @@ class ParamGroupParamRelRepository:
     def find_param_def_by_id(param_def_id: int) -> Optional[ParamDef]:
         """查询参数定义"""
         return db.session.get(ParamDef, param_def_id)
+
+    @staticmethod
+    def find_param_def_by_key(key: str) -> Optional[ParamDef]:
+        """根据key查询参数定义"""
+        query = select(ParamDef).where(ParamDef.key == key)
+        return db.session.execute(query).scalar_one_or_none()
+
+    @staticmethod
+    def find_param_def_by_name(name: str) -> Optional[ParamDef]:
+        """根据名称查询参数定义"""
+        query = select(ParamDef).where(ParamDef.name == name)
+        return db.session.execute(query).scalar_one_or_none()
+
+    @staticmethod
+    def search_param_defs(keyword: str) -> List[ParamDef]:
+        """模糊搜索参数定义（按key或name）"""
+        query = select(ParamDef).where(
+            (ParamDef.key.ilike(f'%{keyword}%')) |
+            (ParamDef.name.ilike(f'%{keyword}%'))
+        ).order_by(ParamDef.id.asc()).limit(20)
+        return db.session.execute(query).scalars().all()
+
+    @staticmethod
+    def create_param_def(data: dict) -> ParamDef:
+        """创建参数定义"""
+        param_def = ParamDef(**data)
+        db.session.add(param_def)
+        db.session.flush()
+        return param_def
 

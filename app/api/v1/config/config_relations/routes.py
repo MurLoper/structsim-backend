@@ -6,6 +6,7 @@ from flask import Blueprint, request
 from pydantic import ValidationError
 from app.common.response import success, error
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from app.constants.error_codes import ErrorCode
 from .schemas import (
     ProjectSimTypeRelCreateRequest,
@@ -38,7 +39,7 @@ def get_project_sim_types(project_id: int):
 def add_sim_type_to_project(project_id: int):
     """添加仿真类型到项目"""
     try:
-        req = ProjectSimTypeRelCreateRequest(**request.json)
+        req = ProjectSimTypeRelCreateRequest(**(get_snake_json() or {}))
         rel = service.add_sim_type_to_project(project_id, req.model_dump())
         return success(data=rel, msg="添加成功")
     except ValidationError as e:
@@ -97,7 +98,7 @@ def get_sim_type_param_groups(sim_type_id: int):
 def add_param_group_to_sim_type(sim_type_id: int):
     """添加参数组合到仿真类型"""
     try:
-        req = SimTypeParamGroupRelCreateRequest(**request.json)
+        req = SimTypeParamGroupRelCreateRequest(**(get_snake_json() or {}))
         rel = service.add_param_group_to_sim_type(sim_type_id, req.model_dump())
         return success(data=rel, msg="添加成功")
     except ValidationError as e:
@@ -140,7 +141,7 @@ def remove_param_group_from_sim_type(sim_type_id: int, param_group_id: int):
 
 # ============ 仿真类型-工况输出组合关联 ============
 
-@config_relations_bp.route('/sim-types/<int:sim_type_id>/cond-out-groups', methods=['GET'])
+@config_relations_bp.route('/sim-types/<int:sim_type_id>/output-groups', methods=['GET'])
 def get_sim_type_cond_out_groups(sim_type_id: int):
     """获取仿真类型关联的工况输出组合"""
     try:
@@ -152,11 +153,11 @@ def get_sim_type_cond_out_groups(sim_type_id: int):
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
 
 
-@config_relations_bp.route('/sim-types/<int:sim_type_id>/cond-out-groups', methods=['POST'])
+@config_relations_bp.route('/sim-types/<int:sim_type_id>/output-groups', methods=['POST'])
 def add_cond_out_group_to_sim_type(sim_type_id: int):
     """添加工况输出组合到仿真类型"""
     try:
-        req = SimTypeCondOutGroupRelCreateRequest(**request.json)
+        req = SimTypeCondOutGroupRelCreateRequest(**(get_snake_json() or {}))
         rel = service.add_cond_out_group_to_sim_type(sim_type_id, req.model_dump())
         return success(data=rel, msg="添加成功")
     except ValidationError as e:
@@ -169,7 +170,7 @@ def add_cond_out_group_to_sim_type(sim_type_id: int):
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
 
 
-@config_relations_bp.route('/sim-types/<int:sim_type_id>/cond-out-groups/<int:cond_out_group_id>/default', methods=['PUT'])
+@config_relations_bp.route('/sim-types/<int:sim_type_id>/output-groups/<int:cond_out_group_id>/default', methods=['PUT'])
 def set_default_cond_out_group(sim_type_id: int, cond_out_group_id: int):
     """设置仿真类型的默认工况输出组合"""
     try:
@@ -183,7 +184,7 @@ def set_default_cond_out_group(sim_type_id: int, cond_out_group_id: int):
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
 
 
-@config_relations_bp.route('/sim-types/<int:sim_type_id>/cond-out-groups/<int:cond_out_group_id>', methods=['DELETE'])
+@config_relations_bp.route('/sim-types/<int:sim_type_id>/output-groups/<int:cond_out_group_id>', methods=['DELETE'])
 def remove_cond_out_group_from_sim_type(sim_type_id: int, cond_out_group_id: int):
     """从仿真类型移除工况输出组合"""
     try:
@@ -215,7 +216,7 @@ def get_sim_type_solvers(sim_type_id: int):
 def add_solver_to_sim_type(sim_type_id: int):
     """添加求解器到仿真类型"""
     try:
-        req = SimTypeSolverRelCreateRequest(**request.json)
+        req = SimTypeSolverRelCreateRequest(**(get_snake_json() or {}))
         rel = service.add_solver_to_sim_type(sim_type_id, req.model_dump())
         return success(data=rel, msg="添加成功")
     except ValidationError as e:

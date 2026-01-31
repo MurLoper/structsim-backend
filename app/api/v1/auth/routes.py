@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from .schemas import LoginRequest
 from .service import auth_service
 
@@ -20,7 +21,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def login():
     """用户登录"""
     try:
-        validated = LoginRequest(**request.get_json())
+        validated = LoginRequest(**(get_snake_json() or {}))
         result = auth_service.login(validated.email, validated.password)
         return success(result, "登录成功")
     except ValidationError as e:

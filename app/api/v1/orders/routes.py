@@ -10,8 +10,11 @@ from pydantic import ValidationError
 from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
+from app.common.serializers import get_snake_json
 from .schemas import OrderCreate, OrderUpdate, OrderQuery
 from .service import orders_service
+from .excel_parser_service import excel_parser_service
+from .param_merge_service import param_merge_service
 
 orders_bp = Blueprint('orders', __name__, url_prefix='/orders')
 
@@ -67,7 +70,7 @@ def get_order(order_id: int):
 def create_order():
     """创建订单"""
     try:
-        validated = OrderCreate(**request.get_json())
+        validated = OrderCreate(**(get_snake_json() or {}))
         identity = get_jwt_identity()
         if isinstance(identity, dict):
             user_id = identity.get('id')
@@ -86,7 +89,7 @@ def create_order():
 def update_order(order_id: int):
     """更新订单"""
     try:
-        validated = OrderUpdate(**request.get_json())
+        validated = OrderUpdate(**(get_snake_json() or {}))
         result = orders_service.update_order(
             order_id,
             validated.model_dump(exclude_none=True)
@@ -121,4 +124,92 @@ def get_order_result(order_id: int):
         return success(result)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@orders_bp.route('/parse-param-excel', methods=['POST'])
+@jwt_required()
+def parse_param_excel():
+    """
+    解析参数Excel文件
+    返回解析后的参数列表，供前端预览和编辑
+    """
+    try:
+        if 'file' not in request.files:
+            return error(ErrorCode.VALIDATION_ERROR, "请上传Excel文件", http_status=400)
+
+        file = request.files['file']
+        if not file.filename:
+            return error(ErrorCode.VALIDATION_ERROR, "文件名为空", http_status=400)
+
+        # 检查文件扩展名
+        allowed_ext = {'.xlsx', '.xls'}
+        ext = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+        if ext not in allowed_ext:
+            return error(ErrorCode.VALIDATION_ERROR, "仅支持xlsx/xls格式", http_status=400)
+
+        sheet_name = request.form.get('sheetName')
+        result = excel_parser_service.parse_param_excel(file, sheet_name)
+
+        return success(result)
+    except Exception as e:
+        return error(ErrorCode.INTERNAL_ERROR, str(e), http_status=500)
+
+
+@orders_bp.route('/merge-params', methods=['POST'])
+@jwt_required()
+def merge_params():
+    """
+    合并基础参数和用户自定义参数
+
+    请求体:
+    {
+        "baseParams": [...],    // 基础配置参数
+        "customParams": [...]   // 用户自定义参数（来自Excel或手动输入）
+    }
+
+    返回:
+    {
+        "mergedParams": [...],  // 合并后的参数列表
+        "report": {...}         // 合并报告
+    }
+    """
+    try:
+        data = get_snake_json() or {}
+        base_params = data.get('base_params', [])
+        custom_params = data.get('custom_params', [])
+
+        # 获取合并报告
+        report = param_merge_service.get_merge_report(base_params, custom_params)
+        # 执行合并
+        merged_params = param_merge_service.merge_params(base_params, custom_params)
+
+        return success({
+            'mergedParams': merged_params,
+            'report': report
+        })
+    except Exception as e:
+        return error(ErrorCode.INTERNAL_ERROR, str(e), http_status=500)
+
+
+@orders_bp.route('/validate-params', methods=['POST'])
+@jwt_required()
+def validate_params():
+    """
+    验证参数列表
+
+    请求体:
+    {
+        "params": [...],        // 参数列表
+        "paramGroupId": 1       // 参数组ID（可选，用于验证必填项）
+    }
+    """
+    try:
+        data = get_snake_json() or {}
+        params = data.get('params', [])
+        param_group_id = data.get('param_group_id')
+
+        result = param_merge_service.validate_params(params, param_group_id)
+        return success(result)
+    except Exception as e:
+        return error(ErrorCode.INTERNAL_ERROR, str(e), http_status=500)
 
