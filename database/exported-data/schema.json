@@ -1,0 +1,3155 @@
+{
+  "automation_modules": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "version",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "timeout_sec",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "retry_max",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "retry_backoff_sec",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "care_devices": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "cond_out_group_condition_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "cond_out_group_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "condition_def_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "config_data",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "cond_out_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "condition_output_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "condition_def_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "condition_defs",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "cond_out_group_output_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "cond_out_group_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "output_def_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "cond_out_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "condition_output_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "output_def_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "output_defs",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "cond_out_sets": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "cond_items",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "output_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "condition_configs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fold_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "param_group_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "output_group_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_param_group_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_output_group_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_solver_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "fold_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "fold_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_fold_type",
+        "column_names": [
+          "fold_type_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "idx_sim_type",
+        "column_names": [
+          "sim_type_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      }
+    ]
+  },
+  "condition_defs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "unit",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "condition_schema",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "condition_output_groups": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "departments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "parent_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "fold_type_sim_type_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "fold_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "fold_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "fold_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "fold_types": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(30)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "angle",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "menus": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "parent_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title_i18n_key",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "icon",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "path",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "component",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "menu_type",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "hidden",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "permission_code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "model_levels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "order_results": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "order_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "progress",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cur_node_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sim_type_result_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "order_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "orders",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "orders": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "order_no",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "origin_file_type",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "origin_file_name",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "origin_file_path",
+        "type": "VARCHAR(500)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "origin_file_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fold_type_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "participant_uids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sim_type_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "opt_param",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "workflow_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "progress",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cur_node_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "submit_check",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "client_meta",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_by",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "project_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "projects",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "fold_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "fold_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "workflow_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "workflows",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "created_by"
+        ],
+        "referred_schema": null,
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "output_defs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "val_type",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "unit",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "param_defs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "key",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "val_type",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "unit",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "min_val",
+        "type": "FLOAT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "max_val",
+        "type": "FLOAT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "precision",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_val",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "enum_options",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "required",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "param_group_param_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "param_group_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "param_def_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "default_value",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "param_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "param_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "param_def_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "param_defs",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "param_groups": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "param_tpl_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "tpl_set_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "tpl_name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "param_vals",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "tpl_set_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "param_tpl_sets",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "param_tpl_sets": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "permissions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "resource",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "project_sim_type_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "project_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "project_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "projects",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "projects": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(200)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_sim_type_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_solver_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "roles": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(30)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "VARCHAR(200)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "permission_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "rounds": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_result_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "order_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "round_index",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "params",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "outputs",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "flow_cur_node_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "flow_node_progress",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "stuck_module_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "error_code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "error_msg",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "started_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "finished_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_result_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_type_results",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "order_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "orders",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_order_simtype_round",
+        "column_names": [
+          "order_id",
+          "sim_type_id",
+          "round_index"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "idx_simresult_round",
+        "column_names": [
+          "sim_type_result_id",
+          "round_index"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "ix_rounds_order_id",
+        "column_names": [
+          "order_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "ix_rounds_sim_type_id",
+        "column_names": [
+          "sim_type_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "ix_rounds_sim_type_result_id",
+        "column_names": [
+          "sim_type_result_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      }
+    ]
+  },
+  "sim_type_cond_out_group_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "cond_out_group_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "cond_out_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "condition_output_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "sim_type_param_group_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "param_group_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "param_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "param_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "sim_type_results": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "order_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "status",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "progress",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cur_node_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "stuck_node_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "stuck_module_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "best_exists",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "best_rule_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "best_round_index",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "best_metrics",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "total_rounds",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "completed_rounds",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "failed_rounds",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "order_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "orders",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_order_simtype",
+        "column_names": [
+          "order_id",
+          "sim_type_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      },
+      {
+        "name": "ix_sim_type_results_order_id",
+        "column_names": [
+          "order_id"
+        ],
+        "unique": 0,
+        "dialect_options": {}
+      }
+    ]
+  },
+  "sim_type_solver_rels": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "solver_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "is_default",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "solver_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "solvers",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  },
+  "sim_types": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "category",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_param_tpl_set_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_cond_out_set_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_solver_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "support_alg_mask",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "node_icon",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "color_tag",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "solver_resources": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cpu_cores",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "memory_gb",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "solvers": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "version",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cpu_core_min",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cpu_core_max",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "cpu_core_default",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "memory_min",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "memory_max",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "memory_default",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "params_schema",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "status_defs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(30)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "color",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "icon",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "users": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "username",
+        "type": "VARCHAR(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "VARCHAR(120)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "password_hash",
+        "type": "VARCHAR(256)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "avatar",
+        "type": "VARCHAR(255)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "phone",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "department",
+        "type": "VARCHAR(100)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "role_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "preferences",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "recent_project_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "recent_sim_type_ids",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "last_login_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "workflows": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "type",
+        "type": "VARCHAR(20)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "nodes",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "edges",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [],
+    "indexes": []
+  },
+  "working_conditions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "VARCHAR(100)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(50)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "fold_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "sim_type_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "default_param_group_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_cond_out_group_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "default_solver_id",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "extra_config",
+        "type": "JSON",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "valid",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "sort",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "remark",
+        "type": "TEXT",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "updated_at",
+        "type": "INTEGER",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "foreign_keys": [
+      {
+        "name": null,
+        "constrained_columns": [
+          "fold_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "fold_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "sim_type_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "sim_types",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "default_param_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "param_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "default_cond_out_group_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "condition_output_groups",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      },
+      {
+        "name": null,
+        "constrained_columns": [
+          "default_solver_id"
+        ],
+        "referred_schema": null,
+        "referred_table": "solvers",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {}
+      }
+    ],
+    "indexes": []
+  }
+}

@@ -6,7 +6,9 @@ StructSim 数据库管理工具
 
 使用方法:
     python database/db_manager.py init          # 创建数据库和表结构
-    python database/db_manager.py seed          # 导入初始数据
+    python database/db_manager.py seed          # 导入初始数据（从 init-data）
+    python database/db_manager.py sync          # 从导出数据完整同步（exported-data）
+    python database/db_manager.py export        # 导出当前数据库到 exported-data
     python database/db_manager.py clean         # 清理所有数据
     python database/db_manager.py reset         # 重置数据库（清理+导入）
     python database/db_manager.py status        # 查看数据库状态
@@ -44,6 +46,7 @@ from sqlalchemy import text, inspect
 
 # 数据文件路径
 INIT_DATA_DIR = SCRIPT_DIR / 'init-data'
+EXPORTED_DATA_DIR = SCRIPT_DIR / 'exported-data'
 
 
 def load_json(filename: str) -> dict:
@@ -1019,6 +1022,166 @@ def seed_all():
     seed_orders_and_results()
 
 
+# ============ 数据同步（从导出文件） ============
+
+def load_exported_data() -> dict:
+    """加载导出的完整数据"""
+    filepath = EXPORTED_DATA_DIR / 'full_data.json'
+    if not filepath.exists():
+        print(f"⚠️  导出数据文件不存在: {filepath}")
+        return {}
+    with open(filepath, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def sync_table_data(table_name: str, data: list, model_class, id_field: str = 'id'):
+    """同步单个表的数据"""
+    if not data:
+        return 0
+
+    count = 0
+    for item in data:
+        record_id = item.get(id_field)
+        if record_id is None:
+            continue
+
+        existing = db.session.get(model_class, record_id)
+        if existing:
+            # 更新现有记录
+            for key, value in item.items():
+                if hasattr(existing, key) and key != id_field:
+                    setattr(existing, key, value)
+        else:
+            # 创建新记录
+            try:
+                obj = model_class(**item)
+                db.session.add(obj)
+                count += 1
+            except Exception as e:
+                print(f"    ⚠️  创建记录失败 {table_name}[{record_id}]: {e}")
+
+    db.session.commit()
+    return count
+
+
+def sync_from_exported():
+    """从导出数据完整同步到数据库"""
+    print("\n📥 从导出数据同步...")
+
+    data = load_exported_data()
+    if not data:
+        print("❌ 无法加载导出数据")
+        return False
+
+    # 表名到模型类的映射
+    TABLE_MODEL_MAP = {
+        'departments': Department,
+        'permissions': Permission,
+        'roles': Role,
+        'menus': Menu,
+        'projects': Project,
+        'sim_types': SimType,
+        'model_levels': ModelLevel,
+        'fold_types': FoldType,
+        'solvers': Solver,
+        'solver_resources': SolverResource,
+        'status_defs': StatusDef,
+        'care_devices': CareDevice,
+        'param_defs': ParamDef,
+        'output_defs': OutputDef,
+        'condition_defs': ConditionDef,
+        'automation_modules': AutomationModule,
+        'workflows': Workflow,
+        'users': User,
+    }
+
+    # 按顺序同步（考虑外键依赖）
+    sync_order = [
+        'departments', 'permissions', 'roles', 'menus',
+        'projects', 'sim_types', 'model_levels', 'fold_types',
+        'solvers', 'solver_resources', 'status_defs', 'care_devices',
+        'param_defs', 'output_defs', 'condition_defs',
+        'automation_modules', 'workflows', 'users',
+    ]
+
+    total = 0
+    for table in sync_order:
+        if table not in data:
+            continue
+        model = TABLE_MODEL_MAP.get(table)
+        if not model:
+            continue
+
+        count = sync_table_data(table, data[table], model)
+        if count > 0:
+            print(f"  ✓ {table}: 新增 {count} 条")
+        total += count
+
+    print(f"\n✅ 同步完成，共新增 {total} 条记录")
+    return True
+
+
+def export_database():
+    """导出当前数据库到 JSON 文件"""
+    print("\n📤 导出数据库...")
+
+    EXPORTED_DATA_DIR.mkdir(exist_ok=True)
+
+    # 获取所有表数据
+    all_data = {}
+    tables_info = [
+        ('departments', Department),
+        ('permissions', Permission),
+        ('roles', Role),
+        ('menus', Menu),
+        ('projects', Project),
+        ('sim_types', SimType),
+        ('model_levels', ModelLevel),
+        ('fold_types', FoldType),
+        ('solvers', Solver),
+        ('solver_resources', SolverResource),
+        ('status_defs', StatusDef),
+        ('care_devices', CareDevice),
+        ('param_defs', ParamDef),
+        ('output_defs', OutputDef),
+        ('condition_defs', ConditionDef),
+        ('automation_modules', AutomationModule),
+        ('workflows', Workflow),
+        ('users', User),
+        ('orders', Order),
+        ('sim_type_results', SimTypeResult),
+        ('rounds', Round),
+    ]
+
+    for table_name, model in tables_info:
+        try:
+            records = model.query.all()
+            if records:
+                all_data[table_name] = [r.to_dict() if hasattr(r, 'to_dict') else serialize_model(r) for r in records]
+                print(f"  ✓ {table_name}: {len(records)} 条")
+        except Exception as e:
+            print(f"  ⚠️ {table_name}: 导出失败 - {e}")
+
+    # 保存到文件
+    output_file = EXPORTED_DATA_DIR / 'full_data.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(all_data, f, ensure_ascii=False, indent=2, default=str)
+
+    print(f"\n✅ 导出完成: {output_file}")
+    return True
+
+
+def serialize_model(obj):
+    """序列化 SQLAlchemy 模型对象"""
+    result = {}
+    for col in obj.__table__.columns:
+        val = getattr(obj, col.name)
+        if isinstance(val, datetime):
+            val = int(val.timestamp())
+        result[col.name] = val
+    return result
+
+
 # ============ 主函数 ============
 
 # 预定义数据库配置
@@ -1035,20 +1198,22 @@ def main():
         epilog="""
 示例:
   python database/db_manager.py init          创建数据库表结构
-  python database/db_manager.py seed          导入初始数据
+  python database/db_manager.py seed          导入初始数据（从 init-data）
+  python database/db_manager.py sync          从导出数据完整同步（exported-data）
+  python database/db_manager.py export        导出当前数据库到 exported-data
   python database/db_manager.py clean         清理所有数据
   python database/db_manager.py reset         重置数据库（清理+创建+导入）
   python database/db_manager.py status        查看数据库状态
 
 数据库切换:
-  python database/db_manager.py reset -f --db sqlite   使用 SQLite 数据库
-  python database/db_manager.py reset -f --db mysql    使用 MySQL 数据库
+  python database/db_manager.py sync -f --db sqlite   使用 SQLite 数据库
+  python database/db_manager.py sync -f --db mysql    使用 MySQL 数据库
 
 环境变量:
   DATABASE_URL=mysql+pymysql://user:pass@host:3306/db  自定义数据库连接
         """
     )
-    parser.add_argument('command', choices=['init', 'seed', 'clean', 'reset', 'status'],
+    parser.add_argument('command', choices=['init', 'seed', 'sync', 'export', 'clean', 'reset', 'status'],
                         help='要执行的命令')
     parser.add_argument('--force', '-f', action='store_true',
                         help='强制执行，不提示确认')
@@ -1083,6 +1248,18 @@ def main():
 
             elif args.command == 'seed':
                 seed_all()
+
+            elif args.command == 'sync':
+                if not args.force:
+                    confirm = input("\n⚠️  确定要从导出数据同步吗？(y/N): ")
+                    if confirm.lower() != 'y':
+                        print("已取消")
+                        return
+                init_database()
+                sync_from_exported()
+
+            elif args.command == 'export':
+                export_database()
 
             elif args.command == 'clean':
                 if not args.force:
