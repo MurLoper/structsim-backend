@@ -3,15 +3,15 @@
 职责：请求/响应数据校验
 """
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ConditionConfigCreateRequest(BaseModel):
     """创建工况配置请求"""
     name: str = Field(..., description="工况名称")
     code: Optional[str] = Field(None, description="工况编码")
-    fold_type_id: int = Field(..., description="姿态ID")
-    sim_type_id: int = Field(..., description="仿真类型ID")
+    fold_type_id: int = Field(..., description="姿态ID", gt=0)
+    sim_type_id: int = Field(..., description="仿真类型ID", gt=0)
     param_group_ids: Optional[List[int]] = Field(default=[], description="参数组ID列表")
     output_group_ids: Optional[List[int]] = Field(default=[], description="输出组ID列表")
     default_param_group_id: Optional[int] = Field(None, description="默认参数组ID")

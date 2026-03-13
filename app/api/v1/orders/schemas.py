@@ -10,12 +10,15 @@ from typing import Optional, List, Dict, Any
 class OrderCreate(BaseModel):
     """创建订单请求"""
     project_id: int = Field(..., description="项目ID")
+    model_level_id: Optional[int] = Field(None, description="模型层级ID")
     origin_file: Dict[str, Any] = Field(..., description="原始文件信息")
-    fold_type_id: Optional[int] = Field(None, description="折叠类型ID")
-    participant_uids: Optional[List[int]] = Field(default_factory=list, description="参与者用户ID列表")
+    origin_fold_type_id: Optional[int] = Field(None, description="原始折叠类型ID")
+    fold_type_ids: Optional[List[int]] = Field(default_factory=list, description="折叠类型ID列表")
+    participant_ids: Optional[List[int]] = Field(default_factory=list, description="参与者用户ID列表")
     remark: Optional[str] = Field(None, description="备注")
     sim_type_ids: Optional[List[int]] = Field(default_factory=list, description="仿真类型ID列表")
     opt_param: Optional[Dict[str, Any]] = Field(default_factory=dict, description="可选参数")
+    input_json: Optional[Dict[str, Any]] = Field(default_factory=dict, description="输入JSON")
     workflow_id: Optional[int] = Field(None, description="工作流ID")
     submit_check: Optional[Dict[str, Any]] = Field(None, description="提交检查信息")
     client_meta: Optional[Dict[str, Any]] = Field(None, description="客户端元数据")

@@ -99,25 +99,28 @@ class OrdersService:
             创建的订单信息
         """
         # 准备订单数据
-        origin_file = order_data.get('originFile', {})
-        
+        origin_file = order_data.get('origin_file', {})
+
         order_dict = {
             'order_no': generate_order_no(),
-            'project_id': order_data.get('projectId'),
+            'project_id': order_data.get('project_id'),
+            'model_level_id': order_data.get('model_level_id'),
             'origin_file_type': origin_file.get('type', 1),
             'origin_file_name': origin_file.get('name'),
             'origin_file_path': origin_file.get('path'),
-            'origin_file_id': origin_file.get('fileId'),
-            'fold_type_id': order_data.get('foldTypeId'),
-            'participant_uids': order_data.get('participantUids', []),
+            'origin_file_id': origin_file.get('file_id'),
+            'origin_fold_type_id': order_data.get('origin_fold_type_id'),
+            'fold_type_ids': order_data.get('fold_type_ids', []),
+            'participant_uids': order_data.get('participant_ids', []),
             'remark': order_data.get('remark'),
-            'sim_type_ids': order_data.get('simTypeIds', []),
-            'opt_param': order_data.get('optParam', {}),
-            'workflow_id': order_data.get('workflowId'),
-            'submit_check': order_data.get('submitCheck'),
-            'client_meta': order_data.get('clientMeta'),
+            'sim_type_ids': order_data.get('sim_type_ids', []),
+            'opt_param': order_data.get('opt_param', {}),
+            'input_json': order_data.get('input_json', {}),
+            'workflow_id': order_data.get('workflow_id'),
+            'submit_check': order_data.get('submit_check'),
+            'client_meta': order_data.get('client_meta'),
             'created_by': user_id,
-            'status': 1,  # 待处理
+            'status': 0,  # 未开始/排队
             'progress': 0
         }
         

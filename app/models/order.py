@@ -14,27 +14,33 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     order_no = db.Column(db.String(50), unique=True, nullable=False, comment='订单编号')
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False, comment='项目ID')
-    
+
+    # 模型层级
+    model_level_id = db.Column(db.Integer, comment='模型层级ID')
+
     # 源文件信息
     origin_file_type = db.Column(db.SmallInteger, default=1, comment='1=路径,2=文件ID,3=上传')
     origin_file_name = db.Column(db.String(255), comment='文件名')
     origin_file_path = db.Column(db.String(500), comment='文件路径')
     origin_file_id = db.Column(db.Integer, comment='文件ID')
-    
+
     # 姿态
+    origin_fold_type_id = db.Column(db.Integer, comment='原始姿态类型ID')
     fold_type_id = db.Column(db.Integer, db.ForeignKey('fold_types.id'), comment='姿态类型ID')
-    
+    fold_type_ids = db.Column(db.JSON, comment='姿态类型ID列表')
+
     # 参与人
     participant_uids = db.Column(db.JSON, comment='参与人用户ID列表')
-    
+
     # 备注
     remark = db.Column(db.Text, comment='备注')
-    
+
     # 选中的仿真类型列表
     sim_type_ids = db.Column(db.JSON, comment='选中的仿真类型ID列表')
-    
+
     # 核心：各仿真类型的配置（大JSON）
     opt_param = db.Column(db.JSON, comment='各仿真类型配置 {sim_type_id: {...}}')
+    input_json = db.Column(db.JSON, comment='输入JSON完整配置')
     
     # 工作流
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflows.id'), comment='工作流ID')
@@ -63,17 +69,21 @@ class Order(db.Model):
             'id': self.id,
             'order_no': self.order_no,
             'project_id': self.project_id,
+            'model_level_id': self.model_level_id,
             'origin_file': {
                 'type': self.origin_file_type,
                 'name': self.origin_file_name,
                 'path': self.origin_file_path,
                 'file_id': self.origin_file_id
             },
+            'origin_fold_type_id': self.origin_fold_type_id,
             'fold_type_id': self.fold_type_id,
+            'fold_type_ids': self.fold_type_ids,
             'participant_uids': self.participant_uids,
             'remark': self.remark,
             'sim_type_ids': self.sim_type_ids,
             'opt_param': self.opt_param,
+            'input_json': self.input_json,
             'workflow_id': self.workflow_id,
             'status': self.status,
             'progress': self.progress,
