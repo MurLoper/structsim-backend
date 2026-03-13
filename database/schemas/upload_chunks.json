@@ -1,0 +1,79 @@
+{
+  "table_name": "upload_chunks",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "upload_id",
+      "type": "VARCHAR(36)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "chunk_index",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "chunk_hash",
+      "type": "VARCHAR(64)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "uploaded_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "upload_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "upload_files",
+      "referred_columns": [
+        "upload_id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_upload_id",
+      "column_names": [
+        "upload_id"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    }
+  ],
+  "unique_constraints": [
+    {
+      "name": null,
+      "column_names": [
+        "upload_id",
+        "chunk_index"
+      ]
+    }
+  ]
+}

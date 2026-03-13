@@ -1,0 +1,245 @@
+{
+  "table_name": "orders",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "order_no",
+      "type": "VARCHAR(50)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "project_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "origin_file_type",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "origin_file_name",
+      "type": "VARCHAR(255)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "origin_file_path",
+      "type": "VARCHAR(500)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "origin_file_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "fold_type_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "participant_uids",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "remark",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sim_type_ids",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "opt_param",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "workflow_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "status",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "progress",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "cur_node_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "submit_check",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "client_meta",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_by",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "model_level_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "origin_fold_type_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "fold_type_ids",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "input_json",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "project_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "projects",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "fold_type_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "fold_types",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "workflow_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "workflows",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "created_by"
+      ],
+      "referred_schema": null,
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [],
+  "unique_constraints": [
+    {
+      "name": null,
+      "column_names": [
+        "order_no"
+      ]
+    }
+  ]
+}

@@ -3,10 +3,11 @@
 职责：封装所有数据库操作，提供数据访问接口
 禁止：业务逻辑、HTTP相关代码
 """
-from typing import Optional, List, Tuple
-from sqlalchemy import desc
+from typing import Optional, List, Tuple, Dict
+from sqlalchemy import desc, func
 from app.models.order import Order, OrderResult
 from app.extensions import db
+import time
 
 
 class OrdersRepository:
@@ -88,6 +89,42 @@ class OrdersRepository:
     def get_order_result(order_id: int) -> Optional[OrderResult]:
         """获取订单结果"""
         return OrderResult.query.filter_by(order_id=order_id).first()
+
+    @staticmethod
+    def get_statistics() -> Dict:
+        """获取订单统计数据"""
+        total = Order.query.count()
+        pending = Order.query.filter_by(status=0).count()
+        running = Order.query.filter_by(status=1).count()
+        completed = Order.query.filter_by(status=2).count()
+        failed = Order.query.filter_by(status=3).count()
+        return {
+            'total': total,
+            'pending': pending,
+            'running': running,
+            'completed': completed,
+            'failed': failed
+        }
+
+    @staticmethod
+    def get_trends(days: int) -> List[Dict]:
+        """获取订单趋势数据"""
+        now = int(time.time())
+        start_time = now - days * 86400
+        results = db.session.query(
+            func.date(func.from_unixtime(Order.created_at)).label('date'),
+            func.count(Order.id).label('count')
+        ).filter(Order.created_at >= start_time).group_by('date').all()
+        return [{'date': str(r.date), 'count': r.count} for r in results]
+
+    @staticmethod
+    def get_status_distribution() -> List[Dict]:
+        """获取订单状态分布"""
+        results = db.session.query(
+            Order.status,
+            func.count(Order.id).label('count')
+        ).group_by(Order.status).all()
+        return [{'status': r.status, 'count': r.count} for r in results]
 
 
 # 单例实例

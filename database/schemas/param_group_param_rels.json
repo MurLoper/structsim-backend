@@ -1,0 +1,81 @@
+{
+  "table_name": "param_group_param_rels",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "param_group_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "param_def_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "default_value",
+      "type": "VARCHAR(200)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sort",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "param_group_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "param_groups",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "param_def_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "param_defs",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [],
+  "unique_constraints": []
+}

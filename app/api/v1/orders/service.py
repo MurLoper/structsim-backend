@@ -176,6 +176,18 @@ class OrdersService:
         
         self.repository.delete_order(order)
 
+    def get_statistics(self) -> Dict:
+        """获取订单统计数据"""
+        return self.repository.get_statistics()
+
+    def get_trends(self, days: int = 7) -> List[Dict]:
+        """获取订单趋势数据"""
+        return self.repository.get_trends(days)
+
+    def get_status_distribution(self) -> List[Dict]:
+        """获取订单状态分布"""
+        return self.repository.get_status_distribution()
+
 
 # 单例实例
 orders_service = OrdersService()

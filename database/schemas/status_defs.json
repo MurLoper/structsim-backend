@@ -1,0 +1,91 @@
+{
+  "table_name": "status_defs",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "name",
+      "type": "VARCHAR(50)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "code",
+      "type": "VARCHAR(30)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "type",
+      "type": "VARCHAR(20)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "color",
+      "type": "VARCHAR(100)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "icon",
+      "type": "VARCHAR(100)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "valid",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sort",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [],
+  "indexes": [],
+  "unique_constraints": [
+    {
+      "name": null,
+      "column_names": [
+        "code"
+      ]
+    }
+  ]
+}

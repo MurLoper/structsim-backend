@@ -1,0 +1,74 @@
+{
+  "table_name": "cond_out_group_output_rels",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "cond_out_group_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "output_def_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sort",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "cond_out_group_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "condition_output_groups",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "output_def_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "output_defs",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [],
+  "unique_constraints": []
+}

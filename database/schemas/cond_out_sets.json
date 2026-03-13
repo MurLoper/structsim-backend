@@ -1,0 +1,97 @@
+{
+  "table_name": "cond_out_sets",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "sim_type_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "name",
+      "type": "VARCHAR(100)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "cond_items",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "output_ids",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "valid",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sort",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "remark",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "sim_type_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "sim_types",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [],
+  "unique_constraints": []
+}

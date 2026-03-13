@@ -138,7 +138,8 @@ def delete_sim_type(id: int):
 def list_param_defs():
     """获取参数定义（支持分页和搜索）"""
     page = request.args.get('page', type=int)
-    page_size = request.args.get('pageSize', type=int, default=20)
+    page_size = request.args.get('page_size') or request.args.get('pageSize')
+    page_size = int(page_size) if page_size else 20
     keyword = request.args.get('keyword', '').strip()
 
     # 如果有分页参数，返回分页数据
@@ -295,7 +296,8 @@ def delete_condition_def(id: int):
 def list_output_defs():
     """获取输出定义（支持分页和搜索）"""
     page = request.args.get('page', type=int)
-    page_size = request.args.get('pageSize', type=int, default=20)
+    page_size = request.args.get('page_size') or request.args.get('pageSize')
+    page_size = int(page_size) if page_size else 20
     keyword = request.args.get('keyword', '').strip()
 
     if page:

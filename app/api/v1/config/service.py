@@ -176,7 +176,7 @@ class ConfigService:
             'items': serialize_models(result['items']),
             'total': result['total'],
             'page': result['page'],
-            'page_size': result['pageSize']
+            'page_size': result.get('page_size') or result.get('pageSize')
         }
 
     def create_param_def(self, data: Dict) -> Dict:
@@ -242,7 +242,7 @@ class ConfigService:
             'items': serialize_models(result['items']),
             'total': result['total'],
             'page': result['page'],
-            'page_size': result['pageSize']
+            'page_size': result.get('page_size') or result.get('pageSize')
         }
 
     def create_output_def(self, data: Dict) -> Dict:

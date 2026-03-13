@@ -1,0 +1,202 @@
+{
+  "table_name": "rounds",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "sim_type_result_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "order_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sim_type_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "round_index",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "params",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "outputs",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "status",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "flow_cur_node_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "flow_node_progress",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "stuck_module_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "error_code",
+      "type": "VARCHAR(50)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "error_msg",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "started_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "finished_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "sim_type_result_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "sim_type_results",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "order_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "orders",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_order_simtype_round",
+      "column_names": [
+        "order_id",
+        "sim_type_id",
+        "round_index"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "idx_simresult_round",
+      "column_names": [
+        "sim_type_result_id",
+        "round_index"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "ix_rounds_order_id",
+      "column_names": [
+        "order_id"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "ix_rounds_sim_type_id",
+      "column_names": [
+        "sim_type_id"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "ix_rounds_sim_type_result_id",
+      "column_names": [
+        "sim_type_result_id"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    }
+  ],
+  "unique_constraints": []
+}

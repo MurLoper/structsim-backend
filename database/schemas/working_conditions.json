@@ -1,0 +1,180 @@
+{
+  "table_name": "working_conditions",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "name",
+      "type": "VARCHAR(100)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "code",
+      "type": "VARCHAR(50)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "fold_type_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sim_type_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "default_param_group_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "default_cond_out_group_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "default_solver_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "extra_config",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "valid",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "sort",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "remark",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "fold_type_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "fold_types",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "sim_type_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "sim_types",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "default_param_group_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "param_groups",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "default_cond_out_group_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "condition_output_groups",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    },
+    {
+      "name": null,
+      "constrained_columns": [
+        "default_solver_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "solvers",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [],
+  "unique_constraints": [
+    {
+      "name": null,
+      "column_names": [
+        "code"
+      ]
+    }
+  ]
+}

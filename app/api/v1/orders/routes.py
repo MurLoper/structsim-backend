@@ -27,15 +27,19 @@ def get_orders():
         # 从查询参数构建验证对象
         query_params = {
             'page': request.args.get('page', 1, type=int),
-            'page_size': request.args.get('pageSize', 20, type=int),
+            'page_size': int(request.args.get('page_size') or request.args.get('pageSize') or 20),
             'status': request.args.get('status', type=int),
-            'project_id': request.args.get('projectId', type=int),
-            'sim_type_id': request.args.get('simTypeId', type=int),
-            'order_no': request.args.get('orderNo', type=str),
-            'created_by': request.args.get('createdBy', type=int),
-            'start_date': request.args.get('startDate', type=int),
-            'end_date': request.args.get('endDate', type=int),
+            'project_id': request.args.get('project_id') or request.args.get('projectId'),
+            'sim_type_id': request.args.get('sim_type_id') or request.args.get('simTypeId'),
+            'order_no': request.args.get('order_no') or request.args.get('orderNo'),
+            'created_by': request.args.get('created_by') or request.args.get('createdBy'),
+            'start_date': request.args.get('start_date') or request.args.get('startDate'),
+            'end_date': request.args.get('end_date') or request.args.get('endDate'),
         }
+        # 转换类型
+        for key in ['project_id', 'sim_type_id', 'created_by', 'start_date', 'end_date']:
+            if query_params[key]:
+                query_params[key] = int(query_params[key])
         validated = OrderQuery(**query_params)
 
         result = orders_service.get_orders(
@@ -118,6 +122,32 @@ def delete_order(order_id: int):
 @jwt_required()
 def get_order_result(order_id: int):
     """获取订单结果"""
+    pass
+
+
+@orders_bp.route('/statistics', methods=['GET'])
+@jwt_required()
+def get_statistics():
+    """获取订单统计数据"""
+    data = orders_service.get_statistics()
+    return success(data)
+
+
+@orders_bp.route('/trends', methods=['GET'])
+@jwt_required()
+def get_trends():
+    """获取订单趋势数据"""
+    days = int(request.args.get('days') or 7)
+    data = orders_service.get_trends(days)
+    return success(data)
+
+
+@orders_bp.route('/status-distribution', methods=['GET'])
+@jwt_required()
+def get_status_distribution():
+    """获取订单状态分布"""
+    data = orders_service.get_status_distribution()
+    return success(data)
     try:
         result = orders_service.get_order(order_id)
         # 这里可以扩展获取结果的逻辑

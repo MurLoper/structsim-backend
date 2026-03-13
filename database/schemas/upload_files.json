@@ -1,0 +1,178 @@
+{
+  "table_name": "upload_files",
+  "columns": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 1
+    },
+    {
+      "name": "file_hash",
+      "type": "VARCHAR(64)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "file_name",
+      "type": "VARCHAR(255)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "file_size",
+      "type": "BIGINT",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "mime_type",
+      "type": "VARCHAR(100)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "upload_id",
+      "type": "VARCHAR(36)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "user_id",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "chunk_size",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "total_chunks",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "uploaded_chunks",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "status",
+      "type": "VARCHAR(20)",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "storage_path",
+      "type": "VARCHAR(500)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "extra_data",
+      "type": "JSON",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "error_message",
+      "type": "TEXT",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "created_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "updated_at",
+      "type": "INTEGER",
+      "nullable": false,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "completed_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "expires_at",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    }
+  ],
+  "primary_key": {
+    "constrained_columns": [
+      "id"
+    ],
+    "name": null
+  },
+  "foreign_keys": [
+    {
+      "name": null,
+      "constrained_columns": [
+        "user_id"
+      ],
+      "referred_schema": null,
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "options": {}
+    }
+  ],
+  "indexes": [
+    {
+      "name": "ix_upload_files_expires_at",
+      "column_names": [
+        "expires_at"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "ix_upload_files_file_hash",
+      "column_names": [
+        "file_hash"
+      ],
+      "unique": 0,
+      "dialect_options": {}
+    },
+    {
+      "name": "ix_upload_files_upload_id",
+      "column_names": [
+        "upload_id"
+      ],
+      "unique": 1,
+      "dialect_options": {}
+    }
+  ],
+  "unique_constraints": []
+}
