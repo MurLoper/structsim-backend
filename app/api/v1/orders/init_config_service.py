@@ -81,11 +81,11 @@ class OrderInitConfigService:
         
         # 6. 组装响应
         return {
-            'projectId': project.id,
+            'project_id': project.id,
             'projectName': project.name,
-            'simTypeId': sim_type.id,
-            'simTypeName': sim_type.name,
-            'simTypeCode': sim_type.code,
+            'sim_type_id': sim_type.id,
+            'sim_type_name': sim_type.name,
+            'sim_type_code': sim_type.code,
             'defaultParamGroup': default_param_group,
             'defaultCondOutGroup': default_cond_out_group,
             'defaultSolver': default_solver,

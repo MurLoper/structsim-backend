@@ -184,7 +184,7 @@ def merge_params():
         merged_params = param_merge_service.merge_params(base_params, custom_params)
 
         return success({
-            'mergedParams': merged_params,
+            'merged_params': merged_params,
             'report': report
         })
     except Exception as e:

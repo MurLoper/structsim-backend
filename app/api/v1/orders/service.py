@@ -68,8 +68,8 @@ class OrdersService:
             'items': [order.to_list_dict() for order in orders],
             'total': total,
             'page': page,
-            'pageSize': page_size,
-            'totalPages': ceil(total / page_size) if total > 0 else 0
+            'page_size': page_size,
+            'total_pages': ceil(total / page_size) if total > 0 else 0
         }
     
     def get_order(self, order_id: int) -> Dict:

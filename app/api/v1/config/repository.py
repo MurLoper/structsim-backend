@@ -128,7 +128,7 @@ class ParamDefRepository(BaseRepository[ParamDef]):
         items = query.order_by(self.model_class.sort.asc(), self.model_class.id.asc()) \
             .offset((page - 1) * page_size).limit(page_size).all()
 
-        return {'items': items, 'total': total, 'page': page, 'pageSize': page_size}
+        return {'items': items, 'total': total, 'page': page, 'page_size': page_size}
 
     def find_by_key(self, key: str) -> Optional[ParamDef]:
         """根据key查找参数定义"""
@@ -175,7 +175,7 @@ class OutputDefRepository(BaseRepository[OutputDef]):
         items = query.order_by(self.model_class.sort.asc(), self.model_class.id.asc()) \
             .offset((page - 1) * page_size).limit(page_size).all()
 
-        return {'items': items, 'total': total, 'page': page, 'pageSize': page_size}
+        return {'items': items, 'total': total, 'page': page, 'page_size': page_size}
 
     def find_by_code(self, code: str) -> Optional[OutputDef]:
         """根据code查找输出定义"""

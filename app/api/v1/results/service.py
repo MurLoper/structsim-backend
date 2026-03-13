@@ -104,8 +104,8 @@ class ResultsService:
             'items': [self._serialize_round(r) for r in rounds],
             'total': total,
             'page': page,
-            'pageSize': page_size,
-            'totalPages': ceil(total / page_size) if total > 0 else 0
+            'page_size': page_size,
+            'total_pages': ceil(total / page_size) if total > 0 else 0
         }
 
     def update_sim_type_result_status(
@@ -169,8 +169,8 @@ class ResultsService:
         """序列化仿真类型结果"""
         return {
             'id': result.id,
-            'orderId': result.order_id,
-            'simTypeId': result.sim_type_id,
+            'order_id': result.order_id,
+            'sim_type_id': result.sim_type_id,
             'status': result.status,
             'progress': result.progress,
             'curNodeId': result.cur_node_id,

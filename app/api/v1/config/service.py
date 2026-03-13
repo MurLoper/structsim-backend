@@ -176,7 +176,7 @@ class ConfigService:
             'items': serialize_models(result['items']),
             'total': result['total'],
             'page': result['page'],
-            'pageSize': result['pageSize']
+            'page_size': result['pageSize']
         }
 
     def create_param_def(self, data: Dict) -> Dict:
@@ -242,7 +242,7 @@ class ConfigService:
             'items': serialize_models(result['items']),
             'total': result['total'],
             'page': result['page'],
-            'pageSize': result['pageSize']
+            'page_size': result['pageSize']
         }
 
     def create_output_def(self, data: Dict) -> Dict:
@@ -326,7 +326,7 @@ class ConfigService:
     def get_base_data(self) -> Dict[str, List]:
         """获取所有基础配置数据（用于前端初始化）"""
         return {
-            'simTypes': self.get_sim_types(),
+            'sim_types': self.get_sim_types(),
             'paramDefs': self.get_param_defs(),
             'conditionDefs': self.get_condition_defs(),
             'outputDefs': self.get_output_defs(),
