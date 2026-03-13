@@ -1,92 +1,103 @@
 """
-一键数据库同步脚本 - 兼容SQLite和MySQL
-功能：检查表存在性、对比结构、同步数据
+一键数据库同步脚本 - 从SQLite同步到MySQL
+功能：同步表结构和数据
 """
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app import create_app, db
-from sqlalchemy import inspect, text, MetaData
-from sqlalchemy.schema import CreateTable
+from sqlalchemy import create_engine, MetaData, inspect, text
+from sqlalchemy.orm import sessionmaker
 
+# 数据库配置
+SQLITE_URL = 'sqlite:///sim_ai_paltform.db'
+MYSQL_URL = 'mysql+pymysql://opti_user:cQi8Xjw3xTbJFG7s@api.xinqilingxi.cn:3306/sim_ai_paltform'
 
-def get_dialect():
-    """获取数据库类型"""
-    return db.engine.dialect.name
+def sync_database():
+    """同步数据库"""
+    print("=" * 60)
+    print("开始同步 SQLite -> MySQL")
+    print("=" * 60)
 
+    # 连接源数据库（SQLite）
+    source_engine = create_engine(SQLITE_URL)
+    source_metadata = MetaData()
+    source_metadata.reflect(bind=source_engine)
+    SourceSession = sessionmaker(bind=source_engine)
+    source_session = SourceSession()
 
-def table_exists(table_name):
-    """检查表是否存在"""
-    inspector = inspect(db.engine)
-    return table_name in inspector.get_table_names()
+    # 连接目标数据库（MySQL）
+    target_engine = create_engine(MYSQL_URL)
+    target_inspector = inspect(target_engine)
+    TargetSession = sessionmaker(bind=target_engine)
+    target_session = TargetSession()
 
+    print(f"\n源数据库: SQLite")
+    print(f"目标数据库: MySQL")
+    print(f"发现 {len(source_metadata.tables)} 个表\n")
 
-def get_create_sql(table_name, source_metadata):
-    """生成建表SQL（兼容MySQL和SQLite）"""
-    table = source_metadata.tables[table_name]
-    create_sql = str(CreateTable(table).compile(db.engine))
+    synced_tables = []
 
-    dialect = get_dialect()
-    if dialect == 'mysql':
-        create_sql = create_sql.replace('AUTOINCREMENT', 'AUTO_INCREMENT')
-        create_sql = create_sql.replace('INTEGER', 'INT')
-        create_sql = create_sql.replace('DATETIME', 'TIMESTAMP')
-        if 'ENGINE=' not in create_sql:
-            create_sql += ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    for table_name in sorted(source_metadata.tables.keys()):
+        print(f"\n处理表: {table_name}")
+        table = source_metadata.tables[table_name]
 
-    return create_sql
+        # 检查目标表是否存在
+        if table_name not in target_inspector.get_table_names():
+            print(f"  [创建表] {table_name}")
+            table.create(target_engine)
+        else:
+            print(f"  [表已存在] {table_name}")
 
+        # 同步数据
+        try:
+            # 读取源数据
+            source_data = source_session.execute(text(f"SELECT * FROM {table_name}")).fetchall()
+            source_count = len(source_data)
 
-def compare_columns(table_name):
-    """对比表结构差异"""
-    inspector = inspect(db.engine)
-    current_cols = {col['name']: col for col in inspector.get_columns(table_name)}
-    return current_cols
+            # 检查目标数据
+            target_count = target_session.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
 
+            print(f"  源数据: {source_count} 条")
+            print(f"  目标数据: {target_count} 条")
 
-def sync_table(table_name, source_metadata):
-    """同步单个表结构"""
-    if not table_exists(table_name):
-        print(f"  [创建] {table_name}")
-        create_sql = get_create_sql(table_name, source_metadata)
-        db.session.execute(text(create_sql))
-        db.session.commit()
-        return 'created'
-    else:
-        print(f"  [存在] {table_name}")
-        return 'exists'
+            if source_count > 0 and target_count == 0:
+                print(f"  [同步数据] 插入 {source_count} 条记录")
 
+                # 获取列名
+                columns = [col.name for col in table.columns]
+                col_str = ', '.join(columns)
+                placeholders = ', '.join([f":{col}" for col in columns])
 
-def sync_all():
-    """一键同步所有表"""
-    app = create_app()
-    with app.app_context():
-        dialect = get_dialect()
-        print(f"数据库类型: {dialect}")
-        print(f"连接地址: {db.engine.url}")
-        print("=" * 60)
+                # 批量插入
+                insert_sql = f"INSERT INTO {table_name} ({col_str}) VALUES ({placeholders})"
 
-        # 反射当前数据库结构
-        metadata = MetaData()
-        metadata.reflect(bind=db.engine)
+                for row in source_data:
+                    row_dict = dict(zip(columns, row))
+                    target_session.execute(text(insert_sql), row_dict)
 
-        tables = list(metadata.tables.keys())
-        print(f"发现 {len(tables)} 个表\n")
-
-        created = []
-        exists = []
-
-        for table_name in sorted(tables):
-            result = sync_table(table_name, metadata)
-            if result == 'created':
-                created.append(table_name)
+                target_session.commit()
+                print(f"  [完成] 数据同步成功")
+                synced_tables.append(table_name)
+            elif target_count > 0:
+                print(f"  [跳过] 目标表已有数据")
             else:
-                exists.append(table_name)
+                print(f"  [跳过] 源表无数据")
 
-        print("\n" + "=" * 60)
-        print(f"同步完成: 创建 {len(created)} 个表, 已存在 {len(exists)} 个表")
+        except Exception as e:
+            print(f"  [错误] {str(e)}")
+            target_session.rollback()
 
+    source_session.close()
+    target_session.close()
+
+    print("\n" + "=" * 60)
+    print(f"同步完成: 共同步 {len(synced_tables)} 个表的数据")
+    if synced_tables:
+        print("已同步的表:")
+        for t in synced_tables:
+            print(f"  - {t}")
+    print("=" * 60)
 
 if __name__ == '__main__':
-    sync_all()
+    sync_database()
