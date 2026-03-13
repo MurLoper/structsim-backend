@@ -121,6 +121,10 @@ def create_app(config_name=None):
     from app.api.v1 import v1_bp
     app.register_blueprint(v1_bp, url_prefix='/api/v1')
 
+    # 注册上传蓝图
+    from app.api.v1.upload.routes import upload_bp
+    app.register_blueprint(upload_bp, url_prefix='/api/v1/upload')
+
     # Swagger / OpenAPI
     swagger_config = {
         'headers': [],  # 必须提供，否则 flasgger 会报错
