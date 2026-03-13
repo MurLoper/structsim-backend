@@ -52,7 +52,6 @@ class UploadService:
             'user_id': user_id,
             'chunk_size': chunk_size,
             'total_chunks': total_chunks,
-            'uploaded_chunks': [],
             'status': 'uploading',
             'created_at': now,
             'updated_at': now,
@@ -84,14 +83,6 @@ class UploadService:
             raise BusinessError(ErrorCode.VALIDATION_ERROR,
                               f"分片索引超出范围: {chunk_index}")
 
-        # 检查是否已上传
-        if chunk_index in (upload.uploaded_chunks or []):
-            return {
-                'chunk_index': chunk_index,
-                'uploaded': True,
-                'progress': len(upload.uploaded_chunks) / upload.total_chunks
-            }
-
         # 保存并校验分片
         success = storage_manager.save_chunk(
             upload_id, chunk_index, chunk_file.stream, chunk_hash
@@ -100,11 +91,12 @@ class UploadService:
         if not success:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "分片校验失败")
 
-        # 更新数据库
-        upload_repository.update_chunks(upload, chunk_index)
+        # 添加分片记录
+        upload_repository.add_chunk(upload_id, chunk_index, chunk_hash)
 
-        uploaded_count = len(upload.uploaded_chunks) + 1
-        progress = uploaded_count / upload.total_chunks
+        # 获取已上传数量
+        uploaded_chunks = upload_repository.get_uploaded_chunks(upload_id)
+        progress = len(uploaded_chunks) / upload.total_chunks
 
         return {
             'chunk_index': chunk_index,
@@ -118,7 +110,7 @@ class UploadService:
         if not upload:
             raise NotFoundError("上传会话")
 
-        uploaded_chunks = upload.uploaded_chunks or []
+        uploaded_chunks = upload_repository.get_uploaded_chunks(upload_id)
         progress = len(uploaded_chunks) / upload.total_chunks
 
         return {
@@ -137,10 +129,10 @@ class UploadService:
             raise NotFoundError("上传会话")
 
         # 验证所有分片已上传
-        uploaded_count = len(upload.uploaded_chunks or [])
-        if uploaded_count != upload.total_chunks:
+        uploaded_chunks = upload_repository.get_uploaded_chunks(upload_id)
+        if len(uploaded_chunks) != upload.total_chunks:
             raise BusinessError(ErrorCode.VALIDATION_ERROR,
-                              f"分片未完整上传: {uploaded_count}/{upload.total_chunks}")
+                              f"分片未完整上传: {len(uploaded_chunks)}/{upload.total_chunks}")
 
         # 合并分片
         try:

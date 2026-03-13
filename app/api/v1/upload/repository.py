@@ -4,6 +4,7 @@
 import time
 from typing import Optional, List
 from app.models.upload import UploadFile
+from app.models.upload_chunk import UploadChunk
 from app import db
 
 
@@ -33,15 +34,25 @@ class UploadRepository:
         return upload
 
     @staticmethod
-    def update_chunks(upload: UploadFile, chunk_index: int) -> None:
-        """更新已上传分片列表"""
-        chunks = upload.uploaded_chunks or []
-        if chunk_index not in chunks:
-            chunks.append(chunk_index)
-            chunks.sort()
-        upload.uploaded_chunks = chunks
-        upload.updated_at = int(time.time())
-        db.session.commit()
+    def add_chunk(upload_id: str, chunk_index: int, chunk_hash: str) -> None:
+        """添加分片记录（使用INSERT IGNORE避免重复）"""
+        chunk = UploadChunk(
+            upload_id=upload_id,
+            chunk_index=chunk_index,
+            chunk_hash=chunk_hash,
+            uploaded_at=int(time.time())
+        )
+        db.session.add(chunk)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()  # 重复插入时忽略
+
+    @staticmethod
+    def get_uploaded_chunks(upload_id: str) -> List[int]:
+        """获取已上传的分片索引列表"""
+        chunks = UploadChunk.query.filter_by(upload_id=upload_id).all()
+        return sorted([c.chunk_index for c in chunks])
 
     @staticmethod
     def mark_completed(upload: UploadFile, storage_path: str) -> None:
@@ -62,7 +73,7 @@ class UploadRepository:
 
     @staticmethod
     def delete(upload: UploadFile) -> None:
-        """删除上传记录"""
+        """删除上传记录（级联删除分片）"""
         db.session.delete(upload)
         db.session.commit()
 

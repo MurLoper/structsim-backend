@@ -25,7 +25,9 @@ class UploadFile(db.Model, ToDictMixin):
     # 分片配置
     chunk_size = db.Column(db.Integer, nullable=False, default=5242880, comment='分片大小(字节)')
     total_chunks = db.Column(db.Integer, nullable=False, comment='总分片数')
-    uploaded_chunks = db.Column(db.JSON, default=list, comment='已上传分片索引列表')
+
+    # 关联分片记录
+    chunks = db.relationship('UploadChunk', backref='upload_file', lazy='dynamic', cascade='all, delete-orphan')
 
     # 状态
     status = db.Column(db.String(20), nullable=False, default='uploading', comment='状态: uploading/merging/completed/failed')
