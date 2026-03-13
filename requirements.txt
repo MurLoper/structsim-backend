@@ -9,14 +9,9 @@ werkzeug>=3.0.0
 
 # 数据库
 pymysql>=1.1.0
-sqlalchemy>=2.0.0
-
-# 缓存
-redis>=5.0.0
 
 # 数据验证
 pydantic[email]>=2.0.0
-marshmallow>=4.0.0
 
 # 安全
 cryptography>=42.0.0
@@ -24,9 +19,6 @@ cryptography>=42.0.0
 # 工具
 python-dotenv>=1.0.0
 requests>=2.32.0
-pyyaml>=6.0.0
-pillow>=10.0.0
-reportlab>=4.0.0
 
 # 测试
 pytest>=9.0.0
