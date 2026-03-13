@@ -67,6 +67,6 @@ dist/
 uploads/
 media/
 static/uploads/
-.storage/
+storage/
 
 
