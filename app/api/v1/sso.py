@@ -1,6 +1,7 @@
 """
 SSO 模拟服务 - 用于内网单点登录
 """
+import os
 from flask import Blueprint, request, jsonify, redirect
 from app.models.auth import User
 from app import db
@@ -11,8 +12,8 @@ from functools import wraps
 sso_bp = Blueprint('sso', __name__, url_prefix='/api/v1/sso')
 
 # SSO配置
-SSO_SECRET = 'sso-secret-key-change-in-production'
-SSO_TOKEN_EXPIRE = 24 * 3600  # 24小时
+SSO_SECRET = os.getenv('SSO_SECRET_KEY', 'sso-secret-key-change-in-production')
+SSO_TOKEN_EXPIRE = int(os.getenv('SSO_TOKEN_EXPIRE', 86400))  # 默认24小时
 
 def generate_sso_token(user_id, username):
     """生成SSO token"""
