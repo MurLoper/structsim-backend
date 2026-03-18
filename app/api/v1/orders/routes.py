@@ -11,7 +11,7 @@ from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
 from app.common.serializers import get_snake_json
-from .schemas import OrderCreate, OrderUpdate, OrderQuery
+from .schemas import OrderCreate, OrderUpdate, OrderQuery, VerifyFileRequest
 from .service import orders_service
 from .excel_parser_service import excel_parser_service
 from .param_merge_service import param_merge_service
@@ -148,12 +148,38 @@ def get_status_distribution():
     """获取订单状态分布"""
     data = orders_service.get_status_distribution()
     return success(data)
+
+
+@orders_bp.route('/verify-file', methods=['POST'])
+@jwt_required()
+def verify_file():
+    """
+    验证源文件是否存在并解析 INP set 集
+
+    请求体:
+    {
+        "path": "/path/to/file.inp",
+        "type": 1    // 1=路径验证, 2=文件ID验证
+    }
+
+    返回:
+    {
+        "success": true,
+        "name": "file.inp",
+        "path": "/path/to/file.inp",
+        "inpSets": [{"type": "component", "name": "CHIP-1"}, ...]
+    }
+    """
     try:
-        result = orders_service.get_order(order_id)
-        # 这里可以扩展获取结果的逻辑
+        validated = VerifyFileRequest(**(get_snake_json() or {}))
+        result = orders_service.verify_file(validated.path, validated.type)
         return success(result)
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
 
 
 @orders_bp.route('/parse-param-excel', methods=['POST'])

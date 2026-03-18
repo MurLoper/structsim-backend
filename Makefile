@@ -16,7 +16,7 @@ install:
 	pip install -r requirements.txt
 
 dev:
-	python run.py --host 127.0.0.1 --port 5000
+	python run.py --host 127.0.0.1 --port 6060
 
 lint:
 	python -m ruff check .

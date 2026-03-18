@@ -23,6 +23,22 @@
       "primary_key": 0
     },
     {
+      "name": "project_id",
+      "type": "INTEGER",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0,
+      "comment": "关联项目ID, NULL=全局"
+    },
+    {
+      "name": "alg_type",
+      "type": "SMALLINT",
+      "nullable": true,
+      "default": 0,
+      "primary_key": 0,
+      "comment": "算法类型: 0=通用, 1=贝叶斯优化, 2=DOE"
+    },
+    {
       "name": "valid",
       "type": "SMALLINT",
       "nullable": true,

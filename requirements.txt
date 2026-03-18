@@ -16,6 +16,13 @@ pydantic[email]>=2.0.0
 # 安全
 cryptography>=42.0.0
 
+# 缓存
+redis>=5.0.0
+
+# Excel解析
+openpyxl>=3.1.0
+chardet>=5.0.0
+
 # 工具
 python-dotenv>=1.0.0
 requests>=2.32.0

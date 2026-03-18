@@ -31,6 +31,12 @@ class OrderUpdate(BaseModel):
     opt_param: Optional[Dict[str, Any]] = Field(None, description="可选参数")
 
 
+class VerifyFileRequest(BaseModel):
+    """文件验证请求"""
+    path: str = Field(..., description="文件路径或文件ID")
+    type: int = Field(1, description="验证类型: 1=路径验证, 2=文件ID验证")
+
+
 class OrderQuery(BaseModel):
     """订单查询参数"""
     page: int = Field(1, ge=1, description="页码")

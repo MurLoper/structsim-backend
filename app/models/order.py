@@ -53,6 +53,9 @@ class Order(db.Model):
     # 提交校验配置
     submit_check = db.Column(db.JSON, comment='提交校验配置')
     
+    # 工况概览（冗余存储，供列表展示）
+    condition_summary = db.Column(db.JSON, comment='工况概览 {姿态名: [仿真类型名,...]}')
+
     # 客户端元数据
     client_meta = db.Column(db.JSON, comment='客户端元数据 {lang, theme, ui_ver}')
     
@@ -89,6 +92,7 @@ class Order(db.Model):
             'progress': self.progress,
             'cur_node_id': self.cur_node_id,
             'submit_check': self.submit_check,
+            'condition_summary': self.condition_summary,
             'client_meta': self.client_meta,
             'created_by': self.created_by,
             'created_at': self.created_at,
@@ -102,6 +106,8 @@ class Order(db.Model):
             'order_no': self.order_no,
             'project_id': self.project_id,
             'sim_type_ids': self.sim_type_ids,
+            'fold_type_ids': self.fold_type_ids,
+            'condition_summary': self.condition_summary,
             'status': self.status,
             'progress': self.progress,
             'created_by': self.created_by,

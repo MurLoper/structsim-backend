@@ -22,10 +22,12 @@ service = CondOutGroupService()
 
 @cond_out_groups_bp.route('', methods=['GET'])
 def get_cond_out_groups():
-    """获取工况输出组合列表"""
+    """获取工况输出组合列表，支持 ?valid=1&projectId=1&algType=0 过滤"""
     try:
         valid = request.args.get('valid', type=int)
-        groups = service.get_all_groups(valid)
+        project_id = request.args.get('projectId', type=int)
+        alg_type = request.args.get('algType', type=int)
+        groups = service.get_all_groups(valid, project_id, alg_type)
         return success(data=groups)
     except Exception as e:
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))

@@ -10,7 +10,7 @@ from app.models.base import ToDictMixin
 class ParamGroup(db.Model, ToDictMixin):
     """参数组合表 - 将多个参数定义组合成可复用的参数组"""
     __tablename__ = 'param_groups'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False, comment='组合名称')
     description = db.Column(db.Text, comment='组合描述')
@@ -21,13 +21,25 @@ class ParamGroup(db.Model, ToDictMixin):
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
 
 
+class ParamGroupProjectRel(db.Model, ToDictMixin):
+    """参数组合-项目关联表（多对多）"""
+    __tablename__ = 'param_group_project_rels'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    param_group_id = db.Column(db.Integer, db.ForeignKey('param_groups.id'), nullable=False, comment='参数组合ID')
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False, comment='项目ID')
+    created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
+
+
 class ConditionOutputGroup(db.Model, ToDictMixin):
     """工况输出组合表 - 将工况和输出组合成可复用的配置组"""
     __tablename__ = 'condition_output_groups'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False, comment='组合名称')
     description = db.Column(db.Text, comment='组合描述')
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), comment='关联项目ID, NULL=全局')
+    alg_type = db.Column(db.SmallInteger, default=0, comment='算法类型: 0=通用, 1=贝叶斯优化, 2=DOE')
     valid = db.Column(db.SmallInteger, default=1, comment='1=有效,0=禁用')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
@@ -91,7 +103,11 @@ class ParamGroupParamRel(db.Model, ToDictMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     param_group_id = db.Column(db.Integer, db.ForeignKey('param_groups.id'), nullable=False, comment='参数组合ID')
     param_def_id = db.Column(db.Integer, db.ForeignKey('param_defs.id'), nullable=False, comment='参数定义ID')
-    default_value = db.Column(db.String(200), comment='该参数在此组合中的默认值')
+    default_value = db.Column(db.String(200), comment='该参数在此组合中的默认值(通用)')
+    min_val = db.Column(db.Float, comment='下限(覆盖参数定义)')
+    max_val = db.Column(db.Float, comment='上限(覆盖参数定义)')
+    doe_default_value = db.Column(db.String(200), comment='DOE算法默认值')
+    bayesian_default_value = db.Column(db.String(200), comment='贝叶斯优化算法默认值')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 
@@ -111,7 +127,7 @@ class CondOutGroupConditionRel(db.Model, ToDictMixin):
 
 
 class CondOutGroupOutputRel(db.Model, ToDictMixin):
-    """工况输出组合-输出关联表"""
+    """工况输出组合-输出关联表（含 resp_details 预配置）"""
     __tablename__ = 'cond_out_group_output_rels'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -119,6 +135,19 @@ class CondOutGroupOutputRel(db.Model, ToDictMixin):
                                    nullable=False, comment='工况输出组合ID')
     output_def_id = db.Column(db.Integer, db.ForeignKey('output_defs.id'),
                                nullable=False, comment='输出定义ID')
+    # ── resp_details 预配置字段 ──
+    set_name = db.Column(db.String(100), default='push', comment='set集名称，默认push')
+    component = db.Column(db.String(50), default='35', comment='component，默认35(other)')
+    step_name = db.Column(db.String(100), comment='分析步名称，特殊输出才需要')
+    section_point = db.Column(db.String(50), comment='积分点，特殊输出才需要')
+    special_output_set = db.Column(db.String(100), comment='特殊输出set，仅component为特殊值时需要')
+    description = db.Column(db.String(500), comment='输出描述')
+    weight = db.Column(db.Float, default=1.0, comment='权重')
+    multiple = db.Column(db.Float, default=1.0, comment='数量级')
+    lower_limit = db.Column(db.Float, default=0.0, comment='下限')
+    upper_limit = db.Column(db.Float, comment='上限')
+    target_type = db.Column(db.SmallInteger, default=3, comment='1:最大化 2:最小化 3:靠近目标值')
+    target_value = db.Column(db.Float, comment='目标值(target_type=3时)')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 

@@ -28,6 +28,7 @@ from app.models.config import (
 # 配置关联关系模型
 from app.models.config_relations import (
     ParamGroup,
+    ParamGroupProjectRel,
     ConditionOutputGroup,
     ProjectSimTypeRel,
     SimTypeParamGroupRel,
@@ -82,6 +83,7 @@ __all__ = [
     'ConditionConfig',
     # 配置关联关系
     'ParamGroup',
+    'ParamGroupProjectRel',
     'ConditionOutputGroup',
     'ProjectSimTypeRel',
     'SimTypeParamGroupRel',

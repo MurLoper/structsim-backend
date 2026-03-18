@@ -6,21 +6,32 @@
 from typing import Optional, List
 from sqlalchemy import select, and_
 from app.extensions import db
-from app.models import ParamGroup, ParamGroupParamRel, ParamDef
+from app.models import ParamGroup, ParamGroupProjectRel, ParamGroupParamRel, ParamDef
 
 
 class ParamGroupRepository:
     """参数组合仓储"""
-    
+
     @staticmethod
-    def find_all(valid: Optional[int] = None) -> List[ParamGroup]:
-        """查询所有参数组合"""
-        query = select(ParamGroup)
+    def find_all(valid: Optional[int] = None, project_id: Optional[int] = None) -> List[ParamGroup]:
+        """查询所有参数组合，支持按项目过滤（通过关联表）"""
+        if project_id is not None:
+            # 查询关联了该项目的组合 + 未关联任何项目的全局组合
+            sub = select(ParamGroupProjectRel.param_group_id).where(
+                ParamGroupProjectRel.project_id == project_id
+            )
+            query = select(ParamGroup).where(
+                ParamGroup.id.in_(sub) | ~ParamGroup.id.in_(
+                    select(ParamGroupProjectRel.param_group_id).distinct()
+                )
+            )
+        else:
+            query = select(ParamGroup)
         if valid is not None:
             query = query.where(ParamGroup.valid == valid)
         query = query.order_by(ParamGroup.sort.asc(), ParamGroup.id.asc())
         return db.session.execute(query).scalars().all()
-    
+
     @staticmethod
     def find_by_id(group_id: int) -> Optional[ParamGroup]:
         """根据ID查询参数组合"""
@@ -43,7 +54,7 @@ class ParamGroupRepository:
         db.session.add(group)
         db.session.flush()
         return group
-    
+
     @staticmethod
     def update(group: ParamGroup, data: dict) -> ParamGroup:
         """更新参数组合"""
@@ -52,7 +63,7 @@ class ParamGroupRepository:
                 setattr(group, key, value)
         db.session.flush()
         return group
-    
+
     @staticmethod
     def delete(group: ParamGroup) -> None:
         """删除参数组合"""
@@ -62,7 +73,7 @@ class ParamGroupRepository:
 
 class ParamGroupParamRelRepository:
     """参数组合-参数关联仓储"""
-    
+
     @staticmethod
     def find_by_group_id(group_id: int) -> List[ParamGroupParamRel]:
         """查询组合包含的所有参数"""
@@ -70,7 +81,7 @@ class ParamGroupParamRelRepository:
             ParamGroupParamRel.param_group_id == group_id
         ).order_by(ParamGroupParamRel.sort.asc(), ParamGroupParamRel.id.asc())
         return db.session.execute(query).scalars().all()
-    
+
     @staticmethod
     def find_by_group_and_param(group_id: int, param_def_id: int) -> Optional[ParamGroupParamRel]:
         """查询特定的参数关联"""
@@ -81,7 +92,7 @@ class ParamGroupParamRelRepository:
             )
         )
         return db.session.execute(query).scalar_one_or_none()
-    
+
     @staticmethod
     def create(data: dict) -> ParamGroupParamRel:
         """创建参数关联"""
@@ -89,13 +100,13 @@ class ParamGroupParamRelRepository:
         db.session.add(rel)
         db.session.flush()
         return rel
-    
+
     @staticmethod
     def delete(rel: ParamGroupParamRel) -> None:
         """删除参数关联"""
         db.session.delete(rel)
         db.session.flush()
-    
+
     @staticmethod
     def find_param_def_by_id(param_def_id: int) -> Optional[ParamDef]:
         """查询参数定义"""
@@ -129,4 +140,53 @@ class ParamGroupParamRelRepository:
         db.session.add(param_def)
         db.session.flush()
         return param_def
+
+
+class ParamGroupProjectRelRepository:
+    """参数组合-项目关联仓储"""
+
+    @staticmethod
+    def find_by_group_id(group_id: int) -> List[ParamGroupProjectRel]:
+        """查询组合关联的所有项目"""
+        query = select(ParamGroupProjectRel).where(
+            ParamGroupProjectRel.param_group_id == group_id
+        )
+        return db.session.execute(query).scalars().all()
+
+    @staticmethod
+    def find_project_ids_by_group(group_id: int) -> List[int]:
+        """查询组合关联的项目ID列表"""
+        query = select(ParamGroupProjectRel.project_id).where(
+            ParamGroupProjectRel.param_group_id == group_id
+        )
+        return list(db.session.execute(query).scalars().all())
+
+    @staticmethod
+    def replace_projects(group_id: int, project_ids: List[int]) -> None:
+        """替换组合的项目关联（先删后加）"""
+        # 删除旧关联
+        old_rels = db.session.execute(
+            select(ParamGroupProjectRel).where(
+                ParamGroupProjectRel.param_group_id == group_id
+            )
+        ).scalars().all()
+        for rel in old_rels:
+            db.session.delete(rel)
+        # 添加新关联
+        for pid in project_ids:
+            rel = ParamGroupProjectRel(param_group_id=group_id, project_id=pid)
+            db.session.add(rel)
+        db.session.flush()
+
+    @staticmethod
+    def delete_by_group_id(group_id: int) -> None:
+        """删除组合的所有项目关联"""
+        rels = db.session.execute(
+            select(ParamGroupProjectRel).where(
+                ParamGroupProjectRel.param_group_id == group_id
+            )
+        ).scalars().all()
+        for rel in rels:
+            db.session.delete(rel)
+        db.session.flush()
 

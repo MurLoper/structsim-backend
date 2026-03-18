@@ -19,11 +19,21 @@ class CondOutGroupRepository:
     """工况输出组合仓储"""
     
     @staticmethod
-    def find_all(valid: Optional[int] = None) -> List[ConditionOutputGroup]:
-        """查询所有工况输出组合"""
+    def find_all(valid: Optional[int] = None, project_id: Optional[int] = None,
+                 alg_type: Optional[int] = None) -> List[ConditionOutputGroup]:
+        """查询所有工况输出组合，支持按项目和算法类型过滤"""
         query = select(ConditionOutputGroup)
         if valid is not None:
             query = query.where(ConditionOutputGroup.valid == valid)
+        if project_id is not None:
+            if project_id == -1:
+                query = query.where(ConditionOutputGroup.project_id.is_(None))
+            else:
+                query = query.where(
+                    (ConditionOutputGroup.project_id == project_id) | (ConditionOutputGroup.project_id.is_(None))
+                )
+        if alg_type is not None:
+            query = query.where(ConditionOutputGroup.alg_type == alg_type)
         query = query.order_by(ConditionOutputGroup.sort.asc(), ConditionOutputGroup.id.asc())
         return db.session.execute(query).scalars().all()
     

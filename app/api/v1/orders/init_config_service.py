@@ -128,6 +128,8 @@ class OrderInitConfigService:
             options.append({
                 'paramGroupId': param_group.id,
                 'paramGroupName': param_group.name,
+                'projectId': param_group.project_id,
+                'algType': param_group.alg_type or 0,
                 'isDefault': rel.is_default,
                 'params': params
             })
@@ -177,12 +179,27 @@ class OrderInitConfigService:
                         'outputName': output_def.name,
                         'outputCode': output_def.code,
                         'unit': output_def.unit,
-                        'valType': output_def.val_type
+                        'valType': output_def.val_type,
+                        # resp_details 预配置
+                        'setName': output_rel.set_name or 'push',
+                        'component': output_rel.component or '35',
+                        'stepName': output_rel.step_name,
+                        'sectionPoint': output_rel.section_point,
+                        'specialOutputSet': output_rel.special_output_set,
+                        'description': output_rel.description,
+                        'weight': output_rel.weight or 1.0,
+                        'multiple': output_rel.multiple or 1.0,
+                        'lowerLimit': output_rel.lower_limit or 0.0,
+                        'upperLimit': output_rel.upper_limit,
+                        'targetType': output_rel.target_type or 3,
+                        'targetValue': output_rel.target_value,
                     })
 
             options.append({
                 'condOutGroupId': cond_out_group.id,
                 'condOutGroupName': cond_out_group.name,
+                'projectId': cond_out_group.project_id,
+                'algType': cond_out_group.alg_type or 0,
                 'isDefault': rel.is_default,
                 'conditions': conditions,
                 'outputs': outputs

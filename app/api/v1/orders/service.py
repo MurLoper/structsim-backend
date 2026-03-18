@@ -3,11 +3,14 @@
 职责：处理业务逻辑、调用Repository、事务管理
 禁止：直接处理HTTP请求/响应、直接操作数据库
 """
+import os
+import re
 import time
 import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 from math import ceil
 
+from flask import current_app
 from app.common.errors import NotFoundError, BusinessError
 from app.constants import ErrorCode
 from .repository import orders_repository
@@ -116,6 +119,7 @@ class OrdersService:
             'sim_type_ids': order_data.get('sim_type_ids', []),
             'opt_param': order_data.get('opt_param', {}),
             'input_json': order_data.get('input_json', {}),
+            'condition_summary': order_data.get('condition_summary'),
             'workflow_id': order_data.get('workflow_id'),
             'submit_check': order_data.get('submit_check'),
             'client_meta': order_data.get('client_meta'),
@@ -143,10 +147,16 @@ class OrdersService:
         if not order:
             raise NotFoundError("订单不存在")
         
-        # 只允许更新特定字段
-        allowed_fields = ['remark', 'participant_uids', 'opt_param']
+        # 允许更新的字段（编辑态需要全量更新提单数据）
+        allowed_fields = [
+            'remark', 'participant_uids', 'opt_param',
+            'input_json', 'sim_type_ids', 'fold_type_ids',
+            'origin_file_type', 'origin_file_name', 'origin_file_path', 'origin_file_id',
+            'origin_fold_type_id', 'model_level_id', 'condition_summary',
+            'workflow_id', 'submit_check', 'client_meta',
+        ]
         filtered_data = {
-            k: v for k, v in update_data.items() 
+            k: v for k, v in update_data.items()
             if k in allowed_fields and v is not None
         }
         
@@ -175,6 +185,122 @@ class OrdersService:
             )
         
         self.repository.delete_order(order)
+
+    def verify_file(self, path: str, file_type: int = 1) -> Dict:
+        """
+        验证源文件是否存在，并解析 INP 文件的 set 集信息
+
+        Args:
+            path: 文件路径(type=1)或文件ID(type=2)
+            file_type: 1=路径验证, 2=文件ID验证
+        Returns:
+            验证结果字典，包含 success, name, path, inpSets
+        Raises:
+            NotFoundError: 文件不存在
+            BusinessError: 路径格式无效
+        """
+        if file_type == 2:
+            # 文件ID验证：查数据库
+            try:
+                file_id = int(path)
+            except (ValueError, TypeError):
+                raise BusinessError(ErrorCode.VALIDATION_ERROR, "文件ID格式无效")
+            # 查询上传记录
+            from app.models.order import UploadFile
+            upload = UploadFile.query.get(file_id)
+            if not upload:
+                raise NotFoundError("文件记录不存在")
+            return {
+                'success': True,
+                'name': upload.original_name or f'file_{file_id}',
+                'path': upload.storage_path or path,
+                'inpSets': [],
+            }
+
+        # type=1: 路径验证
+        if not path or not path.strip():
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "文件路径不能为空")
+
+        clean_path = path.strip()
+        file_name = os.path.basename(clean_path)
+
+        if not file_name:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "无法从路径中提取文件名")
+
+        # 尝试在配置的 UPLOAD_FOLDER 下定位文件
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', './storage')
+        abs_path = clean_path if os.path.isabs(clean_path) else os.path.join(upload_folder, clean_path)
+
+        inp_sets: List[Dict] = []
+
+        if os.path.isfile(abs_path):
+            # 文件存在，解析 INP set 集
+            if file_name.lower().endswith('.inp'):
+                inp_sets = self._parse_inp_sets(abs_path)
+        else:
+            # 文件不在本地 — 但路径格式合法即视为通过
+            # 生产环境中文件可能在远程 NFS/共享存储上
+            current_app.logger.info(f"文件不在本地: {abs_path}，路径格式验证通过")
+            # 对 .inp 路径返回空 inpSets，前端可手动配置
+            if file_name.lower().endswith('.inp'):
+                inp_sets = []
+
+        result: Dict = {
+            'success': True,
+            'name': file_name,
+            'path': clean_path,
+        }
+        if inp_sets or file_name.lower().endswith('.inp'):
+            result['inpSets'] = inp_sets
+        return result
+
+    @staticmethod
+    def _parse_inp_sets(file_path: str) -> List[Dict]:
+        """
+        解析 INP 文件中的 set 集定义
+
+        支持的关键字:
+        - *ELSET, ELSET=name
+        - *NSET, NSET=name
+        - *PART, NAME=name (→ component)
+        - *INSTANCE, NAME=name (→ component)
+
+        Returns:
+            [{"type": "eleset"|"nodeset"|"component", "name": "SET-1"}, ...]
+        """
+        sets: List[Dict] = []
+        seen: set = set()
+
+        # 正则：匹配 *KEYWORD, ... NAME=xxx 或 ELSET=xxx 等
+        pattern_elset = re.compile(r'\*ELSET\b.*?ELSET\s*=\s*([^\s,]+)', re.IGNORECASE)
+        pattern_nset = re.compile(r'\*NSET\b.*?NSET\s*=\s*([^\s,]+)', re.IGNORECASE)
+        pattern_part = re.compile(r'\*PART\b.*?NAME\s*=\s*([^\s,]+)', re.IGNORECASE)
+        pattern_instance = re.compile(r'\*INSTANCE\b.*?NAME\s*=\s*([^\s,]+)', re.IGNORECASE)
+
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line.startswith('*'):
+                        continue
+
+                    for pattern, set_type in [
+                        (pattern_elset, 'eleset'),
+                        (pattern_nset, 'nodeset'),
+                        (pattern_part, 'component'),
+                        (pattern_instance, 'component'),
+                    ]:
+                        m = pattern.match(line)
+                        if m:
+                            name = m.group(1).strip()
+                            key = (set_type, name)
+                            if key not in seen:
+                                seen.add(key)
+                                sets.append({'type': set_type, 'name': name})
+        except Exception as e:
+            current_app.logger.warning(f"解析 INP 文件失败: {file_path}, {e}")
+
+        return sets
 
     def get_statistics(self) -> Dict:
         """获取订单统计数据"""

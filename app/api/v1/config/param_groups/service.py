@@ -7,34 +7,41 @@ import time
 from typing import Optional, List, Dict, Any
 from app.extensions import db
 from app.common.errors import NotFoundError, BusinessError
-from .repository import ParamGroupRepository, ParamGroupParamRelRepository
+from .repository import ParamGroupRepository, ParamGroupParamRelRepository, ParamGroupProjectRelRepository
 
 
 class ParamGroupService:
     """参数组合服务"""
-    
+
     def __init__(self):
         self.repo = ParamGroupRepository()
         self.rel_repo = ParamGroupParamRelRepository()
-    
-    def get_all_groups(self, valid: Optional[int] = None) -> List[Dict[str, Any]]:
-        """获取所有参数组合"""
-        groups = self.repo.find_all(valid)
-        return [group.to_dict() for group in groups]
-    
+        self.proj_repo = ParamGroupProjectRelRepository()
+
+    def _enrich_group(self, group_dict: dict) -> dict:
+        """为组合数据附加 project_ids"""
+        group_dict['project_ids'] = self.proj_repo.find_project_ids_by_group(group_dict['id'])
+        return group_dict
+
+    def get_all_groups(self, valid: Optional[int] = None,
+                       project_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        """获取所有参数组合，支持按项目过滤"""
+        groups = self.repo.find_all(valid, project_id)
+        return [self._enrich_group(g.to_dict()) for g in groups]
+
     def get_group_by_id(self, group_id: int) -> Dict[str, Any]:
         """获取参数组合详情"""
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"参数组合 {group_id} 不存在")
-        return group.to_dict()
+        return self._enrich_group(group.to_dict())
     
     def get_group_detail(self, group_id: int) -> Dict[str, Any]:
         """获取参数组合详情（包含参数列表）"""
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"参数组合 {group_id} 不存在")
-        
+
         # 获取组合包含的参数
         param_rels = self.rel_repo.find_by_group_id(group_id)
         params = []
@@ -46,21 +53,26 @@ class ParamGroupService:
                 param_data['param_key'] = param_def.key
                 param_data['unit'] = param_def.unit
                 param_data['val_type'] = param_def.val_type
+                param_data['def_min_val'] = param_def.min_val
+                param_data['def_max_val'] = param_def.max_val
+                param_data['def_default_val'] = param_def.default_val
             params.append(param_data)
-        
-        result = group.to_dict()
+
+        result = self._enrich_group(group.to_dict())
         result['params'] = params
         return result
-    
+
     def create_group(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """创建参数组合"""
-        # 同名校验
         name = data.get('name', '').strip()
         if not name:
             raise BusinessError("组合名称不能为空")
         existing = self.repo.find_by_name(name)
         if existing:
             raise BusinessError(f"参数组合名称「{name}」已存在")
+
+        # 提取 project_ids（不传给 ORM）
+        project_ids = data.pop('project_ids', [])
 
         now = int(time.time())
         data['created_at'] = now
@@ -69,48 +81,56 @@ class ParamGroupService:
 
         try:
             group = self.repo.create(data)
+            # 创建项目关联
+            if project_ids:
+                self.proj_repo.replace_projects(group.id, project_ids)
             db.session.commit()
-            return group.to_dict()
+            return self._enrich_group(group.to_dict())
         except Exception as e:
             db.session.rollback()
             raise BusinessError(f"创建参数组合失败: {str(e)}")
-    
+
     def update_group(self, group_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         """更新参数组合"""
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"参数组合 {group_id} 不存在")
 
-        # 同名校验（排除自身）
         name = data.get('name', '').strip()
         if name:
             existing = self.repo.find_by_name(name, exclude_id=group_id)
             if existing:
                 raise BusinessError(f"参数组合名称「{name}」已存在")
 
+        # 提取 project_ids（不传给 ORM）
+        project_ids = data.pop('project_ids', None)
         data['updated_at'] = int(time.time())
 
         try:
             updated_group = self.repo.update(group, data)
+            # 更新项目关联（仅当传了 project_ids 时）
+            if project_ids is not None:
+                self.proj_repo.replace_projects(group_id, project_ids)
             db.session.commit()
-            return updated_group.to_dict()
+            return self._enrich_group(updated_group.to_dict())
         except Exception as e:
             db.session.rollback()
             raise BusinessError(f"更新参数组合失败: {str(e)}")
-    
+
     def delete_group(self, group_id: int) -> None:
         """删除参数组合"""
         group = self.repo.find_by_id(group_id)
         if not group:
             raise NotFoundError(f"参数组合 {group_id} 不存在")
-        
+
         try:
-            # 先删除所有参数关联
+            # 删除项目关联
+            self.proj_repo.delete_by_group_id(group_id)
+            # 删除参数关联
             param_rels = self.rel_repo.find_by_group_id(group_id)
             for rel in param_rels:
                 self.rel_repo.delete(rel)
-            
-            # 再删除组合本身
+            # 删除组合本身
             self.repo.delete(group)
             db.session.commit()
         except Exception as e:
@@ -133,8 +153,11 @@ class ParamGroupService:
                 param_data['param_key'] = param_def.key
                 param_data['unit'] = param_def.unit
                 param_data['val_type'] = param_def.val_type
+                param_data['def_min_val'] = param_def.min_val
+                param_data['def_max_val'] = param_def.max_val
+                param_data['def_default_val'] = param_def.default_val
             params.append(param_data)
-        
+
         return params
     
     def add_param_to_group(self, group_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -157,6 +180,10 @@ class ParamGroupService:
             'param_group_id': group_id,
             'param_def_id': param_def_id,
             'default_value': data.get('default_value'),
+            'min_val': data.get('min_val'),
+            'max_val': data.get('max_val'),
+            'doe_default_value': data.get('doe_default_value'),
+            'bayesian_default_value': data.get('bayesian_default_value'),
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -240,6 +267,10 @@ class ParamGroupService:
                     'param_group_id': group_id,
                     'param_def_id': param_def_id,
                     'default_value': param.get('default_value'),
+                    'min_val': param.get('min_val'),
+                    'max_val': param.get('max_val'),
+                    'doe_default_value': param.get('doe_default_value'),
+                    'bayesian_default_value': param.get('bayesian_default_value'),
                     'sort': param.get('sort', 100 + idx),
                     'created_at': int(time.time())
                 }
@@ -322,6 +353,10 @@ class ParamGroupService:
                     'param_group_id': group_id,
                     'param_def_id': param_def_id,
                     'default_value': param.get('default_value'),
+                    'min_val': param.get('min_val'),
+                    'max_val': param.get('max_val'),
+                    'doe_default_value': param.get('doe_default_value'),
+                    'bayesian_default_value': param.get('bayesian_default_value'),
                     'sort': param.get('sort', 100 + idx),
                     'created_at': int(time.time())
                 }

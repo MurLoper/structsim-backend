@@ -22,9 +22,11 @@ class CondOutGroupService:
         self.cond_rel_repo = CondOutGroupConditionRelRepository()
         self.output_rel_repo = CondOutGroupOutputRelRepository()
     
-    def get_all_groups(self, valid: Optional[int] = None) -> List[Dict[str, Any]]:
-        """获取所有工况输出组合"""
-        groups = self.repo.find_all(valid)
+    def get_all_groups(self, valid: Optional[int] = None,
+                       project_id: Optional[int] = None,
+                       alg_type: Optional[int] = None) -> List[Dict[str, Any]]:
+        """获取所有工况输出组合，支持按项目和算法类型过滤"""
+        groups = self.repo.find_all(valid, project_id, alg_type)
         return [group.to_dict() for group in groups]
     
     def get_group_by_id(self, group_id: int) -> Dict[str, Any]:
@@ -244,14 +246,23 @@ class CondOutGroupService:
         if not output_def:
             raise NotFoundError(f"输出定义 {output_def_id} 不存在")
 
-        # 检查是否已存在
-        existing = self.output_rel_repo.find_by_group_and_output(group_id, output_def_id)
-        if existing:
-            raise BusinessError(f"输出 {output_def_id} 已在组合中")
+        # 同一输出可以出现多次（不同 set），不做唯一性检查
 
         rel_data = {
             'cond_out_group_id': group_id,
             'output_def_id': output_def_id,
+            'set_name': data.get('set_name', 'push'),
+            'component': data.get('component', '35'),
+            'step_name': data.get('step_name'),
+            'section_point': data.get('section_point'),
+            'special_output_set': data.get('special_output_set'),
+            'description': data.get('description'),
+            'weight': data.get('weight', 1.0),
+            'multiple': data.get('multiple', 1.0),
+            'lower_limit': data.get('lower_limit', 0.0),
+            'upper_limit': data.get('upper_limit'),
+            'target_type': data.get('target_type', 3),
+            'target_value': data.get('target_value'),
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }

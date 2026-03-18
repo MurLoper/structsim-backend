@@ -21,10 +21,11 @@ service = ParamGroupService()
 
 @param_groups_bp.route('', methods=['GET'])
 def get_param_groups():
-    """获取参数组合列表"""
+    """获取参数组合列表，支持 ?valid=1&projectId=1 过滤"""
     try:
         valid = request.args.get('valid', type=int)
-        groups = service.get_all_groups(valid)
+        project_id = request.args.get('projectId', type=int)
+        groups = service.get_all_groups(valid, project_id)
         return success(data=groups)
     except Exception as e:
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
