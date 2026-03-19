@@ -17,6 +17,7 @@ class ConditionConfigCreateRequest(BaseModel):
     default_param_group_id: Optional[int] = Field(None, description="默认参数组ID")
     default_output_group_id: Optional[int] = Field(None, description="默认输出组ID")
     default_solver_id: Optional[int] = Field(None, description="默认求解器ID")
+    is_default: Optional[int] = Field(0, description="是否默认仿真类型 1=默认 0=非默认")
     sort: Optional[int] = Field(100, description="排序")
     remark: Optional[str] = Field(None, description="备注")
 
@@ -30,6 +31,7 @@ class ConditionConfigUpdateRequest(BaseModel):
     default_param_group_id: Optional[int] = Field(None, description="默认参数组ID")
     default_output_group_id: Optional[int] = Field(None, description="默认输出组ID")
     default_solver_id: Optional[int] = Field(None, description="默认求解器ID")
+    is_default: Optional[int] = Field(None, description="是否默认仿真类型 1=默认 0=非默认")
     valid: Optional[int] = Field(None, description="是否有效")
     sort: Optional[int] = Field(None, description="排序")
     remark: Optional[str] = Field(None, description="备注")
@@ -47,6 +49,7 @@ class ConditionConfigResponse(BaseModel):
     default_param_group_id: Optional[int] = None
     default_output_group_id: Optional[int] = None
     default_solver_id: Optional[int] = None
+    is_default: Optional[int] = 0
     valid: int
     sort: int
     remark: Optional[str] = None

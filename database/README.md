@@ -1,75 +1,35 @@
-# 数据库管理工具
+# database 目录说明
 
-## 目录结构
+## 结构关系（清晰版）
 
-```
-database/
-├── schemas/          # 表结构定义（JSON格式）
-├── data/            # 基础数据（JSON格式）
-├── migrations/      # 数据库迁移脚本
-├── sync_database.py # 数据库同步工具
-├── one_click_sync.py # 一键同步脚本
-└── init_data.py     # 数据初始化脚本
-```
+- `export_mysql.py`：从**源 MySQL**导出完整 SQL（建表 + 数据）
+- `import_mysql.py`：向**目标 MySQL**导入 SQL（自动处理外键检查）
+- `migrations/`：结构变更脚本（DDL）
+- `init-data/`：种子数据源（JSON）
+- `db_manager.py`：初始化/seed/状态检查（把 `init-data` 写入数据库）
+- `export/`：导出的 SQL 文件
 
-## 使用说明
+> 结论：**可用数据同步链路 = migrations →（必要时 seed）→ export_mysql → import_mysql**
 
-### 1. 导出当前数据库结构
+---
 
-```bash
-python database/sync_database.py export
-```
+## 最短执行步骤（只保留必要动作）
 
-导出结果保存在 `database/schemas/` 目录
+1) 在源库先补齐结构（执行 `database/migrations/*.sql`，至少确保 `orders.condition_summary` 存在）
 
-### 2. 一键同步数据库（推荐）
+2) 一键跨库同步（可直接复制）
 
 ```bash
-python database/one_click_sync.py
+python database/export_mysql.py --source-db-url "mysql+pymysql://SOURCE_USER:SOURCE_PASS@SOURCE_HOST:3306/SOURCE_DB" --sync-db-url "mysql+pymysql://TARGET_USER:TARGET_PASS@TARGET_HOST:3306/TARGET_DB"
 ```
 
-功能：
-- 检查表是否存在，不存在则创建
-- 自动兼容 SQLite 和 MySQL
-- 显示同步进度和结果
+3) 验收一个接口：
+- `/api/v1/orders?page=1&pageSize=20`
 
-### 3. 初始化基础数据
+---
 
-```bash
-python database/init_data.py
-```
+## 原理与补救（简版）
 
-从 `database/data/` 目录导入配置数据
-
-## MySQL 切换步骤
-
-1. 修改 `.env` 配置：
-
-```env
-DATABASE_URL=mysql+pymysql://user:password@localhost:3306/structsim
-```
-
-2. 安装 MySQL 驱动：
-
-```bash
-pip install pymysql
-```
-
-3. 运行同步脚本：
-
-```bash
-python database/one_click_sync.py
-```
-
-4. 导入数据（可选）：
-
-```bash
-python database/init_data.py
-```
-
-## 注意事项
-
-- 脚本自动处理 SQLite 和 MySQL 的语法差异
-- MySQL 使用 InnoDB 引擎和 utf8mb4 字符集
-- 已存在的表不会被覆盖
-- 数据导入会跳过已有数据的表
+- 原理：导出脚本生成“可重放 SQL”，导入脚本在执行时关闭外键检查，避免因表顺序/FK 依赖导致失败。
+- 若同步后缺数据：说明源库本身未入库完整（常见是只改了 `init-data`，未执行 seed）；先把数据写入源库，再重新同步。
+- 若仍失败：用 `import_mysql.py --continue-on-error` 收集失败语句，再按报错补齐 schema/数据。

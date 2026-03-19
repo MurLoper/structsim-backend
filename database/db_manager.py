@@ -379,54 +379,11 @@ def seed_menus():
     """导入菜单数据"""
     print("\n📋 导入菜单数据...")
 
-    menus_data = [
-        # 顶级菜单
-        {'id': 1, 'parent_id': 0, 'name': 'Dashboard', 'title_i18n_key': 'nav.dashboard',
-         'icon': 'LayoutDashboard', 'path': '/', 'component': 'pages/dashboard/Dashboard',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': None, 'sort': 10},
-
-        {'id': 2, 'parent_id': 0, 'name': 'Orders', 'title_i18n_key': 'nav.orders',
-         'icon': 'FileText', 'path': '/orders', 'component': 'pages/orders/OrderList',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_VIEW', 'sort': 20},
-
-        {'id': 3, 'parent_id': 0, 'name': 'New Simulation', 'title_i18n_key': 'nav.new_simulation',
-         'icon': 'Plus', 'path': '/create', 'component': 'pages/submission/SubmissionPage',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'ORDER_CREATE', 'sort': 30},
-
-        {'id': 4, 'parent_id': 0, 'name': 'Configuration', 'title_i18n_key': 'nav.configuration',
-         'icon': 'Settings', 'path': '/config', 'component': None,
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 40},
-
-        # 配置子菜单 - 新结构
-        {'id': 41, 'parent_id': 4, 'name': 'Basic Config', 'title_i18n_key': 'nav.config.basic',
-         'icon': 'Cube', 'path': '/config/basic', 'component': 'pages/configuration/BasicConfig',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 41},
-
-        {'id': 42, 'parent_id': 4, 'name': 'Groups Config', 'title_i18n_key': 'nav.config.groups',
-         'icon': 'Folder', 'path': '/config/groups', 'component': 'pages/configuration/GroupsConfig',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 42},
-
-        {'id': 43, 'parent_id': 4, 'name': 'Relations Config', 'title_i18n_key': 'nav.config.relations',
-         'icon': 'Link', 'path': '/config/relations', 'component': 'pages/configuration/RelationsConfig',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 43},
-
-        {'id': 44, 'parent_id': 4, 'name': 'System Config', 'title_i18n_key': 'nav.config.system',
-         'icon': 'Server', 'path': '/config/system', 'component': 'pages/configuration/SystemConfig',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 44},
-
-        {'id': 45, 'parent_id': 4, 'name': 'Permissions', 'title_i18n_key': 'nav.config.permissions',
-         'icon': 'Shield', 'path': '/config/permissions', 'component': 'pages/configuration/PermissionsConfig',
-         'menu_type': 'MENU', 'hidden': 0, 'permission_code': 'CONFIG_VIEW', 'sort': 45},
-
-        # 隐藏页面（不在菜单显示但需要路由）
-        {'id': 100, 'parent_id': 0, 'name': 'Order Detail', 'title_i18n_key': 'nav.order_detail',
-         'icon': None, 'path': '/orders/:id', 'component': 'pages/orders/OrderDetail',
-         'menu_type': 'MENU', 'hidden': 1, 'permission_code': 'ORDER_VIEW', 'sort': 100},
-
-        {'id': 101, 'parent_id': 0, 'name': 'Results', 'title_i18n_key': 'nav.results',
-         'icon': None, 'path': '/results/:orderId/:simTypeId', 'component': 'pages/results/ResultsPage',
-         'menu_type': 'MENU', 'hidden': 1, 'permission_code': 'ORDER_VIEW', 'sort': 101},
-    ]
+    menus_json = load_json('menus.json')
+    menus_data = menus_json.get('menus', []) if isinstance(menus_json, dict) else []
+    if not menus_data:
+        print("⚠️  menus.json 不存在或为空，跳过")
+        return
 
     count = 0
     for item in menus_data:

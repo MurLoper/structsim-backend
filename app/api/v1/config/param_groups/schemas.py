@@ -41,8 +41,7 @@ class AddParamToGroupRequest(BaseModel):
     default_value: Optional[str] = Field(None, max_length=200, description="默认值(通用)")
     min_val: Optional[float] = Field(None, description="下限(覆盖参数定义)")
     max_val: Optional[float] = Field(None, description="上限(覆盖参数定义)")
-    doe_default_value: Optional[str] = Field(None, max_length=200, description="DOE算法默认值")
-    bayesian_default_value: Optional[str] = Field(None, max_length=200, description="贝叶斯优化默认值")
+    enum_values: Optional[str] = Field(None, max_length=500, description="枚举值,逗号分隔(DOE遍历用)")
     sort: Optional[int] = Field(100, description="排序")
 
 
@@ -54,8 +53,7 @@ class ParamInGroupResponse(BaseModel):
     default_value: Optional[str]
     min_val: Optional[float] = None
     max_val: Optional[float] = None
-    doe_default_value: Optional[str] = None
-    bayesian_default_value: Optional[str] = None
+    enum_values: Optional[str] = None
     sort: int
     created_at: int
     # 参数定义信息

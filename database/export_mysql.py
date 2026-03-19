@@ -1,88 +1,192 @@
 """
-导出MySQL数据库到SQL文件
-用于迁移到内网环境
+导出 MySQL 数据库为可重放 SQL，并可一键同步到目标数据库。
+
+用法示例:
+  python database/export_mysql.py
+  python database/export_mysql.py --source-db-url mysql+pymysql://user:pass@host:3306/db
+  python database/export_mysql.py --sync-db-url mysql+pymysql://user:pass@target:3306/db
 """
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
 import sys
+from datetime import date, datetime, time
+from decimal import Decimal
 from pathlib import Path
+from typing import Iterable, List, Sequence
+
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover
+    def load_dotenv(*args, **kwargs):
+        return False
+
+from sqlalchemy import MetaData, create_engine, text
+
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import create_engine, MetaData, text, inspect
-from datetime import datetime
+EXPORT_DIR = Path(__file__).parent / 'export'
 
-MYSQL_URL = 'mysql+pymysql://opti_user:cQi8Xjw3xTbJFG7s@api.xinqilingxi.cn:3306/sim_ai_paltform'
-OUTPUT_DIR = Path(__file__).parent / 'export'
 
-def export_database():
-    """导出数据库结构和数据"""
-    OUTPUT_DIR.mkdir(exist_ok=True)
+def escape_mysql_string(value: str) -> str:
+    return (
+        value.replace('\\', '\\\\')
+        .replace("'", "\\'")
+        .replace('\0', '\\0')
+        .replace('\n', '\\n')
+        .replace('\r', '\\r')
+        .replace('\x1a', '\\Z')
+    )
 
-    engine = create_engine(MYSQL_URL)
+
+def to_sql_literal(value) -> str:
+    if value is None:
+        return 'NULL'
+    if isinstance(value, bool):
+        return '1' if value else '0'
+    if isinstance(value, (int, float, Decimal)):
+        return str(value)
+    if isinstance(value, (datetime, date, time)):
+        return f"'{escape_mysql_string(value.isoformat(sep=' '))}'"
+    if isinstance(value, (dict, list)):
+        return f"'{escape_mysql_string(json.dumps(value, ensure_ascii=False))}'"
+    if isinstance(value, bytes):
+        return f"X'{value.hex()}'"
+    return f"'{escape_mysql_string(str(value))}'"
+
+
+def parse_csv(value: str | None) -> set[str]:
+    if not value:
+        return set()
+    return {item.strip() for item in value.split(',') if item.strip()}
+
+
+def collect_tables(metadata: MetaData, include: set[str], exclude: set[str]) -> List[str]:
+    names = list(metadata.tables.keys())
+    if include:
+        names = [name for name in names if name in include]
+    if exclude:
+        names = [name for name in names if name not in exclude]
+    return sorted(names)
+
+
+def export_database(
+    source_db_url: str,
+    output_file: Path,
+    include_tables: set[str] | None = None,
+    exclude_tables: set[str] | None = None,
+    chunk_size: int = 500,
+) -> Path:
+    include_tables = include_tables or set()
+    exclude_tables = exclude_tables or set()
+
+    engine = create_engine(source_db_url)
     metadata = MetaData()
     metadata.reflect(bind=engine)
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = OUTPUT_DIR / f'database_export_{timestamp}.sql'
+    tables = collect_tables(metadata, include_tables, exclude_tables)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    print("=" * 60)
-    print("导出MySQL数据库")
-    print("=" * 60)
-    print(f"\n输出文件: {output_file}\n")
+    with open(output_file, 'w', encoding='utf-8', newline='\n') as f, engine.connect() as conn:
+        f.write('-- StructSim DB Export\n')
+        f.write(f'-- ExportedAt: {datetime.now().isoformat()}\n')
+        f.write(f'-- TableCount: {len(tables)}\n\n')
+        f.write('SET NAMES utf8mb4;\n')
+        f.write('SET FOREIGN_KEY_CHECKS=0;\n\n')
 
-    with open(output_file, 'w', encoding='utf-8') as f:
-        # 写入头部
-        f.write("-- StructSim AI Platform Database Export\n")
-        f.write(f"-- Export Time: {datetime.now()}\n")
-        f.write("-- Database: sim_ai_paltform\n\n")
-        f.write("SET FOREIGN_KEY_CHECKS=0;\n")
-        f.write("SET NAMES utf8mb4;\n\n")
+        for table_name in tables:
+            print(f'导出表: {table_name}')
+            create_sql_row = conn.execute(text(f"SHOW CREATE TABLE `{table_name}`")).fetchone()
+            if not create_sql_row:
+                continue
+            create_sql = create_sql_row[1]
 
-        with engine.connect() as conn:
-            # 导出每个表
-            for table_name in sorted(metadata.tables.keys()):
-                print(f"导出表: {table_name}")
+            f.write(f'-- Table: {table_name}\n')
+            f.write(f'DROP TABLE IF EXISTS `{table_name}`;\n')
+            f.write(f'{create_sql};\n\n')
 
-                # 获取建表语句
-                result = conn.execute(text(f"SHOW CREATE TABLE {table_name}"))
-                create_sql = result.fetchone()[1]
+            rows = conn.execute(text(f"SELECT * FROM `{table_name}`")).fetchall()
+            if not rows:
+                continue
 
-                f.write(f"-- Table: {table_name}\n")
-                f.write(f"DROP TABLE IF EXISTS `{table_name}`;\n")
-                f.write(f"{create_sql};\n\n")
+            columns = list(metadata.tables[table_name].columns.keys())
+            col_sql = ', '.join(f'`{c}`' for c in columns)
 
-                # 导出数据
-                data = conn.execute(text(f"SELECT * FROM {table_name}")).fetchall()
-                if data:
-                    columns = metadata.tables[table_name].columns.keys()
-                    col_str = ', '.join([f'`{col}`' for col in columns])
+            f.write(f'-- Data: {table_name}\n')
+            for i in range(0, len(rows), chunk_size):
+                chunk = rows[i:i + chunk_size]
+                values_sql = []
+                for row in chunk:
+                    values_sql.append(
+                        '(' + ', '.join(to_sql_literal(v) for v in row) + ')'
+                    )
+                f.write(f"INSERT INTO `{table_name}` ({col_sql}) VALUES\n")
+                f.write(',\n'.join(values_sql))
+                f.write(';\n')
+            f.write('\n')
 
-                    f.write(f"-- Data for {table_name}\n")
-                    f.write(f"INSERT INTO `{table_name}` ({col_str}) VALUES\n")
+        f.write('SET FOREIGN_KEY_CHECKS=1;\n')
 
-                    for i, row in enumerate(data):
-                        values = []
-                        for val in row:
-                            if val is None:
-                                values.append('NULL')
-                            elif isinstance(val, (int, float)):
-                                values.append(str(val))
-                            else:
-                                # 转义字符串
-                                val_str = str(val).replace('\\', '\\\\').replace("'", "\\'")
-                                values.append(f"'{val_str}'")
+    return output_file
 
-                        value_str = f"({', '.join(values)})"
-                        if i < len(data) - 1:
-                            f.write(f"{value_str},\n")
-                        else:
-                            f.write(f"{value_str};\n")
 
-                    f.write(f"\n")
+def build_output_file(path_arg: str | None) -> Path:
+    if path_arg:
+        p = Path(path_arg)
+        return p if p.is_absolute() else (Path.cwd() / p)
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return EXPORT_DIR / f'database_export_{ts}.sql'
 
-        f.write("SET FOREIGN_KEY_CHECKS=1;\n")
 
-    print(f"\n导出完成！")
-    print(f"文件大小: {output_file.stat().st_size / 1024:.2f} KB")
-    print(f"文件路径: {output_file}")
+def main() -> int:
+    load_dotenv()
+
+    parser = argparse.ArgumentParser(description='导出 MySQL 数据库到 SQL 文件')
+    parser.add_argument('--source-db-url', default=os.getenv('DATABASE_URL'), help='源数据库连接 URL，默认读取 DATABASE_URL')
+    parser.add_argument('--output-file', default=None, help='输出 SQL 文件路径')
+    parser.add_argument('--only-tables', default=None, help='仅导出指定表，逗号分隔')
+    parser.add_argument('--exclude-tables', default=None, help='排除指定表，逗号分隔')
+    parser.add_argument('--chunk-size', type=int, default=500, help='INSERT 批量大小')
+    parser.add_argument('--sync-db-url', default=None, help='导出完成后直接导入到目标数据库')
+    args = parser.parse_args()
+
+    if not args.source_db_url:
+        print('错误: 未提供源数据库 URL，请设置 DATABASE_URL 或传 --source-db-url')
+        return 1
+
+    output_file = build_output_file(args.output_file)
+    include_tables = parse_csv(args.only_tables)
+    exclude_tables = parse_csv(args.exclude_tables)
+
+    print('=' * 60)
+    print('导出数据库')
+    print('=' * 60)
+    print(f'源库: {args.source_db_url}')
+    print(f'输出: {output_file}')
+
+    exported = export_database(
+        source_db_url=args.source_db_url,
+        output_file=output_file,
+        include_tables=include_tables,
+        exclude_tables=exclude_tables,
+        chunk_size=max(1, args.chunk_size),
+    )
+
+    print(f'\n导出完成: {exported}')
+
+    if args.sync_db_url:
+        from import_mysql import import_database
+
+        print('\n开始一键同步到目标库...')
+        ok = import_database(sql_file=str(exported), db_url=args.sync_db_url, stop_on_error=True)
+        return 0 if ok else 2
+
+    return 0
+
 
 if __name__ == '__main__':
-    export_database()
+    raise SystemExit(main())

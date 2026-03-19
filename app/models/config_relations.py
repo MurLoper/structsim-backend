@@ -106,8 +106,7 @@ class ParamGroupParamRel(db.Model, ToDictMixin):
     default_value = db.Column(db.String(200), comment='该参数在此组合中的默认值(通用)')
     min_val = db.Column(db.Float, comment='下限(覆盖参数定义)')
     max_val = db.Column(db.Float, comment='上限(覆盖参数定义)')
-    doe_default_value = db.Column(db.String(200), comment='DOE算法默认值')
-    bayesian_default_value = db.Column(db.String(200), comment='贝叶斯优化算法默认值')
+    enum_values = db.Column(db.String(500), comment='枚举值,逗号分隔(DOE遍历用)')
     sort = db.Column(db.Integer, default=100, comment='排序')
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
 

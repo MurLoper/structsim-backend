@@ -30,6 +30,27 @@
       "primary_key": 0
     },
     {
+      "name": "min_val",
+      "type": "REAL",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "max_val",
+      "type": "REAL",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "enum_values",
+      "type": "VARCHAR(500)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
       "name": "sort",
       "type": "INTEGER",
       "nullable": true,

@@ -7,6 +7,7 @@ import time
 from typing import Optional, List, Dict, Any
 from app.extensions import db
 from app.common.errors import NotFoundError, BusinessError
+from app.constants.error_codes import ErrorCode
 from .repository import ParamGroupRepository, ParamGroupParamRelRepository, ParamGroupProjectRelRepository
 
 
@@ -66,10 +67,10 @@ class ParamGroupService:
         """创建参数组合"""
         name = data.get('name', '').strip()
         if not name:
-            raise BusinessError("组合名称不能为空")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, "组合名称不能为空")
         existing = self.repo.find_by_name(name)
         if existing:
-            raise BusinessError(f"参数组合名称「{name}」已存在")
+            raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, f"参数组合名称「{name}」已存在")
 
         # 提取 project_ids（不传给 ORM）
         project_ids = data.pop('project_ids', [])
@@ -88,7 +89,7 @@ class ParamGroupService:
             return self._enrich_group(group.to_dict())
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"创建参数组合失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"创建参数组合失败: {str(e)}")
 
     def update_group(self, group_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         """更新参数组合"""
@@ -100,7 +101,7 @@ class ParamGroupService:
         if name:
             existing = self.repo.find_by_name(name, exclude_id=group_id)
             if existing:
-                raise BusinessError(f"参数组合名称「{name}」已存在")
+                raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, f"参数组合名称「{name}」已存在")
 
         # 提取 project_ids（不传给 ORM）
         project_ids = data.pop('project_ids', None)
@@ -115,7 +116,7 @@ class ParamGroupService:
             return self._enrich_group(updated_group.to_dict())
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"更新参数组合失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"更新参数组合失败: {str(e)}")
 
     def delete_group(self, group_id: int) -> None:
         """删除参数组合"""
@@ -135,7 +136,7 @@ class ParamGroupService:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"删除参数组合失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"删除参数组合失败: {str(e)}")
     
     def get_group_params(self, group_id: int) -> List[Dict[str, Any]]:
         """获取组合包含的参数"""
@@ -174,7 +175,7 @@ class ParamGroupService:
         # 检查是否已存在
         existing = self.rel_repo.find_by_group_and_param(group_id, param_def_id)
         if existing:
-            raise BusinessError(f"参数 {param_def_id} 已在组合中")
+            raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, f"参数 {param_def_id} 已在组合中")
 
         rel_data = {
             'param_group_id': group_id,
@@ -182,8 +183,7 @@ class ParamGroupService:
             'default_value': data.get('default_value'),
             'min_val': data.get('min_val'),
             'max_val': data.get('max_val'),
-            'doe_default_value': data.get('doe_default_value'),
-            'bayesian_default_value': data.get('bayesian_default_value'),
+            'enum_values': data.get('enum_values'),
             'sort': data.get('sort', 100),
             'created_at': int(time.time())
         }
@@ -200,7 +200,7 @@ class ParamGroupService:
             return result
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"添加参数到组合失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"添加参数到组合失败: {str(e)}")
 
     def remove_param_from_group(self, group_id: int, param_def_id: int) -> None:
         """从组合移除参数"""
@@ -217,7 +217,7 @@ class ParamGroupService:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"从组合移除参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"从组合移除参数失败: {str(e)}")
 
     def clear_group_params(self, group_id: int) -> Dict[str, Any]:
         """清空组合的所有参数"""
@@ -234,7 +234,7 @@ class ParamGroupService:
             return {'clearedCount': count}
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"清空参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"清空参数失败: {str(e)}")
 
     def batch_add_params(self, group_id: int, params: List[Dict[str, Any]]) -> Dict[str, Any]:
         """批量添加参数到组合"""
@@ -269,8 +269,7 @@ class ParamGroupService:
                     'default_value': param.get('default_value'),
                     'min_val': param.get('min_val'),
                     'max_val': param.get('max_val'),
-                    'doe_default_value': param.get('doe_default_value'),
-                    'bayesian_default_value': param.get('bayesian_default_value'),
+                    'enum_values': param.get('enum_values'),
                     'sort': param.get('sort', 100 + idx),
                     'created_at': int(time.time())
                 }
@@ -288,7 +287,7 @@ class ParamGroupService:
             }
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"批量添加参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"批量添加参数失败: {str(e)}")
 
     def batch_remove_params(self, group_id: int, param_def_ids: List[int]) -> Dict[str, Any]:
         """批量移除参数"""
@@ -317,7 +316,7 @@ class ParamGroupService:
             }
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"批量移除参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"批量移除参数失败: {str(e)}")
 
     def replace_group_params(self, group_id: int, params: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -355,8 +354,7 @@ class ParamGroupService:
                     'default_value': param.get('default_value'),
                     'min_val': param.get('min_val'),
                     'max_val': param.get('max_val'),
-                    'doe_default_value': param.get('doe_default_value'),
-                    'bayesian_default_value': param.get('bayesian_default_value'),
+                    'enum_values': param.get('enum_values'),
                     'sort': param.get('sort', 100 + idx),
                     'created_at': int(time.time())
                 }
@@ -373,7 +371,7 @@ class ParamGroupService:
             }
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"重配参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"重配参数失败: {str(e)}")
 
     def search_params(self, keyword: str, group_id: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -456,7 +454,7 @@ class ParamGroupService:
 
         key = param_data.get('key', '').strip()
         if not key:
-            raise BusinessError("参数key不能为空")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, "参数key不能为空")
 
         try:
             # 检查key是否已存在
@@ -523,5 +521,5 @@ class ParamGroupService:
             }
         except Exception as e:
             db.session.rollback()
-            raise BusinessError(f"创建并添加参数失败: {str(e)}")
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, f"创建并添加参数失败: {str(e)}")
 

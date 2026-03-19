@@ -337,6 +337,7 @@ class ConditionConfig(db.Model, ToDictMixin):
     default_param_group_id = db.Column(db.Integer, comment='默认参数组ID')
     default_output_group_id = db.Column(db.Integer, comment='默认输出组ID')
     default_solver_id = db.Column(db.Integer, comment='默认求解器ID')
+    is_default = db.Column(db.SmallInteger, default=0, comment='1=默认仿真类型,0=非默认')
     # 通用字段
     valid = db.Column(db.SmallInteger, default=1, comment='1=有效,0=禁用')
     sort = db.Column(db.Integer, default=100, comment='排序')
