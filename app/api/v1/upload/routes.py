@@ -20,11 +20,12 @@ upload_bp = Blueprint('upload', __name__, url_prefix='/upload')
 def check_file():
     """检查文件是否存在（秒传）"""
     try:
-        user_id = int(get_jwt_identity())
+        user_identity = str(get_jwt_identity())
         validated = CheckFileRequest(**(get_snake_json() or {}))
         result = upload_service.check_file_exists(
-            validated.file_hash, user_id
+            validated.file_hash, user_identity
         )
+
         return success(result)
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
@@ -37,16 +38,17 @@ def check_file():
 def init_upload():
     """初始化上传会话"""
     try:
-        user_id = int(get_jwt_identity())
+        user_identity = str(get_jwt_identity())
         validated = InitUploadRequest(**(get_snake_json() or {}))
         result = upload_service.init_upload(
             validated.file_hash,
             validated.file_name,
             validated.file_size,
             validated.chunk_size,
-            user_id,
+            user_identity,
             validated.mime_type
         )
+
         return success(result, "上传会话已创建")
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)

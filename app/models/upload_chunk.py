@@ -10,7 +10,7 @@ class UploadChunk(db.Model, ToDictMixin):
     __tablename__ = 'upload_chunks'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    upload_id = db.Column(db.String(36), db.ForeignKey('upload_files.upload_id'), nullable=False, index=True, comment='上传会话UUID')
+    upload_id = db.Column(db.String(36), nullable=False, index=True, comment='上传会话UUID')
     chunk_index = db.Column(db.Integer, nullable=False, comment='分片索引')
     chunk_hash = db.Column(db.String(64), comment='分片SHA-256哈希')
     uploaded_at = db.Column(db.Integer, nullable=False, comment='上传时间戳')

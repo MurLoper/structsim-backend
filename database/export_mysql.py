@@ -4,7 +4,7 @@
 用法示例:
   python database/export_mysql.py
   python database/export_mysql.py --source-db-url mysql+pymysql://user:pass@host:3306/db
-  python database/export_mysql.py --sync-db-url mysql+pymysql://user:pass@target:3306/db
+  python database/export_mysql.py --source-db-url mysql+pymysql://user:pass@host:3306/db --output-file database/export/full_latest.sql
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import date, datetime, time
 from decimal import Decimal
@@ -24,7 +25,13 @@ except Exception:  # pragma: no cover
     def load_dotenv(*args, **kwargs):
         return False
 
-from sqlalchemy import MetaData, create_engine, text
+from sqlalchemy import MetaData, create_engine, text, inspect
+
+try:
+    from .migrations.user_identity_upgrade import upgrade_identity_schema
+except Exception:  # pragma: no cover
+    from migrations.user_identity_upgrade import upgrade_identity_schema  # pyright: ignore[reportImplicitRelativeImport]
+
 
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -74,22 +81,63 @@ def collect_tables(metadata: MetaData, include: set[str], exclude: set[str]) -> 
     return sorted(names)
 
 
+def ensure_required_tables(engine, required_tables: Sequence[str]) -> None:
+    if not required_tables:
+        return
+
+    existing = set(inspect(engine).get_table_names())
+    missing = [name for name in required_tables if name not in existing]
+    if missing:
+        raise RuntimeError(f'源库缺少关键表: {", ".join(missing)}')
+
+
+def strip_foreign_keys(create_sql: str) -> tuple[str, list[str]]:
+    lines = create_sql.splitlines()
+    fk_clauses: list[str] = []
+    kept: list[str] = []
+
+    for line in lines:
+        if 'FOREIGN KEY' in line.upper():
+            clause = line.strip().rstrip(',')
+            fk_clauses.append(clause)
+            continue
+        kept.append(line)
+
+    stripped_sql = '\n'.join(kept)
+    stripped_sql = re.sub(r',\s*\n\)', '\n)', stripped_sql)
+    return stripped_sql, fk_clauses
+
+
+def build_fk_restore_sql(table_name: str, fk_clauses: Sequence[str]) -> list[str]:
+    statements: list[str] = []
+    for clause in fk_clauses:
+        statements.append(f'ALTER TABLE `{table_name}` ADD {clause};')
+    return statements
+
+
 def export_database(
     source_db_url: str,
     output_file: Path,
     include_tables: set[str] | None = None,
     exclude_tables: set[str] | None = None,
     chunk_size: int = 500,
+    strip_fk: bool = True,
+    required_tables: Sequence[str] | None = None,
 ) -> Path:
     include_tables = include_tables or set()
     exclude_tables = exclude_tables or set()
+    required_tables = tuple(required_tables or [])
 
     engine = create_engine(source_db_url)
+    ensure_required_tables(engine, required_tables)
+
     metadata = MetaData()
     metadata.reflect(bind=engine)
 
     tables = collect_tables(metadata, include_tables, exclude_tables)
     output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    fk_restore_statements: list[str] = []
 
     with open(output_file, 'w', encoding='utf-8', newline='\n') as f, engine.connect() as conn:
         f.write('-- StructSim DB Export\n')
@@ -104,6 +152,9 @@ def export_database(
             if not create_sql_row:
                 continue
             create_sql = create_sql_row[1]
+            if strip_fk:
+                create_sql, fk_clauses = strip_foreign_keys(create_sql)
+                fk_restore_statements.extend(build_fk_restore_sql(table_name, fk_clauses))
 
             f.write(f'-- Table: {table_name}\n')
             f.write(f'DROP TABLE IF EXISTS `{table_name}`;\n')
@@ -131,6 +182,16 @@ def export_database(
 
         f.write('SET FOREIGN_KEY_CHECKS=1;\n')
 
+    if strip_fk and fk_restore_statements:
+        fk_file = output_file.with_name(f'{output_file.stem}_foreign_keys.sql')
+        with open(fk_file, 'w', encoding='utf-8', newline='\n') as fk:
+            fk.write('-- StructSim FK Restore SQL\n')
+            fk.write(f'-- ExportedAt: {datetime.now().isoformat()}\n\n')
+            fk.write('SET FOREIGN_KEY_CHECKS=0;\n')
+            for stmt in fk_restore_statements:
+                fk.write(f'{stmt}\n')
+            fk.write('SET FOREIGN_KEY_CHECKS=1;\n')
+
     return output_file
 
 
@@ -151,7 +212,10 @@ def main() -> int:
     parser.add_argument('--only-tables', default=None, help='仅导出指定表，逗号分隔')
     parser.add_argument('--exclude-tables', default=None, help='排除指定表，逗号分隔')
     parser.add_argument('--chunk-size', type=int, default=500, help='INSERT 批量大小')
-    parser.add_argument('--sync-db-url', default=None, help='导出完成后直接导入到目标数据库')
+    parser.add_argument('--keep-foreign-keys', action='store_true', help='保留建表语句中的外键约束（默认移除）')
+    parser.add_argument('--required-tables', default='upload_files,upload_chunks', help='导出前必须存在的关键表，逗号分隔')
+    parser.add_argument('--skip-identity-upgrade', action='store_true', help='跳过用户身份字段自动升级')
+
     args = parser.parse_args()
 
     if not args.source_db_url:
@@ -161,30 +225,33 @@ def main() -> int:
     output_file = build_output_file(args.output_file)
     include_tables = parse_csv(args.only_tables)
     exclude_tables = parse_csv(args.exclude_tables)
+    required_tables = sorted(parse_csv(args.required_tables))
 
     print('=' * 60)
     print('导出数据库')
     print('=' * 60)
     print(f'源库: {args.source_db_url}')
     print(f'输出: {output_file}')
+    print(f'移除外键: {"否" if args.keep_foreign_keys else "是"}')
+    if required_tables:
+        print(f'关键表校验: {", ".join(required_tables)}')
+
+    if not args.skip_identity_upgrade:
+        print('预处理: 升级源库用户身份字段...')
+        upgrade_identity_schema(args.source_db_url, verbose=True)
 
     exported = export_database(
+
         source_db_url=args.source_db_url,
         output_file=output_file,
         include_tables=include_tables,
         exclude_tables=exclude_tables,
         chunk_size=max(1, args.chunk_size),
+        strip_fk=not args.keep_foreign_keys,
+        required_tables=required_tables,
     )
 
     print(f'\n导出完成: {exported}')
-
-    if args.sync_db_url:
-        from import_mysql import import_database
-
-        print('\n开始一键同步到目标库...')
-        ok = import_database(sql_file=str(exported), db_url=args.sync_db_url, stop_on_error=True)
-        return 0 if ok else 2
-
     return 0
 
 

@@ -21,13 +21,20 @@ class RedisClient:
 
     def init_app(self, app):
         """初始化 Redis 连接池"""
+        socket_connect_timeout = float(app.config.get('REDIS_SOCKET_CONNECT_TIMEOUT', 0.5))
+        socket_timeout = float(app.config.get('REDIS_SOCKET_TIMEOUT', 0.8))
+
         self._pool = redis.ConnectionPool(
             host=app.config.get('REDIS_HOST', 'localhost'),
             port=app.config.get('REDIS_PORT', 6379),
             db=app.config.get('REDIS_DB', 0),
             password=app.config.get('REDIS_PASSWORD'),
             decode_responses=True,
-            max_connections=20
+            max_connections=20,
+            socket_connect_timeout=socket_connect_timeout,
+            socket_timeout=socket_timeout,
+            retry_on_timeout=False,
+            health_check_interval=30,
         )
         self._prefix = app.config.get('REDIS_KEY_PREFIX', 'structsim:')
         self._default_ttl = app.config.get('REDIS_DEFAULT_TTL', 3600)

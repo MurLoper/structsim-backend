@@ -17,13 +17,44 @@ from .service import auth_service
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+def _get_identity_value():
+    """读取JWT身份标识（优先域账号，兼容老token）"""
+    identity = get_jwt_identity()
+    if isinstance(identity, dict):
+        return identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
+    return identity
+
+
+@auth_bp.route('/login-mode', methods=['GET'])
+def get_login_mode():
+    """获取登录模式配置（前端据此决定跳SSO还是本地登录页）"""
+    result = auth_service.get_login_mode()
+    return success(result)
+
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """用户登录"""
+    """用户密码登录（域账号 + 密码）"""
     try:
         validated = LoginRequest(**(get_snake_json() or {}))
-        result = auth_service.login(validated.email, validated.password)
+        result = auth_service.login(validated.domain_account, validated.password)
         return success(result, "登录成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
+
+
+@auth_bp.route('/sso/callback', methods=['POST'])
+def sso_callback_login():
+    """SSO回调登录：前端携带uid，后端查询公司信息后签发本站token"""
+    try:
+        payload = get_snake_json() or {}
+        uid = str(payload.get('uid') or '').strip()
+        result = auth_service.login_by_uid(uid, request.cookies.to_dict())
+        return success(result, "SSO登录成功")
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
     except NotFoundError as e:
@@ -37,14 +68,8 @@ def login():
 def get_current_user():
     """获取当前登录用户信息"""
     try:
-        identity = get_jwt_identity()
-        if isinstance(identity, dict):
-            user_id = identity.get('id')
-        elif isinstance(identity, str) and identity.isdigit():
-            user_id = int(identity)
-        else:
-            user_id = identity
-        result = auth_service.get_current_user(user_id)
+        user_identity = _get_identity_value()
+        result = auth_service.get_current_user(user_identity)
         return success(result)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
@@ -61,14 +86,8 @@ def get_all_users():
 @jwt_required()
 def logout():
     """用户登出"""
-    identity = get_jwt_identity()
-    if isinstance(identity, dict):
-        user_id = identity.get('id')
-    elif isinstance(identity, str) and identity.isdigit():
-        user_id = int(identity)
-    else:
-        user_id = identity
-    result = auth_service.logout(user_id)
+    user_identity = _get_identity_value()
+    result = auth_service.logout(user_identity)
     return success(result)
 
 
@@ -77,14 +96,8 @@ def logout():
 def get_user_menus():
     """获取当前用户的菜单列表（树形结构）"""
     try:
-        identity = get_jwt_identity()
-        if isinstance(identity, dict):
-            user_id = identity.get('id')
-        elif isinstance(identity, str) and identity.isdigit():
-            user_id = int(identity)
-        else:
-            user_id = identity
-        result = auth_service.get_user_menus(user_id)
+        user_identity = _get_identity_value()
+        result = auth_service.get_user_menus(user_identity)
         return success(result)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
@@ -93,28 +106,14 @@ def get_user_menus():
 @auth_bp.route('/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
-    """
-    验证Token并返回完整用户信息（SSO回调使用）
-    返回用户信息、权限列表、菜单树
-    """
+    """验证Token并返回完整用户信息"""
     try:
-        identity = get_jwt_identity()
-        if isinstance(identity, dict):
-            user_id = identity.get('id')
-        elif isinstance(identity, str) and identity.isdigit():
-            user_id = int(identity)
-        else:
-            user_id = identity
+        user_identity = _get_identity_value()
 
-        # 获取用户信息和权限
-        user_data = auth_service.get_current_user(user_id)
-        # 获取用户菜单
-        menus = auth_service.get_user_menus(user_id)
+        user_data = auth_service.get_current_user(user_identity)
+        menus = auth_service.get_user_menus(user_identity)
 
-        return success({
-            'user': user_data,
-            'menus': menus
-        })
+        return success({'user': user_data, 'menus': menus})
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
@@ -124,21 +123,13 @@ def verify_token():
 def refresh_token():
     """刷新访问令牌"""
     try:
-        identity = get_jwt_identity()
-        if isinstance(identity, dict):
-            user_id = identity.get('id')
-        elif isinstance(identity, str) and identity.isdigit():
-            user_id = int(identity)
-        else:
-            user_id = identity
+        user_identity = _get_identity_value()
 
-        # 获取用户权限
-        user_data = auth_service.get_current_user(user_id)
-        permission_codes = user_data.get('permission_codes', [])
+        user_data = auth_service.get_current_user(user_identity)
+        permission_codes = user_data.get('permissionCodes', []) or user_data.get('permission_codes', [])
 
-        # 生成新token
         new_token = create_access_token(
-            identity=str(user_id),
+            identity=str(user_data.get('domain_account') or user_data.get('id') or user_identity),
             additional_claims={'permissions': permission_codes}
         )
         return success({'token': new_token}, "令牌刷新成功")
@@ -163,7 +154,6 @@ def heartbeat():
         now = int(time.time())
         expires_in = max(0, exp - now)
 
-        # 如果剩余时间小于30分钟，建议刷新
         should_refresh = expires_in < 1800
 
         return success({
@@ -173,4 +163,3 @@ def heartbeat():
         })
     except Exception:
         return error(ErrorCode.UNAUTHORIZED, "登录已过期", http_status=401)
-

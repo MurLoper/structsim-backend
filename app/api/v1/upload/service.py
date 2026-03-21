@@ -15,9 +15,10 @@ from .storage import storage_manager
 class UploadService:
     """上传服务"""
 
-    def check_file_exists(self, file_hash: str, user_id: int) -> Dict:
+    def check_file_exists(self, file_hash: str, user_identity: str) -> Dict:
         """检查文件是否存在（秒传）"""
-        existing = upload_repository.find_by_hash(file_hash, user_id)
+        existing = upload_repository.find_by_hash(file_hash, user_identity)
+
 
         if existing:
             return {
@@ -29,11 +30,13 @@ class UploadService:
 
     def init_upload(self, file_hash: str, file_name: str,
                     file_size: int, chunk_size: int,
-                    user_id: int, mime_type: Optional[str] = None) -> Dict:
+                    user_identity: str, mime_type: Optional[str] = None) -> Dict:
+
         """初始化上传会话"""
 
         # 检查是否已存在
-        existing = self.check_file_exists(file_hash, user_id)
+        existing = self.check_file_exists(file_hash, user_identity)
+
         if existing['exists']:
             raise BusinessError(ErrorCode.VALIDATION_ERROR,
                               "文件已存在，无需重复上传")
@@ -49,7 +52,8 @@ class UploadService:
             'file_name': file_name,
             'file_size': file_size,
             'mime_type': mime_type,
-            'user_id': user_id,
+            'user_id': str(user_identity),
+
             'chunk_size': chunk_size,
             'total_chunks': total_chunks,
             'status': 'uploading',

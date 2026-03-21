@@ -1,0 +1,43 @@
+-- StructSim FK Restore SQL
+-- ExportedAt: 2026-03-21T19:16:23.660990
+
+SET FOREIGN_KEY_CHECKS=0;
+ALTER TABLE `cond_out_group_condition_rels` ADD CONSTRAINT `cond_out_group_condition_rels_ibfk_1` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`);
+ALTER TABLE `cond_out_group_condition_rels` ADD CONSTRAINT `cond_out_group_condition_rels_ibfk_2` FOREIGN KEY (`condition_def_id`) REFERENCES `condition_defs` (`id`);
+ALTER TABLE `cond_out_group_output_rels` ADD CONSTRAINT `cond_out_group_output_rels_ibfk_1` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`);
+ALTER TABLE `cond_out_group_output_rels` ADD CONSTRAINT `cond_out_group_output_rels_ibfk_2` FOREIGN KEY (`output_def_id`) REFERENCES `output_defs` (`id`);
+ALTER TABLE `cond_out_sets` ADD CONSTRAINT `cond_out_sets_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `condition_configs` ADD CONSTRAINT `condition_configs_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`);
+ALTER TABLE `condition_configs` ADD CONSTRAINT `condition_configs_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `fold_type_sim_type_rels` ADD CONSTRAINT `fold_type_sim_type_rels_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`);
+ALTER TABLE `fold_type_sim_type_rels` ADD CONSTRAINT `fold_type_sim_type_rels_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `order_results` ADD CONSTRAINT `order_results_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`);
+ALTER TABLE `orders` ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
+ALTER TABLE `orders` ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`);
+ALTER TABLE `orders` ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`workflow_id`) REFERENCES `workflows` (`id`);
+ALTER TABLE `orders` ADD CONSTRAINT `orders_ibfk_4` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+ALTER TABLE `param_group_param_rels` ADD CONSTRAINT `param_group_param_rels_ibfk_1` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`);
+ALTER TABLE `param_group_param_rels` ADD CONSTRAINT `param_group_param_rels_ibfk_2` FOREIGN KEY (`param_def_id`) REFERENCES `param_defs` (`id`);
+ALTER TABLE `param_group_project_rels` ADD CONSTRAINT `param_group_project_rels_ibfk_1` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`);
+ALTER TABLE `param_group_project_rels` ADD CONSTRAINT `param_group_project_rels_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
+ALTER TABLE `param_tpl_items` ADD CONSTRAINT `param_tpl_items_ibfk_1` FOREIGN KEY (`tpl_set_id`) REFERENCES `param_tpl_sets` (`id`);
+ALTER TABLE `param_tpl_sets` ADD CONSTRAINT `param_tpl_sets_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `project_sim_type_rels` ADD CONSTRAINT `project_sim_type_rels_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
+ALTER TABLE `project_sim_type_rels` ADD CONSTRAINT `project_sim_type_rels_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `rounds` ADD CONSTRAINT `rounds_ibfk_1` FOREIGN KEY (`sim_type_result_id`) REFERENCES `sim_type_results` (`id`);
+ALTER TABLE `rounds` ADD CONSTRAINT `rounds_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`);
+ALTER TABLE `sim_type_cond_out_group_rels` ADD CONSTRAINT `sim_type_cond_out_group_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `sim_type_cond_out_group_rels` ADD CONSTRAINT `sim_type_cond_out_group_rels_ibfk_2` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`);
+ALTER TABLE `sim_type_param_group_rels` ADD CONSTRAINT `sim_type_param_group_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `sim_type_param_group_rels` ADD CONSTRAINT `sim_type_param_group_rels_ibfk_2` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`);
+ALTER TABLE `sim_type_results` ADD CONSTRAINT `sim_type_results_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`);
+ALTER TABLE `sim_type_results` ADD CONSTRAINT `sim_type_results_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `sim_type_solver_rels` ADD CONSTRAINT `sim_type_solver_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `sim_type_solver_rels` ADD CONSTRAINT `sim_type_solver_rels_ibfk_2` FOREIGN KEY (`solver_id`) REFERENCES `solvers` (`id`);
+ALTER TABLE `upload_files` ADD CONSTRAINT `upload_files_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `working_conditions` ADD CONSTRAINT `working_conditions_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`);
+ALTER TABLE `working_conditions` ADD CONSTRAINT `working_conditions_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`);
+ALTER TABLE `working_conditions` ADD CONSTRAINT `working_conditions_ibfk_3` FOREIGN KEY (`default_param_group_id`) REFERENCES `param_groups` (`id`);
+ALTER TABLE `working_conditions` ADD CONSTRAINT `working_conditions_ibfk_4` FOREIGN KEY (`default_cond_out_group_id`) REFERENCES `condition_output_groups` (`id`);
+ALTER TABLE `working_conditions` ADD CONSTRAINT `working_conditions_ibfk_5` FOREIGN KEY (`default_solver_id`) REFERENCES `solvers` (`id`);
+SET FOREIGN_KEY_CHECKS=1;

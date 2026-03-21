@@ -15,17 +15,44 @@ from pathlib import Path
 from typing import List
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv as _load_dotenv
 except Exception:  # pragma: no cover
-    def load_dotenv(*args, **kwargs):
-        return False
+    _load_dotenv = None
 
-from sqlalchemy import create_engine, text
+
+def load_env() -> None:
+    if _load_dotenv is not None:
+        _load_dotenv()
+
+from sqlalchemy import create_engine, text, inspect
 
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 EXPORT_DIR = Path(__file__).parent / 'export'
+
+
+def parse_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def ensure_required_tables(engine, required_tables: list[str]) -> list[str]:
+    if not required_tables:
+        return []
+    existing = set(inspect(engine).get_table_names())
+    return [name for name in required_tables if name not in existing]
+
+
+def drop_all_tables(conn) -> None:
+    rows = conn.execute(
+        text("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'")
+    )
+    table_names = [row[0] for row in rows.fetchall()]
+    for name in table_names:
+        conn.execute(text(f"DROP TABLE IF EXISTS `{name}`"))
+    conn.commit()
 
 
 def split_sql_statements(sql: str) -> List[str]:
@@ -107,7 +134,14 @@ def get_latest_export_file() -> Path | None:
     return files[0] if files else None
 
 
-def import_database(sql_file: str, db_url: str, stop_on_error: bool = True) -> bool:
+def import_database(
+    sql_file: str,
+    db_url: str,
+    stop_on_error: bool = True,
+    fk_sql_file: str | None = None,
+    required_tables: list[str] | None = None,
+    drop_all_first: bool = False,
+) -> bool:
     sql_path = Path(sql_file)
     if not sql_path.exists():
         print(f'错误: SQL 文件不存在: {sql_path}')
@@ -126,6 +160,7 @@ def import_database(sql_file: str, db_url: str, stop_on_error: bool = True) -> b
     print(f'SQL文件: {sql_path}')
     print(f'语句数: {len(statements)}')
 
+    required_tables = required_tables or []
     engine = create_engine(db_url)
     failed = 0
 
@@ -133,9 +168,13 @@ def import_database(sql_file: str, db_url: str, stop_on_error: bool = True) -> b
         conn.execute(text('SET FOREIGN_KEY_CHECKS=0'))
         conn.commit()
         try:
+            if drop_all_first:
+                print('先清空目标库所有表...')
+                drop_all_tables(conn)
+
             for idx, stmt in enumerate(statements, 1):
                 try:
-                    conn.execute(text(stmt))
+                    conn.exec_driver_sql(stmt)
                     conn.commit()
                     if idx % 50 == 0 or idx == len(statements):
                         print(f'已执行: {idx}/{len(statements)}')
@@ -145,9 +184,26 @@ def import_database(sql_file: str, db_url: str, stop_on_error: bool = True) -> b
                     print(f'[失败] {idx}/{len(statements)}: {str(exc)[:200]}')
                     if stop_on_error:
                         raise
+
+            if fk_sql_file:
+                fk_path = Path(fk_sql_file)
+                if fk_path.exists():
+                    fk_statements = split_sql_statements(fk_path.read_text(encoding='utf-8'))
+                    print(f'开始恢复外键: {fk_path} ({len(fk_statements)} 条)')
+                    for idx, stmt in enumerate(fk_statements, 1):
+                        conn.exec_driver_sql(stmt)
+                        conn.commit()
+                    print('外键恢复完成')
+                else:
+                    print(f'⚠️ 外键恢复文件不存在，已跳过: {fk_path}')
         finally:
             conn.execute(text('SET FOREIGN_KEY_CHECKS=1'))
             conn.commit()
+
+    missing_tables = ensure_required_tables(engine, required_tables)
+    if missing_tables:
+        print(f'导入后关键表缺失: {", ".join(missing_tables)}')
+        return False
 
     if failed > 0:
         print(f'导入完成（存在失败）: 失败 {failed} 条')
@@ -158,12 +214,16 @@ def import_database(sql_file: str, db_url: str, stop_on_error: bool = True) -> b
 
 
 def main() -> int:
-    load_dotenv()
+    load_env()
 
     parser = argparse.ArgumentParser(description='导入 SQL 文件到 MySQL')
     parser.add_argument('--sql-file', default=None, help='SQL 文件路径')
     parser.add_argument('--latest', action='store_true', help='自动使用 database/export 最新 SQL 文件')
     parser.add_argument('--db-url', default=os.getenv('DATABASE_URL'), help='目标数据库连接 URL，默认读取 DATABASE_URL')
+    parser.add_argument('--fk-sql-file', default=None, help='导入完成后执行的外键恢复 SQL 文件路径')
+    parser.add_argument('--apply-latest-fk', action='store_true', help='自动应用与 --latest SQL 对应的 *_foreign_keys.sql')
+    parser.add_argument('--required-tables', default='upload_files,upload_chunks', help='导入后必须存在的关键表，逗号分隔')
+    parser.add_argument('--drop-all-first', action='store_true', help='导入前先删除目标库全部业务表（用于全量覆盖）')
     parser.add_argument('--continue-on-error', action='store_true', help='遇错继续执行，不中断')
     args = parser.parse_args()
 
@@ -172,6 +232,7 @@ def main() -> int:
         return 1
 
     sql_file = args.sql_file
+    latest: Path | None = None
     if args.latest:
         latest = get_latest_export_file()
         if not latest:
@@ -183,10 +244,19 @@ def main() -> int:
         print('错误: 请提供 --sql-file 或使用 --latest')
         return 1
 
+    fk_sql_file = args.fk_sql_file
+    if args.apply_latest_fk and latest is not None:
+        fk_sql_file = str(latest.with_name(f'{latest.stem}_foreign_keys.sql'))
+
+    required_tables = parse_csv(args.required_tables)
+
     ok = import_database(
         sql_file=sql_file,
         db_url=args.db_url,
         stop_on_error=not args.continue_on_error,
+        fk_sql_file=fk_sql_file,
+        required_tables=required_tables,
+        drop_all_first=args.drop_all_first,
     )
     return 0 if ok else 2
 

@@ -2,7 +2,7 @@
 参数组合管理 - Routes层
 职责：路由定义、参数校验、HTTP响应
 """
-from flask import Blueprint, request
+from flask import Blueprint, request, send_file
 from pydantic import ValidationError
 from app.common.response import success, error
 from app.common.errors import NotFoundError, BusinessError, ValidationError as AppValidationError
@@ -101,6 +101,42 @@ def get_group_params(group_id: int):
         return error(code=ErrorCode.NOT_FOUND, msg=str(e))
     except Exception as e:
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
+
+
+@param_groups_bp.route('/<int:group_id>/doe-file/download', methods=['GET'])
+def download_group_doe_file(group_id: int):
+    """下载参数组合DOE文件"""
+    try:
+        file_info = service.get_group_doe_download_info(group_id)
+        return send_file(
+            file_info['path'],
+            as_attachment=True,
+            download_name=file_info['download_name'],
+            mimetype='text/csv; charset=utf-8'
+        )
+    except NotFoundError as e:
+        return error(code=ErrorCode.NOT_FOUND, msg=str(e), http_status=404)
+    except BusinessError as e:
+        return error(code=ErrorCode.BUSINESS_ERROR, msg=str(e), http_status=400)
+    except Exception as e:
+        return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e), http_status=500)
+
+
+@param_groups_bp.route('/doe-template/download', methods=['GET'])
+def download_doe_template_file():
+    """下载参数组合DOE模板文件（固定模板）"""
+    try:
+        template_path = Path(__file__).resolve().parents[5] / 'database' / 'doe' / '目标DOE.csv'
+        if not template_path.exists():
+            return error(code=ErrorCode.NOT_FOUND, msg='DOE模板文件不存在', http_status=404)
+        return send_file(
+            template_path,
+            as_attachment=True,
+            download_name='目标DOE.csv',
+            mimetype='text/csv; charset=utf-8'
+        )
+    except Exception as e:
+        return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e), http_status=500)
 
 
 @param_groups_bp.route('/<int:group_id>/params', methods=['POST'])

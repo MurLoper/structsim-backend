@@ -3,12 +3,20 @@
 职责：业务逻辑、事务管理
 禁止：HTTP相关逻辑
 """
+import csv
+import re
 import time
+from pathlib import Path
 from typing import Optional, List, Dict, Any
+from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.common.errors import NotFoundError, BusinessError
 from app.constants.error_codes import ErrorCode
 from .repository import ParamGroupRepository, ParamGroupParamRelRepository, ParamGroupProjectRelRepository
+
+
+BASE_DIR = Path(__file__).resolve().parents[5]
+DOE_GROUP_FILES_DIR = BASE_DIR / 'storage' / 'files' / 'doe' / 'param_groups'
 
 
 class ParamGroupService:
@@ -18,6 +26,70 @@ class ParamGroupService:
         self.repo = ParamGroupRepository()
         self.rel_repo = ParamGroupParamRelRepository()
         self.proj_repo = ParamGroupProjectRelRepository()
+
+    @staticmethod
+    def _normalize_group_algorithm_fields(data: Dict[str, Any]) -> None:
+        """标准化参数组算法字段"""
+        alg_type = data.get('alg_type')
+        if alg_type is None:
+            return
+        if alg_type not in (1, 2, 5):
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "alg_type 仅支持 1/2/5")
+
+        if alg_type != 5:
+            data['doe_file_name'] = None
+            data['doe_file_heads'] = None
+            data['doe_file_data'] = None
+
+    @staticmethod
+    def _to_camel_key(key: str) -> str:
+        chunks = key.split('_')
+        return chunks[0] + ''.join(part[:1].upper() + part[1:] for part in chunks[1:])
+
+    @staticmethod
+    def _ensure_csv_name(file_name: Optional[str], group_id: int) -> str:
+        raw_name = (file_name or '').strip() or f'param_group_{group_id}.csv'
+        safe_name = secure_filename(raw_name) or f'param_group_{group_id}.csv'
+        if not safe_name.lower().endswith('.csv'):
+            safe_name = f'{safe_name}.csv'
+        return safe_name
+
+    @staticmethod
+    def _resolve_row_value(row: Dict[str, Any], head: str) -> Any:
+        if head in row:
+            return row.get(head)
+        camel_head = ParamGroupService._to_camel_key(head)
+        if camel_head in row:
+            return row.get(camel_head)
+        snake_head = re.sub(r'(?<!^)(?=[A-Z])', '_', head).lower()
+        if snake_head in row:
+            return row.get(snake_head)
+        return ''
+
+    def _persist_group_doe_file(self, group_id: int, file_name: Optional[str], heads: List[str], data: List[Dict[str, Any]]) -> Path:
+        DOE_GROUP_FILES_DIR.mkdir(parents=True, exist_ok=True)
+        storage_path = DOE_GROUP_FILES_DIR / f'param_group_{group_id}.csv'
+
+        normalized_heads = [str(h).strip() for h in heads if str(h).strip()]
+        with open(storage_path, 'w', encoding='utf-8-sig', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(normalized_heads)
+            for row in data or []:
+                row_dict = row if isinstance(row, dict) else {}
+                writer.writerow([self._resolve_row_value(row_dict, head) for head in normalized_heads])
+
+        return storage_path
+
+    def _ensure_group_doe_file(self, group) -> Path:
+        heads = group.doe_file_heads or []
+        data = group.doe_file_data or []
+        if not heads or not data:
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, '当前参数组没有可下载的DOE文件内容')
+
+        storage_path = DOE_GROUP_FILES_DIR / f'param_group_{group.id}.csv'
+        if not storage_path.exists():
+            self._persist_group_doe_file(group.id, group.doe_file_name, heads, data)
+        return storage_path
 
     def _enrich_group(self, group_dict: dict) -> dict:
         """为组合数据附加 project_ids"""
@@ -74,6 +146,7 @@ class ParamGroupService:
 
         # 提取 project_ids（不传给 ORM）
         project_ids = data.pop('project_ids', [])
+        self._normalize_group_algorithm_fields(data)
 
         now = int(time.time())
         data['created_at'] = now
@@ -85,6 +158,17 @@ class ParamGroupService:
             # 创建项目关联
             if project_ids:
                 self.proj_repo.replace_projects(group.id, project_ids)
+
+            if group.alg_type == 5:
+                normalized_name = self._ensure_csv_name(group.doe_file_name, group.id)
+                group.doe_file_name = normalized_name
+                self._persist_group_doe_file(
+                    group.id,
+                    normalized_name,
+                    group.doe_file_heads or [],
+                    group.doe_file_data or [],
+                )
+
             db.session.commit()
             return self._enrich_group(group.to_dict())
         except Exception as e:
@@ -105,6 +189,7 @@ class ParamGroupService:
 
         # 提取 project_ids（不传给 ORM）
         project_ids = data.pop('project_ids', None)
+        self._normalize_group_algorithm_fields(data)
         data['updated_at'] = int(time.time())
 
         try:
@@ -112,6 +197,17 @@ class ParamGroupService:
             # 更新项目关联（仅当传了 project_ids 时）
             if project_ids is not None:
                 self.proj_repo.replace_projects(group_id, project_ids)
+
+            if updated_group.alg_type == 5:
+                normalized_name = self._ensure_csv_name(updated_group.doe_file_name, updated_group.id)
+                updated_group.doe_file_name = normalized_name
+                self._persist_group_doe_file(
+                    updated_group.id,
+                    normalized_name,
+                    updated_group.doe_file_heads or [],
+                    updated_group.doe_file_data or [],
+                )
+
             db.session.commit()
             return self._enrich_group(updated_group.to_dict())
         except Exception as e:
@@ -137,6 +233,21 @@ class ParamGroupService:
         except Exception as e:
             db.session.rollback()
             raise BusinessError(ErrorCode.BUSINESS_ERROR, f"删除参数组合失败: {str(e)}")
+
+    def get_group_doe_download_info(self, group_id: int) -> Dict[str, Any]:
+        """获取参数组DOE文件下载信息"""
+        group = self.repo.find_by_id(group_id)
+        if not group:
+            raise NotFoundError(f"参数组合 {group_id} 不存在")
+        if group.alg_type != 5:
+            raise BusinessError(ErrorCode.BUSINESS_ERROR, "当前参数组合默认算法不是DOE文件")
+
+        storage_path = self._ensure_group_doe_file(group)
+        download_name = self._ensure_csv_name(group.doe_file_name, group.id)
+        return {
+            'path': str(storage_path),
+            'download_name': download_name,
+        }
     
     def get_group_params(self, group_id: int) -> List[Dict[str, Any]]:
         """获取组合包含的参数"""

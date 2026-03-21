@@ -23,7 +23,36 @@
       "primary_key": 0
     },
     {
+      "name": "domain_account",
+      "type": "VARCHAR(32)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "lc_user_id",
+      "type": "VARCHAR(64)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "user_name",
+      "type": "VARCHAR(100)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
+      "name": "real_name",
+      "type": "VARCHAR(100)",
+      "nullable": true,
+      "default": null,
+      "primary_key": 0
+    },
+    {
       "name": "password_hash",
+
       "type": "VARCHAR(256)",
       "nullable": true,
       "default": null,
@@ -121,8 +150,24 @@
     "name": null
   },
   "foreign_keys": [],
-  "indexes": [],
+  "indexes": [
+    {
+      "name": "uq_users_domain_account",
+      "column_names": [
+        "domain_account"
+      ],
+      "unique": 1
+    },
+    {
+      "name": "uq_users_lc_user_id",
+      "column_names": [
+        "lc_user_id"
+      ],
+      "unique": 1
+    }
+  ],
   "unique_constraints": [
+
     {
       "name": null,
       "column_names": [

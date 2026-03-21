@@ -61,6 +61,10 @@ from app.models.auth import (
     Menu
 )
 
+# 上传模型
+from app.models.upload import UploadFile
+from app.models.upload_chunk import UploadChunk
+
 __all__ = [
     # 配置表
     'Project',
@@ -104,6 +108,9 @@ __all__ = [
     'User',
     'Role',
     'Permission',
-    'Menu'
+    'Menu',
+    # 上传
+    'UploadFile',
+    'UploadChunk'
 ]
 

@@ -14,10 +14,14 @@ class User(db.Model, ToDictMixin):
     _exclude_fields = {'password_hash'}  # 排除敏感字段
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(50), unique=True, nullable=False, comment='用户名')
+    username = db.Column(db.String(50), unique=True, nullable=True, comment='用户名(兼容影子字段，不参与业务)')
     email = db.Column(db.String(120), unique=True, nullable=False, comment='邮箱')
-    password_hash = db.Column(db.String(256), comment='密码哈希')
-    name = db.Column(db.String(100), comment='姓名')
+    domain_account = db.Column(db.String(32), unique=True, index=True, nullable=False, comment='域账号，如 z00012345 / lwx0045644')
+    lc_user_id = db.Column(db.String(64), unique=True, index=True, comment='部门平台用户ID(外部ID)，可对应 lc_user_id / user_id')
+    user_name = db.Column(db.String(100), comment='用户展示名')
+    real_name = db.Column(db.String(100), comment='真实姓名')
+    password_hash = db.Column(db.String(256), comment='密码哈希(保留字段，当前登录不使用)')
+    name = db.Column(db.String(100), comment='姓名(兼容字段)')
     avatar = db.Column(db.String(255), comment='头像URL')
     phone = db.Column(db.String(20), comment='手机号')
     department = db.Column(db.String(100), comment='部门')
@@ -43,9 +47,16 @@ class User(db.Model, ToDictMixin):
 
     def to_public_dict(self):
         """公开信息（用于参与人选择等）"""
+        display_name = self.real_name or self.name or self.domain_account
         return {
-            'id': self.id,
-            'name': self.name,
+            'id': self.domain_account,
+            'db_id': self.id,
+            'user_id': self.lc_user_id,
+            'name': display_name,
+            'real_name': self.real_name,
+            'user_name': self.user_name,
+            'domain_account': self.domain_account,
+            'lc_user_id': self.lc_user_id,
             'email': self.email,
             'avatar': self.avatar,
             'department': self.department

@@ -25,14 +25,12 @@ def require_permission(permission: str):
                 claims = get_jwt() or {}
                 user_permissions = claims.get('permissions', [])
                 if isinstance(identity, dict):
-                    user_id = identity.get('id')
-                elif isinstance(identity, str) and identity.isdigit():
-                    user_id = int(identity)
+                    user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
                 else:
-                    user_id = identity
-                
+                    user_identity = identity
+
                 if permission not in user_permissions:
-                    logger.warning(f"Permission denied: {permission} for user {user_id}")
+                    logger.warning(f"Permission denied: {permission} for user {user_identity}")
                     return error(ErrorCode.PERMISSION_DENIED, f"缺少权限: {permission}", http_status=403)
                 
                 return f(*args, **kwargs)

@@ -37,7 +37,7 @@ def get_orders():
             'end_date': request.args.get('end_date') or request.args.get('endDate'),
         }
         # 转换类型
-        for key in ['project_id', 'sim_type_id', 'created_by', 'start_date', 'end_date']:
+        for key in ['project_id', 'sim_type_id', 'start_date', 'end_date']:
             if query_params[key]:
                 query_params[key] = int(query_params[key])
         validated = OrderQuery(**query_params)
@@ -77,12 +77,10 @@ def create_order():
         validated = OrderCreate(**(get_snake_json() or {}))
         identity = get_jwt_identity()
         if isinstance(identity, dict):
-            user_id = identity.get('id')
-        elif isinstance(identity, str) and identity.isdigit():
-            user_id = int(identity)
+            user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
         else:
-            user_id = identity
-        result = orders_service.create_order(validated.model_dump(), user_id)
+            user_identity = identity
+        result = orders_service.create_order(validated.model_dump(), str(user_identity))
         return success(result, "创建成功")
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)

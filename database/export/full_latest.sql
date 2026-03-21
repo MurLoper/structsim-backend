@@ -1,31 +1,31 @@
--- StructSim AI Platform Database Export
--- Export Time: 2026-03-18 23:57:18.794709
--- Database: sim_ai_paltform
+-- StructSim DB Export
+-- ExportedAt: 2026-03-21T19:34:44.283555
+-- TableCount: 40
 
-SET FOREIGN_KEY_CHECKS=0;
 SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS=0;
 
 -- Table: automation_modules
 DROP TABLE IF EXISTS `automation_modules`;
 CREATE TABLE `automation_modules` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '模块名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块编码',
-  `category` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类',
-  `version` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '版本',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模块名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块编码',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类',
+  `version` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '版本',
   `timeout_sec` int DEFAULT NULL COMMENT '超时秒数',
   `retry_max` int DEFAULT NULL COMMENT '最大重试次数',
   `retry_backoff_sec` int DEFAULT NULL COMMENT '重试间隔秒',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for automation_modules
+-- Data: automation_modules
 INSERT INTO `automation_modules` (`id`, `name`, `code`, `category`, `version`, `timeout_sec`, `retry_max`, `retry_backoff_sec`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '模型预处理', 'MODEL_PREPROCESS', 'PREPROCESS', NULL, 1800, 2, 60, 1, 100, NULL, 1769934088, 1769934088),
 (2, '网格划分', 'MESH_GENERATION', 'PREPROCESS', NULL, 3600, 2, 60, 1, 100, NULL, 1769934088, 1769934088),
@@ -40,19 +40,19 @@ INSERT INTO `automation_modules` (`id`, `name`, `code`, `category`, `version`, `
 DROP TABLE IF EXISTS `care_devices`;
 CREATE TABLE `care_devices` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '器件名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '器件编码',
-  `category` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '器件分类',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '器件名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '器件编码',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '器件分类',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci COMMENT '备注',
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备注',
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for care_devices
+-- Data: care_devices
 INSERT INTO `care_devices` (`id`, `name`, `code`, `category`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '屏幕', 'SCREEN', NULL, 1, 100, NULL, 1769934087, 1769934087),
 (2, '电池', 'BATTERY', NULL, 1, 100, NULL, 1769934087, 1769934087),
@@ -72,9 +72,7 @@ CREATE TABLE `cond_out_group_condition_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `cond_out_group_id` (`cond_out_group_id`),
-  KEY `condition_def_id` (`condition_def_id`),
-  CONSTRAINT `cond_out_group_condition_rels_ibfk_1` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`),
-  CONSTRAINT `cond_out_group_condition_rels_ibfk_2` FOREIGN KEY (`condition_def_id`) REFERENCES `condition_defs` (`id`)
+  KEY `condition_def_id` (`condition_def_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: cond_out_group_output_rels
@@ -85,12 +83,12 @@ CREATE TABLE `cond_out_group_output_rels` (
   `output_def_id` int NOT NULL COMMENT '输出定义ID',
   `sort` int DEFAULT NULL COMMENT '排序',
   `created_at` int DEFAULT NULL,
-  `set_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT 'push' COMMENT 'set集名称',
-  `component` varchar(50) COLLATE utf8mb4_general_ci DEFAULT '35' COMMENT 'component',
-  `step_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分析步名称',
-  `section_point` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '积分点',
-  `special_output_set` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '特殊输出set',
-  `description` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '输出描述',
+  `set_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'push' COMMENT 'set集名称',
+  `component` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '35' COMMENT 'component',
+  `step_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分析步名称',
+  `section_point` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '积分点',
+  `special_output_set` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '特殊输出set',
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '输出描述',
   `weight` float DEFAULT '1' COMMENT '权重',
   `multiple` float DEFAULT '1' COMMENT '数量级',
   `lower_limit` float DEFAULT '0' COMMENT '下限',
@@ -99,32 +97,29 @@ CREATE TABLE `cond_out_group_output_rels` (
   `target_value` float DEFAULT NULL COMMENT '目标值',
   PRIMARY KEY (`id`),
   KEY `cond_out_group_id` (`cond_out_group_id`),
-  KEY `output_def_id` (`output_def_id`),
-  CONSTRAINT `cond_out_group_output_rels_ibfk_1` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`),
-  CONSTRAINT `cond_out_group_output_rels_ibfk_2` FOREIGN KEY (`output_def_id`) REFERENCES `output_defs` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `output_def_id` (`output_def_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for cond_out_group_output_rels
+-- Data: cond_out_group_output_rels
 INSERT INTO `cond_out_group_output_rels` (`id`, `cond_out_group_id`, `output_def_id`, `sort`, `created_at`, `set_name`, `component`, `step_name`, `section_point`, `special_output_set`, `description`, `weight`, `multiple`, `lower_limit`, `upper_limit`, `target_type`, `target_value`) VALUES
-(2, 1, 2, 100, 1773849352, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 3, NULL),
-(3, 1, 2, 100, 1773849353, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 3, NULL);
+(4, 1, 2, 100, 1773929490, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL),
+(5, 1, 2, 100, 1773929490, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL);
 
 -- Table: cond_out_sets
 DROP TABLE IF EXISTS `cond_out_sets`;
 CREATE TABLE `cond_out_sets` (
   `id` int NOT NULL AUTO_INCREMENT,
   `sim_type_id` int DEFAULT NULL COMMENT '关联仿真类型',
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '集合名称',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '集合名称',
   `cond_items` json DEFAULT NULL COMMENT '工况配置列表',
   `output_ids` json DEFAULT NULL COMMENT '输出ID列表',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `sim_type_id` (`sim_type_id`),
-  CONSTRAINT `cond_out_sets_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `sim_type_id` (`sim_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: condition_configs
@@ -145,35 +140,34 @@ CREATE TABLE `condition_configs` (
   `remark` text,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
+  `is_default` smallint DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_fold_sim` (`fold_type_id`,`sim_type_id`),
-  KEY `sim_type_id` (`sim_type_id`),
-  CONSTRAINT `condition_configs_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`),
-  CONSTRAINT `condition_configs_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `sim_type_id` (`sim_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data for condition_configs
-INSERT INTO `condition_configs` (`id`, `name`, `code`, `fold_type_id`, `sim_type_id`, `param_group_ids`, `output_group_ids`, `default_param_group_id`, `default_output_group_id`, `default_solver_id`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
-(1, '展开态跌落', 'unfold-drop', 0, 1, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1769846308, 1769846308),
-(2, '展开态落球', 'unfold-dropball', 0, 2, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1769846359, 1769846359),
-(3, '折叠态落球', 'fold-dropball', 1, 2, '[1]', '[1]', NULL, NULL, NULL, 1, 100, NULL, 1769846392, 1769846392),
-(4, '半折叠态跌落', 'half-fold-drop', 2, 1, '[1]', '[1]', NULL, NULL, NULL, 1, 100, NULL, 1769846433, 1769846433),
-(5, '展开态-跌落', 'UNFOLD_DROP', 1, 1, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1773820597, 1773820597);
+-- Data: condition_configs
+INSERT INTO `condition_configs` (`id`, `name`, `code`, `fold_type_id`, `sim_type_id`, `param_group_ids`, `output_group_ids`, `default_param_group_id`, `default_output_group_id`, `default_solver_id`, `valid`, `sort`, `remark`, `created_at`, `updated_at`, `is_default`) VALUES
+(1, '展开态跌落', 'unfold-drop', 0, 1, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1769846308, 1769846308, 0),
+(2, '展开态落球', 'unfold-dropball', 0, 2, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1769846359, 1769846359, 0),
+(3, '折叠态落球', 'fold-dropball', 1, 2, '[1]', '[1]', NULL, NULL, NULL, 1, 200, NULL, 1769846392, 1773987065, 0),
+(4, '半折叠态跌落', 'half-fold-drop', 2, 1, '[1]', '[1]', NULL, NULL, NULL, 1, 100, NULL, 1769846433, 1773906516, 1),
+(5, '展开态-跌落', 'UNFOLD_DROP', 1, 1, '[1]', '[1]', 1, 1, 39, 1, 100, NULL, 1773820597, 1773906147, 1);
 
 -- Table: condition_defs
 DROP TABLE IF EXISTS `condition_defs`;
 CREATE TABLE `condition_defs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '工况名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '工况编码',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '工况名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '工况编码',
   `condition_schema` json DEFAULT NULL,
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
-  `category` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `unit` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -182,8 +176,8 @@ CREATE TABLE `condition_defs` (
 DROP TABLE IF EXISTS `condition_output_groups`;
 CREATE TABLE `condition_output_groups` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '组合名称',
-  `description` text COLLATE utf8mb4_general_ci COMMENT '组合描述',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '组合名称',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '组合描述',
   `valid` smallint DEFAULT NULL COMMENT '1=有效,0=禁用',
   `sort` int DEFAULT NULL COMMENT '排序',
   `created_at` int DEFAULT NULL,
@@ -193,16 +187,16 @@ CREATE TABLE `condition_output_groups` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for condition_output_groups
+-- Data: condition_output_groups
 INSERT INTO `condition_output_groups` (`id`, `name`, `description`, `valid`, `sort`, `created_at`, `updated_at`, `project_id`, `alg_type`) VALUES
-(1, '常规输出', '常规输出', 1, 100, 1773406992, 1773849352, NULL, 0);
+(1, '常规输出', '常规输出', 1, 100, 1773406992, 1773929490, NULL, 0);
 
 -- Table: departments
 DROP TABLE IF EXISTS `departments`;
 CREATE TABLE `departments` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '部门名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门编码',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '部门名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门编码',
   `parent_id` int DEFAULT NULL COMMENT '父部门ID',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
@@ -212,7 +206,7 @@ CREATE TABLE `departments` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for departments
+-- Data: departments
 INSERT INTO `departments` (`id`, `name`, `code`, `parent_id`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
 (1, '研发部', '研发部', 0, 1, 10, 1769934085, 1769934085),
 (2, '测试部', '测试部', 0, 1, 20, 1769934085, 1769934085),
@@ -230,12 +224,10 @@ CREATE TABLE `fold_type_sim_type_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fold_type_id` (`fold_type_id`),
-  KEY `sim_type_id` (`sim_type_id`),
-  CONSTRAINT `fold_type_sim_type_rels_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`),
-  CONSTRAINT `fold_type_sim_type_rels_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `sim_type_id` (`sim_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data for fold_type_sim_type_rels
+-- Data: fold_type_sim_type_rels
 INSERT INTO `fold_type_sim_type_rels` (`id`, `fold_type_id`, `sim_type_id`, `is_default`, `sort`, `created_at`) VALUES
 (1, 0, 1, 1, 10, 1769751512),
 (2, 0, 2, 0, 20, 1769751512),
@@ -249,19 +241,19 @@ INSERT INTO `fold_type_sim_type_rels` (`id`, `fold_type_id`, `sim_type_id`, `is_
 DROP TABLE IF EXISTS `fold_types`;
 CREATE TABLE `fold_types` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '姿态名称',
-  `code` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姿态编码',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '姿态名称',
+  `code` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姿态编码',
   `angle` int DEFAULT NULL COMMENT '角度值',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for fold_types
+-- Data: fold_types
 INSERT INTO `fold_types` (`id`, `name`, `code`, `angle`, `valid`, `sort`, `created_at`, `updated_at`, `remark`) VALUES
 (1, '展开态', '展开态', NULL, 1, 0, 1769934087, 1769934087, NULL),
 (2, '半折叠态', '半折叠态', NULL, 1, 20, 1769934087, 1769934087, NULL);
@@ -271,23 +263,23 @@ DROP TABLE IF EXISTS `menus`;
 CREATE TABLE `menus` (
   `id` int NOT NULL AUTO_INCREMENT,
   `parent_id` int DEFAULT NULL COMMENT '父菜单ID，0为顶级',
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '菜单名称',
-  `title_i18n_key` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '国际化标题key',
-  `icon` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '图标',
-  `path` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路由路径',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '菜单名称',
+  `title_i18n_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '国际化标题key',
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '图标',
+  `path` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路由路径',
   `permission_id` int DEFAULT NULL COMMENT '所需权限ID',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
-  `component` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '前端组件路径',
-  `menu_type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT 'MENU' COMMENT '菜单类型',
+  `component` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '前端组件路径',
+  `menu_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'MENU' COMMENT '菜单类型',
   `hidden` smallint DEFAULT '0' COMMENT '是否隐藏',
-  `permission_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所需权限编码',
+  `permission_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所需权限编码',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for menus
+-- Data: menus
 INSERT INTO `menus` (`id`, `parent_id`, `name`, `title_i18n_key`, `icon`, `path`, `permission_id`, `valid`, `sort`, `created_at`, `updated_at`, `component`, `menu_type`, `hidden`, `permission_code`) VALUES
 (1, 0, 'Dashboard', 'nav.dashboard', 'LayoutDashboard', '/', NULL, 1, 10, 1769934087, 1769934087, 'pages/dashboard/Dashboard', 'MENU', 0, NULL),
 (2, 0, 'Orders', 'nav.orders', 'FileText', '/orders', NULL, 1, 20, 1769934087, 1769934087, 'pages/orders/OrderList', 'MENU', 0, 'ORDER_VIEW'),
@@ -305,18 +297,18 @@ INSERT INTO `menus` (`id`, `parent_id`, `name`, `title_i18n_key`, `icon`, `path`
 DROP TABLE IF EXISTS `model_levels`;
 CREATE TABLE `model_levels` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '模型层级名称',
-  `code` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '层级编码',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模型层级名称',
+  `code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '层级编码',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci COMMENT '备注',
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备注',
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for model_levels
+-- Data: model_levels
 INSERT INTO `model_levels` (`id`, `name`, `code`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '整机', '整机', 1, 10, NULL, 1769934087, 1769934087),
 (2, '单件', '单件', 1, 20, NULL, 1769934087, 1769934087),
@@ -334,23 +326,22 @@ CREATE TABLE `order_results` (
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `order_id` (`order_id`),
-  CONSTRAINT `order_results_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
+  UNIQUE KEY `order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: orders
 DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `order_no` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单编号',
+  `order_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单编号',
   `project_id` int NOT NULL COMMENT '项目ID',
   `origin_file_type` smallint DEFAULT NULL COMMENT '1=路径,2=文件ID,3=上传',
-  `origin_file_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件名',
-  `origin_file_path` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件路径',
+  `origin_file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件名',
+  `origin_file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件路径',
   `origin_file_id` int DEFAULT NULL COMMENT '文件ID',
   `fold_type_id` int DEFAULT NULL COMMENT '姿态类型ID',
   `participant_uids` json DEFAULT NULL COMMENT '参与人用户ID列表',
-  `remark` text COLLATE utf8mb4_general_ci COMMENT '备注',
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备注',
   `sim_type_ids` json DEFAULT NULL COMMENT '选中的仿真类型ID列表',
   `opt_param` json DEFAULT NULL COMMENT '各仿真类型配置 {sim_type_id: {...}}',
   `workflow_id` int DEFAULT NULL COMMENT '工作流ID',
@@ -366,47 +357,44 @@ CREATE TABLE `orders` (
   `origin_fold_type_id` int DEFAULT NULL COMMENT '原始姿态类型ID',
   `fold_type_ids` json DEFAULT NULL COMMENT '姿态类型ID列表',
   `input_json` json DEFAULT NULL COMMENT '输入JSON完整配置',
+  `condition_summary` json DEFAULT NULL COMMENT '工况概览 {姿态名: [仿真类型名,...]}',
   PRIMARY KEY (`id`),
   UNIQUE KEY `order_no` (`order_no`),
   KEY `project_id` (`project_id`),
   KEY `fold_type_id` (`fold_type_id`),
   KEY `workflow_id` (`workflow_id`),
-  KEY `created_by` (`created_by`),
-  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
-  CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`),
-  CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`workflow_id`) REFERENCES `workflows` (`id`),
-  CONSTRAINT `orders_ibfk_4` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+  KEY `created_by` (`created_by`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1009 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for orders
-INSERT INTO `orders` (`id`, `order_no`, `project_id`, `origin_file_type`, `origin_file_name`, `origin_file_path`, `origin_file_id`, `fold_type_id`, `participant_uids`, `remark`, `sim_type_ids`, `opt_param`, `workflow_id`, `status`, `progress`, `cur_node_id`, `submit_check`, `client_meta`, `created_by`, `created_at`, `updated_at`, `model_level_id`, `origin_fold_type_id`, `fold_type_ids`, `input_json`) VALUES
-(1001, 'ORD-2025-001', 1751, 1, 'phone_model_v1.inp', '/models/phone/v1/phone_model_v1.inp', NULL, NULL, '[10001, 10002]', '【全部完成】折叠屏手机A跌落仿真测试 - 贝叶斯优化', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1002, 'ORD-2025-002', 1751, 1, 'phone_model_v2.inp', '/models/phone/v2/phone_model_v2.inp', NULL, 1, '[10001, 10003]', '【完成但有失败】折叠屏手机A折叠态跌落测试 - 部分轮次失败', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1003, 'ORD-2025-003', 1752, 1, 'phone_b_model.inp', '/models/phone_b/phone_b_model.inp', NULL, NULL, '[10002]', '【运行中-少量运行】折叠屏手机B振动测试 - 大部分完成少量运行中', '[3, 4]', NULL, NULL, 1, 85, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1004, 'ORD-2025-004', 1753, 1, 'tablet_model.inp', '/models/tablet/tablet_model.inp', NULL, 2, '[10001, 10002, 10003]', '【运行中-有失败】折叠屏平板综合测试 - 运行中且有失败', '[1, 3, 5]', NULL, NULL, 1, 60, NULL, NULL, NULL, 10003, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1005, 'ORD-2025-005', 1751, 1, 'phone_stress_test.inp', '/models/phone/stress/phone_stress_test.inp', NULL, NULL, '[10001]', '【大量失败】手机压力测试 - 多数轮次失败', '[1, 4]', NULL, NULL, 3, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1006, 'ORD-2025-006', 1752, 1, 'phone_b_thermal.inp', '/models/phone_b/thermal/phone_b_thermal.inp', NULL, 1, '[10002, 10003]', '【待运行】折叠屏手机B热分析 - 等待执行', '[5]', NULL, NULL, 0, 0, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL),
-(1007, 'ORD-20260313-70971', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379371, 1773379371, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}'),
-(1008, 'ORD-20260313-72450', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379572, 1773379572, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}');
+-- Data: orders
+INSERT INTO `orders` (`id`, `order_no`, `project_id`, `origin_file_type`, `origin_file_name`, `origin_file_path`, `origin_file_id`, `fold_type_id`, `participant_uids`, `remark`, `sim_type_ids`, `opt_param`, `workflow_id`, `status`, `progress`, `cur_node_id`, `submit_check`, `client_meta`, `created_by`, `created_at`, `updated_at`, `model_level_id`, `origin_fold_type_id`, `fold_type_ids`, `input_json`, `condition_summary`) VALUES
+(1001, 'ORD-2025-001', 1751, 1, 'phone_model_v1.inp', '/models/phone/v1/phone_model_v1.inp', NULL, NULL, '[10001, 10002]', '【全部完成】折叠屏手机A跌落仿真测试 - 贝叶斯优化', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1002, 'ORD-2025-002', 1751, 1, 'phone_model_v2.inp', '/models/phone/v2/phone_model_v2.inp', NULL, 1, '[10001, 10003]', '【完成但有失败】折叠屏手机A折叠态跌落测试 - 部分轮次失败', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1003, 'ORD-2025-003', 1752, 1, 'phone_b_model.inp', '/models/phone_b/phone_b_model.inp', NULL, NULL, '[10002]', '【运行中-少量运行】折叠屏手机B振动测试 - 大部分完成少量运行中', '[3, 4]', NULL, NULL, 1, 85, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1004, 'ORD-2025-004', 1753, 1, 'tablet_model.inp', '/models/tablet/tablet_model.inp', NULL, 2, '[10001, 10002, 10003]', '【运行中-有失败】折叠屏平板综合测试 - 运行中且有失败', '[1, 3, 5]', NULL, NULL, 1, 60, NULL, NULL, NULL, 10003, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1005, 'ORD-2025-005', 1751, 1, 'phone_stress_test.inp', '/models/phone/stress/phone_stress_test.inp', NULL, NULL, '[10001]', '【大量失败】手机压力测试 - 多数轮次失败', '[1, 4]', NULL, NULL, 3, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1006, 'ORD-2025-006', 1752, 1, 'phone_b_thermal.inp', '/models/phone_b/thermal/phone_b_thermal.inp', NULL, 1, '[10002, 10003]', '【待运行】折叠屏手机B热分析 - 等待执行', '[5]', NULL, NULL, 0, 0, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
+(1007, 'ORD-20260313-70971', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379371, 1773379371, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL),
+(1008, 'ORD-20260313-72450', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379572, 1773379572, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL);
 
 -- Table: output_defs
 DROP TABLE IF EXISTS `output_defs`;
 CREATE TABLE `output_defs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '输出名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '输出编码',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '输出名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '输出编码',
   `val_type` smallint DEFAULT NULL COMMENT '1=number,2=int,3=string',
-  `unit` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '单位',
+  `unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '单位',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for output_defs
+-- Data: output_defs
 INSERT INTO `output_defs` (`id`, `name`, `code`, `val_type`, `unit`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, 'X方向位移', 'LEP1', 1, '', 1, 10, NULL, 1769934088, 1769934088),
 (2, 'Y方向位移', 'LEP2', 1, '', 1, 20, NULL, 1769934088, 1769934088),
@@ -424,26 +412,26 @@ INSERT INTO `output_defs` (`id`, `name`, `code`, `val_type`, `unit`, `valid`, `s
 DROP TABLE IF EXISTS `param_defs`;
 CREATE TABLE `param_defs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '参数名称',
-  `key` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '参数键名',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '参数名称',
+  `key` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '参数键名',
   `val_type` smallint DEFAULT NULL COMMENT '1=number,2=int,3=string,4=enum',
-  `unit` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '单位',
+  `unit` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '单位',
   `min_val` float DEFAULT NULL COMMENT '最小值',
   `max_val` float DEFAULT NULL COMMENT '最大值',
   `precision` smallint DEFAULT NULL COMMENT '精度',
-  `default_val` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '默认值',
+  `default_val` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '默认值',
   `enum_options` json DEFAULT NULL COMMENT '枚举选项列表',
   `required` smallint DEFAULT NULL COMMENT '是否必填',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `key` (`key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for param_defs
+-- Data: param_defs
 INSERT INTO `param_defs` (`id`, `name`, `key`, `val_type`, `unit`, `min_val`, `max_val`, `precision`, `default_val`, `enum_options`, `required`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, 'X轴旋转角度', 'x_deg', 1, '°', 0.0, 90.0, 6, '0', NULL, 1, 1, 10, NULL, 1769934088, 1769934088),
 (2, 'Y轴旋转角度', 'y_deg', 1, '°', 0.0, 360.0, 6, '0', NULL, 1, 1, 20, NULL, 1769934088, 1769934088),
@@ -472,26 +460,23 @@ CREATE TABLE `param_group_param_rels` (
   `id` int NOT NULL AUTO_INCREMENT,
   `param_group_id` int NOT NULL COMMENT '参数组合ID',
   `param_def_id` int NOT NULL COMMENT '参数定义ID',
-  `default_value` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '该参数在此组合中的默认值',
+  `default_value` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '该参数在此组合中的默认值',
   `sort` int DEFAULT NULL COMMENT '排序',
   `created_at` int DEFAULT NULL,
   `min_val` float DEFAULT NULL,
   `max_val` float DEFAULT NULL,
-  `doe_default_value` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `bayesian_default_value` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `enum_values` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `param_group_id` (`param_group_id`),
-  KEY `param_def_id` (`param_def_id`),
-  CONSTRAINT `param_group_param_rels_ibfk_1` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`),
-  CONSTRAINT `param_group_param_rels_ibfk_2` FOREIGN KEY (`param_def_id`) REFERENCES `param_defs` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `param_def_id` (`param_def_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for param_group_param_rels
-INSERT INTO `param_group_param_rels` (`id`, `param_group_id`, `param_def_id`, `default_value`, `sort`, `created_at`, `min_val`, `max_val`, `doe_default_value`, `bayesian_default_value`) VALUES
-(1, 1, 1, NULL, 100, 1773406982, NULL, NULL, NULL, NULL),
-(2, 1, 2, NULL, 100, 1773406982, NULL, NULL, NULL, NULL),
-(3, 1, 3, NULL, 100, 1773406982, NULL, NULL, NULL, NULL),
-(4, 1, 4, NULL, 100, 1773406983, NULL, NULL, NULL, NULL);
+-- Data: param_group_param_rels
+INSERT INTO `param_group_param_rels` (`id`, `param_group_id`, `param_def_id`, `default_value`, `sort`, `created_at`, `min_val`, `max_val`, `enum_values`) VALUES
+(13, 1, 1, '0', 10, 1773932012, 0.0, 90.0, '0,15,30,45,60'),
+(14, 1, 2, '0', 20, 1773932012, 0.0, 360.0, '0,15,30,45,60'),
+(15, 1, 3, '0', 30, 1773932012, 0.0, 90.0, '0,15,30,45,60'),
+(16, 1, 4, '1.0', 40, 1773932012, 0.5, 2.0, '1');
 
 -- Table: param_group_project_rels
 DROP TABLE IF EXISTS `param_group_project_rels`;
@@ -502,17 +487,15 @@ CREATE TABLE `param_group_project_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `param_group_id` (`param_group_id`),
-  KEY `project_id` (`project_id`),
-  CONSTRAINT `param_group_project_rels_ibfk_1` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`),
-  CONSTRAINT `param_group_project_rels_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
+  KEY `project_id` (`project_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: param_groups
 DROP TABLE IF EXISTS `param_groups`;
 CREATE TABLE `param_groups` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '组合名称',
-  `description` text COLLATE utf8mb4_general_ci COMMENT '组合描述',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '组合名称',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '组合描述',
   `valid` smallint DEFAULT NULL COMMENT '1=有效,0=禁用',
   `sort` int DEFAULT NULL COMMENT '排序',
   `created_at` int DEFAULT NULL,
@@ -522,24 +505,23 @@ CREATE TABLE `param_groups` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for param_groups
+-- Data: param_groups
 INSERT INTO `param_groups` (`id`, `name`, `description`, `valid`, `sort`, `created_at`, `updated_at`, `project_id`, `alg_type`) VALUES
-(1, '常规跌落', '常规跌落组合', 1, 100, 1773406965, 1773406965, NULL, 0);
+(1, '常规跌落', '常规跌落组合', 1, 100, 1773406965, 1773932012, NULL, 0);
 
 -- Table: param_tpl_items
 DROP TABLE IF EXISTS `param_tpl_items`;
 CREATE TABLE `param_tpl_items` (
   `id` int NOT NULL AUTO_INCREMENT,
   `tpl_set_id` int NOT NULL,
-  `tpl_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板名称',
+  `tpl_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板名称',
   `param_vals` json DEFAULT NULL COMMENT '参数值映射 {"param_id": value}',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `tpl_set_id` (`tpl_set_id`),
-  CONSTRAINT `param_tpl_items_ibfk_1` FOREIGN KEY (`tpl_set_id`) REFERENCES `param_tpl_sets` (`id`)
+  KEY `tpl_set_id` (`tpl_set_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: param_tpl_sets
@@ -547,26 +529,25 @@ DROP TABLE IF EXISTS `param_tpl_sets`;
 CREATE TABLE `param_tpl_sets` (
   `id` int NOT NULL AUTO_INCREMENT,
   `sim_type_id` int DEFAULT NULL COMMENT '关联仿真类型',
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板集名称',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '模板集名称',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `sim_type_id` (`sim_type_id`),
-  CONSTRAINT `param_tpl_sets_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `sim_type_id` (`sim_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: permissions
 DROP TABLE IF EXISTS `permissions`;
 CREATE TABLE `permissions` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '权限名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '权限编码',
-  `type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: PAGE/ACTION/DATA',
-  `resource` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资源标识',
-  `description` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '权限描述',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '权限名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '权限编码',
+  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: PAGE/ACTION/DATA',
+  `resource` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资源标识',
+  `description` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '权限描述',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
@@ -575,7 +556,7 @@ CREATE TABLE `permissions` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for permissions
+-- Data: permissions
 INSERT INTO `permissions` (`id`, `name`, `code`, `type`, `resource`, `description`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
 (1, '查看仪表盘', 'VIEW_DASHBOARD', 'PAGE', NULL, NULL, 1, 10, 1769934085, 1769934085),
 (2, '管理配置', 'MANAGE_CONFIG', 'PAGE', NULL, NULL, 1, 20, 1769934085, 1769934085),
@@ -600,29 +581,27 @@ CREATE TABLE `project_sim_type_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `project_id` (`project_id`),
-  KEY `sim_type_id` (`sim_type_id`),
-  CONSTRAINT `project_sim_type_rels_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
-  CONSTRAINT `project_sim_type_rels_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `sim_type_id` (`sim_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: projects
 DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(200) COLLATE utf8mb4_general_ci NOT NULL COMMENT '项目名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '项目编码',
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '项目名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '项目编码',
   `default_sim_type_id` int DEFAULT NULL COMMENT '默认仿真类型ID',
   `default_solver_id` int DEFAULT NULL COMMENT '默认求解器ID',
   `valid` smallint DEFAULT NULL COMMENT '1=有效,0=禁用',
   `sort` int DEFAULT NULL COMMENT '排序',
-  `remark` text COLLATE utf8mb4_general_ci COMMENT '备注',
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '备注',
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1761 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for projects
+-- Data: projects
 INSERT INTO `projects` (`id`, `name`, `code`, `default_sim_type_id`, `default_solver_id`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1751, '折叠屏手机A', 'PRJ_1751', NULL, NULL, 1, 100, NULL, 1769962887, 1769962887),
 (1752, '折叠屏手机B', 'PRJ_1752', NULL, NULL, 1, 100, NULL, 1769962887, 1769962887),
@@ -639,9 +618,9 @@ INSERT INTO `projects` (`id`, `name`, `code`, `default_sim_type_id`, `default_so
 DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '角色名称',
-  `code` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色编码',
-  `description` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色描述',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '角色名称',
+  `code` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色编码',
+  `description` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色描述',
   `permission_ids` json DEFAULT NULL COMMENT '权限ID列表',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
@@ -651,7 +630,7 @@ CREATE TABLE `roles` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for roles
+-- Data: roles
 INSERT INTO `roles` (`id`, `name`, `code`, `description`, `permission_ids`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
 (1, '超级管理员', 'ADMIN', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 10, 1769934085, 1769934085),
 (2, '项目经理', 'PM', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 20, 1769934085, 1769934085),
@@ -673,8 +652,8 @@ CREATE TABLE `rounds` (
   `flow_cur_node_id` int DEFAULT NULL COMMENT '当前流程节点',
   `flow_node_progress` json DEFAULT NULL COMMENT '各节点进度',
   `stuck_module_id` int DEFAULT NULL COMMENT '卡住的模块ID',
-  `error_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '错误码',
-  `error_msg` text COLLATE utf8mb4_general_ci COMMENT '错误信息',
+  `error_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '错误码',
+  `error_msg` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '错误信息',
   `started_at` int DEFAULT NULL COMMENT '开始时间',
   `finished_at` int DEFAULT NULL COMMENT '结束时间',
   `created_at` int DEFAULT NULL,
@@ -684,12 +663,10 @@ CREATE TABLE `rounds` (
   KEY `idx_order_simtype_round` (`order_id`,`sim_type_id`,`round_index`),
   KEY `ix_rounds_sim_type_id` (`sim_type_id`),
   KEY `ix_rounds_order_id` (`order_id`),
-  KEY `ix_rounds_sim_type_result_id` (`sim_type_result_id`),
-  CONSTRAINT `rounds_ibfk_1` FOREIGN KEY (`sim_type_result_id`) REFERENCES `sim_type_results` (`id`),
-  CONSTRAINT `rounds_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
+  KEY `ix_rounds_sim_type_result_id` (`sim_type_result_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2471 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for rounds
+-- Data: rounds
 INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `round_index`, `params`, `outputs`, `status`, `flow_cur_node_id`, `flow_node_progress`, `stuck_module_id`, `error_code`, `error_msg`, `started_at`, `finished_at`, `created_at`, `updated_at`) VALUES
 (1, 1, 1001, 1, 1, '{"1": 54.1, "2": 323.86, "3": 5.86, "4": 0.78, "5": 0.75, "6": 1.4, "14": 98.2, "15": 0.362}', '{"1": 3.0425, "2": -2.3645, "3": 1.9176, "7": 128.0, "9": 589.49, "12": 0.01376}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769932948, 1769932978, 1769962888, 1769962888),
 (2, 1, 1001, 1, 2, '{"1": 65.26, "2": 252.88, "3": 27.9, "4": 1.2, "5": 3.4, "6": 3.13, "14": 99.0, "15": 0.318}', '{"1": -3.9464, "2": 0.7077, "3": 1.3413, "7": 279.96, "9": 719.54, "12": 0.01847}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769933008, 1769933038, 1769962888, 1769962888),
@@ -1190,7 +1167,8 @@ INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `ro
 (497, 1, 1001, 1, 497, '{"1": 7.66, "2": 66.95, "3": 10.06, "4": 0.64, "5": 4.46, "6": 6.17, "14": 82.8, "15": 0.234}', '{"1": 4.025, "2": 1.077, "3": -0.4673, "7": 277.78, "9": 577.56, "12": 0.00218}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769962708, 1769962738, 1769962888, 1769962888),
 (498, 1, 1001, 1, 498, '{"1": 84.54, "2": 214.23, "3": 6.41, "4": 1.01, "5": 0.3, "6": 0.92, "14": 207.3, "15": 0.477}', '{"1": 3.7969, "2": 0.0294, "3": 0.7546, "7": 170.13, "9": 683.32, "12": 0.01074}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769962768, 1769962798, 1769962888, 1769962888),
 (499, 1, 1001, 1, 499, '{"1": 33.38, "2": 153.54, "3": 89.54, "4": 0.81, "5": 0.6, "6": 0.39, "14": 158.2, "15": 0.498}', '{"1": 4.9094, "2": 4.092, "3": -0.3808, "7": 214.92, "9": 706.95, "12": 0.00769}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769962828, 1769962858, 1769962888, 1769962888),
-(500, 1, 1001, 1, 500, '{"1": 68.11, "2": 29.13, "3": 71.05, "4": 0.59, "5": 1.29, "6": 6.4, "14": 82.7, "15": 0.204}', '{"1": 1.805, "2": 1.0995, "3": 1.8548, "7": 356.82, "9": 551.44, "12": 0.02983}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769962888, 1769962918, 1769962888, 1769962888),
+(500, 1, 1001, 1, 500, '{"1": 68.11, "2": 29.13, "3": 71.05, "4": 0.59, "5": 1.29, "6": 6.4, "14": 82.7, "15": 0.204}', '{"1": 1.805, "2": 1.0995, "3": 1.8548, "7": 356.82, "9": 551.44, "12": 0.02983}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769962888, 1769962918, 1769962888, 1769962888);
+INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `round_index`, `params`, `outputs`, `status`, `flow_cur_node_id`, `flow_node_progress`, `stuck_module_id`, `error_code`, `error_msg`, `started_at`, `finished_at`, `created_at`, `updated_at`) VALUES
 (501, 2, 1001, 2, 1, '{"4": 1.19, "6": 5.31, "7": 0.454, "8": 43.7, "9": -5.2, "10": -49.2, "14": 86.9, "16": 7577.0}', '{"4": 976.3, "5": 582.85, "6": 398.66, "7": 465.74, "9": 438.9, "13": 12.59}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769938948, 1769938978, 1769962888, 1769962888),
 (502, 2, 1001, 2, 2, '{"4": 0.97, "6": 3.69, "7": 0.156, "8": 43.5, "9": -27.8, "10": -67.6, "14": 251.3, "16": 7453.0}', '{"4": 669.25, "5": 300.27, "6": 126.27, "7": 176.8, "9": 478.29, "13": 22.73}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769939008, 1769939038, 1769962888, 1769962888),
 (503, 2, 1001, 2, 3, '{"4": 1.15, "6": 5.23, "7": 0.845, "8": 29.4, "9": -51.9, "10": -65.6, "14": 227.8, "16": 7817.0}', '{"4": 719.34, "5": 381.74, "6": 336.71, "7": 112.81, "9": 201.25, "13": 79.32}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769939068, 1769939098, 1769962888, 1769962888),
@@ -1690,7 +1668,8 @@ INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `ro
 (997, 3, 1001, 3, 97, '{"1": 19.93, "2": 262.83, "3": 54.58, "11": 1888.9, "12": 0.9, "13": 6.6, "19": 0.069, "20": 6.7}', '{"1": 5.3815, "2": -7.7536, "7": 277.04, "8": 237.08, "14": 217.45, "15": 31.66}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950708, 1769950738, 1769962888, 1769962888),
 (998, 3, 1001, 3, 98, '{"1": 66.19, "2": 111.1, "3": 48.1, "11": 83.9, "12": 2.65, "13": 51.8, "19": 0.044, "20": 2.5}', '{"1": 1.3595, "2": 0.2312, "7": 195.73, "8": 399.04, "14": 554.86, "15": 12.13}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950768, 1769950798, 1769962888, 1769962888),
 (999, 3, 1001, 3, 99, '{"1": 25.21, "2": 32.73, "3": 66.59, "11": 1355.3, "12": 5.9, "13": 8.2, "19": 0.073, "20": 1.2}', '{"1": -6.7051, "2": -3.8811, "7": 243.28, "8": 58.26, "14": 975.24, "15": 2.99}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950828, 1769950858, 1769962888, 1769962888),
-(1000, 3, 1001, 3, 100, '{"1": 31.02, "2": 27.9, "3": 84.1, "11": 757.6, "12": 2.82, "13": 49.5, "19": 0.019, "20": 4.2}', '{"1": 5.4753, "2": 0.1014, "7": 245.03, "8": 223.67, "14": 462.68, "15": 9.23}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950888, 1769950918, 1769962888, 1769962888),
+(1000, 3, 1001, 3, 100, '{"1": 31.02, "2": 27.9, "3": 84.1, "11": 757.6, "12": 2.82, "13": 49.5, "19": 0.019, "20": 4.2}', '{"1": 5.4753, "2": 0.1014, "7": 245.03, "8": 223.67, "14": 462.68, "15": 9.23}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950888, 1769950918, 1769962888, 1769962888);
+INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `round_index`, `params`, `outputs`, `status`, `flow_cur_node_id`, `flow_node_progress`, `stuck_module_id`, `error_code`, `error_msg`, `started_at`, `finished_at`, `created_at`, `updated_at`) VALUES
 (1001, 3, 1001, 3, 101, '{"1": 57.66, "2": 59.82, "3": 3.07, "11": 1537.5, "12": 8.51, "13": 56.7, "19": 0.054, "20": 4.9}', '{"1": -4.9187, "2": 8.2703, "7": 80.8, "8": 183.68, "14": 800.06, "15": 39.85}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769950948, 1769950978, 1769962888, 1769962888),
 (1002, 3, 1001, 3, 102, '{"1": 62.87, "2": 193.99, "3": 7.22, "11": 1011.4, "12": 1.47, "13": 26.9, "19": 0.097, "20": 9.8}', '{"1": 5.3509, "2": -7.1285, "7": 345.01, "8": 207.45, "14": 76.95, "15": 1.07}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769951008, 1769951038, 1769962888, 1769962888),
 (1003, 3, 1001, 3, 103, '{"1": 14.65, "2": 254.46, "3": 55.01, "11": 1353.5, "12": 9.42, "13": 48.9, "19": 0.062, "20": 8.5}', '{"1": 5.2698, "2": -2.6366, "7": 291.86, "8": 204.63, "14": 701.96, "15": 46.54}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769951068, 1769951098, 1769962888, 1769962888),
@@ -2190,7 +2169,8 @@ INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `ro
 (1497, 5, 1002, 2, 97, '{"4": 1.94, "6": 4.82, "7": 0.633, "8": 16.3, "9": 5.3, "10": 29.3, "14": 226.4, "16": 7078.0}', '{"4": 740.87, "5": 941.07, "6": 450.78, "7": 434.55, "9": 158.8, "13": 9.8}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959708, 1769959738, 1769962888, 1769962888),
 (1498, 5, 1002, 2, 98, '{"4": 1.25, "6": 6.54, "7": 0.534, "8": 40.5, "9": -76.0, "10": -3.4, "14": 228.4, "16": 7624.0}', '{"4": 815.35, "5": 206.63, "6": 354.13, "7": 290.7, "9": 488.35, "13": 96.57}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959768, 1769959798, 1769962888, 1769962888),
 (1499, 5, 1002, 2, 99, '{"4": 1.52, "6": 3.21, "7": 0.151, "8": 24.6, "9": -91.1, "10": -45.1, "14": 52.0, "16": 7801.0}', '{"4": 304.11, "5": 122.08, "6": 310.24, "7": 178.84, "9": 152.04, "13": 44.83}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959828, 1769959858, 1769962888, 1769962888),
-(1500, 5, 1002, 2, 100, '{"4": 1.94, "6": 5.07, "7": 0.437, "8": 46.2, "9": -40.4, "10": 58.8, "14": 233.1, "16": 7049.0}', '{"4": 468.66, "5": 866.56, "6": 274.65, "7": 495.12, "9": 616.45, "13": 68.92}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959888, 1769959918, 1769962888, 1769962888),
+(1500, 5, 1002, 2, 100, '{"4": 1.94, "6": 5.07, "7": 0.437, "8": 46.2, "9": -40.4, "10": 58.8, "14": 233.1, "16": 7049.0}', '{"4": 468.66, "5": 866.56, "6": 274.65, "7": 495.12, "9": 616.45, "13": 68.92}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959888, 1769959918, 1769962888, 1769962888);
+INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `round_index`, `params`, `outputs`, `status`, `flow_cur_node_id`, `flow_node_progress`, `stuck_module_id`, `error_code`, `error_msg`, `started_at`, `finished_at`, `created_at`, `updated_at`) VALUES
 (1501, 5, 1002, 2, 101, '{"4": 0.6, "6": 6.51, "7": 0.539, "8": 20.2, "9": 37.8, "10": -76.9, "14": 65.4, "16": 7420.0}', '{"4": 203.82, "5": 957.9, "6": 116.72, "7": 82.05, "9": 751.34, "13": 89.37}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769959948, 1769959978, 1769962888, 1769962888),
 (1502, 5, 1002, 2, 102, '{"4": 1.88, "6": 1.7, "7": 0.374, "8": 39.6, "9": -61.4, "10": 9.3, "14": 187.5, "16": 7846.0}', '{"4": 509.21, "5": 47.88, "6": 389.56, "7": 361.9, "9": 341.25, "13": 95.24}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769960008, 1769960038, 1769962888, 1769962888),
 (1503, 5, 1002, 2, 103, '{"4": 0.86, "6": 0.69, "7": 0.406, "8": 26.2, "9": -99.5, "10": 48.1, "14": 160.6, "16": 7587.0}', '{"4": 466.21, "5": 320.7, "6": 259.39, "7": 52.57, "9": 493.1, "13": 48.18}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769960068, 1769960098, 1769962888, 1769962888),
@@ -2690,7 +2670,8 @@ INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `ro
 (1997, 8, 1003, 4, 147, '{"1": 63.26, "2": 169.72, "4": 0.64, "6": 3.18, "13": 0.042, "14": 52.4, "21": 811.0, "22": 0.39}', 'null', 1, 4, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 79, "node_5": 0, "node_6": 0, "node_7": 0}', NULL, NULL, NULL, 1769962708, NULL, 1769962888, 1769962888),
 (1998, 8, 1003, 4, 148, '{"1": 48.4, "2": 219.87, "4": 1.57, "6": 5.74, "13": 0.0494, "14": 283.3, "21": 529.0, "22": 0.42}', 'null', 1, 5, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 62, "node_6": 0, "node_7": 0}', NULL, NULL, NULL, 1769962768, NULL, 1769962888, 1769962888),
 (1999, 8, 1003, 4, 149, '{"1": 38.85, "2": 0.58, "4": 1.7, "6": 9.07, "13": 0.0337, "14": 202.5, "21": 580.0, "22": 0.48}', 'null', 1, 5, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 36, "node_6": 0, "node_7": 0}', NULL, NULL, NULL, 1769962828, NULL, 1769962888, 1769962888),
-(2000, 8, 1003, 4, 150, '{"1": 27.28, "2": 153.66, "4": 1.35, "6": 6.07, "13": 0.0346, "14": 211.9, "21": 219.0, "22": 0.11}', 'null', 1, 6, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 20, "node_7": 0}', NULL, NULL, NULL, 1769962888, NULL, 1769962888, 1769962888),
+(2000, 8, 1003, 4, 150, '{"1": 27.28, "2": 153.66, "4": 1.35, "6": 6.07, "13": 0.0346, "14": 211.9, "21": 219.0, "22": 0.11}', 'null', 1, 6, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 20, "node_7": 0}', NULL, NULL, NULL, 1769962888, NULL, 1769962888, 1769962888);
+INSERT INTO `rounds` (`id`, `sim_type_result_id`, `order_id`, `sim_type_id`, `round_index`, `params`, `outputs`, `status`, `flow_cur_node_id`, `flow_node_progress`, `stuck_module_id`, `error_code`, `error_msg`, `started_at`, `finished_at`, `created_at`, `updated_at`) VALUES
 (2001, 9, 1004, 1, 1, '{"1": 50.28, "2": 47.59, "3": 50.03, "4": 1.82, "5": 0.02, "6": 4.32, "14": 280.2, "15": 0.432}', '{"1": -0.9818, "2": 3.5208, "3": -0.8043, "7": 366.48, "9": 653.52, "12": 0.03784}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769956948, 1769956978, 1769962888, 1769962888),
 (2002, 9, 1004, 1, 2, '{"1": 77.18, "2": 344.92, "3": 77.25, "4": 1.07, "5": 4.35, "6": 9.62, "14": 171.3, "15": 0.283}', '{"1": 0.789, "2": 3.732, "3": -1.7846, "7": 282.81, "9": 545.47, "12": 0.00638}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769957008, 1769957038, 1769962888, 1769962888),
 (2003, 9, 1004, 1, 3, '{"1": 39.81, "2": 59.29, "3": 82.18, "4": 1.71, "5": 3.48, "6": 7.82, "14": 289.2, "15": 0.464}', '{"1": -1.3986, "2": 3.2662, "3": 1.5002, "7": 71.75, "9": 277.85, "12": 0.04461}', 2, 7, '{"node_1": 100, "node_2": 100, "node_3": 100, "node_4": 100, "node_5": 100, "node_6": 100, "node_7": 100}', NULL, NULL, NULL, 1769957068, 1769957098, 1769962888, 1769962888),
@@ -3173,9 +3154,7 @@ CREATE TABLE `sim_type_cond_out_group_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sim_type_id` (`sim_type_id`),
-  KEY `cond_out_group_id` (`cond_out_group_id`),
-  CONSTRAINT `sim_type_cond_out_group_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`),
-  CONSTRAINT `sim_type_cond_out_group_rels_ibfk_2` FOREIGN KEY (`cond_out_group_id`) REFERENCES `condition_output_groups` (`id`)
+  KEY `cond_out_group_id` (`cond_out_group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: sim_type_param_group_rels
@@ -3189,9 +3168,7 @@ CREATE TABLE `sim_type_param_group_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sim_type_id` (`sim_type_id`),
-  KEY `param_group_id` (`param_group_id`),
-  CONSTRAINT `sim_type_param_group_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`),
-  CONSTRAINT `sim_type_param_group_rels_ibfk_2` FOREIGN KEY (`param_group_id`) REFERENCES `param_groups` (`id`)
+  KEY `param_group_id` (`param_group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: sim_type_results
@@ -3217,12 +3194,10 @@ CREATE TABLE `sim_type_results` (
   PRIMARY KEY (`id`),
   KEY `sim_type_id` (`sim_type_id`),
   KEY `ix_sim_type_results_order_id` (`order_id`),
-  KEY `idx_order_simtype` (`order_id`,`sim_type_id`),
-  CONSTRAINT `sim_type_results_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
-  CONSTRAINT `sim_type_results_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`)
+  KEY `idx_order_simtype` (`order_id`,`sim_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for sim_type_results
+-- Data: sim_type_results
 INSERT INTO `sim_type_results` (`id`, `order_id`, `sim_type_id`, `status`, `progress`, `cur_node_id`, `stuck_node_id`, `stuck_module_id`, `best_exists`, `best_rule_id`, `best_round_index`, `best_metrics`, `total_rounds`, `completed_rounds`, `failed_rounds`, `created_at`, `updated_at`) VALUES
 (1, 1001, 1, 2, 100, NULL, NULL, NULL, 1, NULL, 347, NULL, 500, 500, 0, 1769962888, 1769962888),
 (2, 1001, 2, 2, 100, NULL, NULL, NULL, 1, NULL, 256, NULL, 400, 400, 0, 1769962888, 1769962888),
@@ -3250,34 +3225,32 @@ CREATE TABLE `sim_type_solver_rels` (
   `created_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `sim_type_id` (`sim_type_id`),
-  KEY `solver_id` (`solver_id`),
-  CONSTRAINT `sim_type_solver_rels_ibfk_1` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`),
-  CONSTRAINT `sim_type_solver_rels_ibfk_2` FOREIGN KEY (`solver_id`) REFERENCES `solvers` (`id`)
+  KEY `solver_id` (`solver_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: sim_types
 DROP TABLE IF EXISTS `sim_types`;
 CREATE TABLE `sim_types` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '仿真类型名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型编码',
-  `category` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类: STRUCTURE/THERMAL/MODAL等',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '仿真类型名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型编码',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类: STRUCTURE/THERMAL/MODAL等',
   `default_param_tpl_set_id` int DEFAULT NULL COMMENT '默认参数模板集ID',
   `default_cond_out_set_id` int DEFAULT NULL COMMENT '默认工况输出集ID',
   `default_solver_id` int DEFAULT NULL COMMENT '默认求解器ID',
   `support_alg_mask` int DEFAULT NULL COMMENT '支持算法位掩码:1=DOE,2=BAYES,4=...',
-  `node_icon` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '节点图标',
-  `color_tag` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色标签',
+  `node_icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '节点图标',
+  `color_tag` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色标签',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for sim_types
+-- Data: sim_types
 INSERT INTO `sim_types` (`id`, `name`, `code`, `category`, `default_param_tpl_set_id`, `default_cond_out_set_id`, `default_solver_id`, `support_alg_mask`, `node_icon`, `color_tag`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '跌落', '跌落', NULL, NULL, NULL, NULL, 3, NULL, NULL, 1, 10, NULL, 1769934087, 1769934087),
 (2, '落球', '落球', NULL, NULL, NULL, NULL, 3, NULL, NULL, 1, 20, NULL, 1769934087, 1769934087),
@@ -3289,9 +3262,9 @@ INSERT INTO `sim_types` (`id`, `name`, `code`, `category`, `default_param_tpl_se
 DROP TABLE IF EXISTS `solver_resources`;
 CREATE TABLE `solver_resources` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '资源池名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资源池编码',
-  `description` text COLLATE utf8mb4_general_ci COMMENT '资源池描述',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '资源池名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资源池编码',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '资源池描述',
   `cpu_cores` int DEFAULT NULL COMMENT 'CPU核心数',
   `memory_gb` int DEFAULT NULL COMMENT '内存大小GB',
   `valid` smallint DEFAULT NULL,
@@ -3302,7 +3275,7 @@ CREATE TABLE `solver_resources` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for solver_resources
+-- Data: solver_resources
 INSERT INTO `solver_resources` (`id`, `name`, `code`, `description`, `cpu_cores`, `memory_gb`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
 (1, '标准节点', NULL, NULL, 16, 64, 1, 100, 1769934087, 1769934087),
 (2, '大内存节点', NULL, NULL, 32, 256, 1, 100, 1769934087, 1769934087),
@@ -3314,9 +3287,9 @@ INSERT INTO `solver_resources` (`id`, `name`, `code`, `description`, `cpu_cores`
 DROP TABLE IF EXISTS `solvers`;
 CREATE TABLE `solvers` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '求解器名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '求解器编码',
-  `version` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '版本',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '求解器名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '求解器编码',
+  `version` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '版本',
   `cpu_core_min` int DEFAULT NULL COMMENT '最小CPU核数',
   `cpu_core_max` int DEFAULT NULL COMMENT '最大CPU核数',
   `cpu_core_default` int DEFAULT NULL COMMENT '默认CPU核数',
@@ -3326,14 +3299,14 @@ CREATE TABLE `solvers` (
   `params_schema` json DEFAULT NULL COMMENT '其他参数schema',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for solvers
+-- Data: solvers
 INSERT INTO `solvers` (`id`, `name`, `code`, `version`, `cpu_core_min`, `cpu_core_max`, `cpu_core_default`, `memory_min`, `memory_max`, `memory_default`, `params_schema`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, 'GPU求解器', 'GPU求解器', NULL, 1, 256, 16, 1, 1024, 64, NULL, 1, 0, NULL, 1769934087, 1769934087),
 (39, 'Abaqus2019', 'Abaqus2019', NULL, 1, 256, 16, 1, 1024, 64, NULL, 1, 390, NULL, 1769934087, 1769934087),
@@ -3345,20 +3318,20 @@ INSERT INTO `solvers` (`id`, `name`, `code`, `version`, `cpu_core_min`, `cpu_cor
 DROP TABLE IF EXISTS `status_defs`;
 CREATE TABLE `status_defs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '状态名称',
-  `code` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态编码',
-  `type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: PROCESS/FINAL',
-  `color` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色样式',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '状态名称',
+  `code` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态编码',
+  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: PROCESS/FINAL',
+  `color` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色样式',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
-  `icon` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '图标样式',
+  `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '图标样式',
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for status_defs
+-- Data: status_defs
 INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color`, `valid`, `sort`, `created_at`, `updated_at`, `icon`) VALUES
 (1, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1769934087, 'Clock'),
 (2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1769934087, 'CheckCircle'),
@@ -3367,6 +3340,24 @@ INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color`, `valid`, `sort
 (5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1769934087, 'Ban'),
 (6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1769934087, 'Timer'),
 (7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1769934087, 'CircleCheck');
+
+-- Table: upload_chunks
+DROP TABLE IF EXISTS `upload_chunks`;
+CREATE TABLE `upload_chunks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `upload_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '上传会话UUID',
+  `chunk_index` int NOT NULL COMMENT '分片索引',
+  `chunk_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '分片SHA-256哈希',
+  `uploaded_at` int NOT NULL COMMENT '上传时间戳',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_upload_chunk` (`upload_id`,`chunk_index`),
+  KEY `idx_upload_id` (`upload_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件上传分片记录表';
+
+-- Data: upload_chunks
+INSERT INTO `upload_chunks` (`id`, `upload_id`, `chunk_index`, `chunk_hash`, `uploaded_at`) VALUES
+(1, '15d18d88-be09-425f-9f34-a7bd80ac7ea2', 0, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 1774091459),
+(2, 'fad8473d-fe6c-4b1a-8827-0285eb4e181c', 0, '1ddc2f51e88cd47ac13e2d734f9f90fee4a1a7b22b23ed51118a82e4b29e6018', 1774092381);
 
 -- Table: upload_files
 DROP TABLE IF EXISTS `upload_files`;
@@ -3390,11 +3381,10 @@ CREATE TABLE `upload_files` (
   `completed_at` int DEFAULT NULL,
   `expires_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `upload_files_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data for upload_files
+-- Data: upload_files
 INSERT INTO `upload_files` (`id`, `file_hash`, `file_name`, `file_size`, `mime_type`, `upload_id`, `user_id`, `chunk_size`, `total_chunks`, `uploaded_chunks`, `status`, `storage_path`, `extra_data`, `error_message`, `created_at`, `updated_at`, `completed_at`, `expires_at`) VALUES
 (1, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'c578a473-8007-4091-9ef9-04e89d64cd6e', 10001, 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410405, 1773410405, NULL, 1773496805),
 (2, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'aac17647-401d-4672-90aa-f58659e35568', 10001, 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410503, 1773410503, NULL, 1773496903),
@@ -3406,19 +3396,22 @@ INSERT INTO `upload_files` (`id`, `file_hash`, `file_name`, `file_size`, `mime_t
 (8, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5f7b37c1-6ed8-4e84-aef6-a62907aa4166', 10001, 5242880, 24, '[2, 4, 7, 11, 12, 14, 17, 19, 22, 23]', 'uploading', NULL, NULL, NULL, 1773411455, 1773411459, NULL, 1773497855),
 (9, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '4dc34899-ac7d-4b53-92ae-dc28c296cd31', 10001, 5242880, 24, '[2, 3, 5, 8, 9, 11, 13, 17, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411510, 1773411513, NULL, 1773497910),
 (10, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'd030bc3e-e646-4563-a009-a5c168b8ea28', 10001, 5242880, 24, '[1, 5, 7, 11, 13, 16, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411572, 1773411575, NULL, 1773497972),
-(11, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5e67d774-e50f-4fd8-83f8-76fa25cbc5f1', 10001, 5242880, 24, NULL, 'completed', 'files\\2026\\03\\5e67d774_clash-win.zip', NULL, NULL, 1773412040, 1773412044, 1773412044, 1773498440);
+(11, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5e67d774-e50f-4fd8-83f8-76fa25cbc5f1', 10001, 5242880, 24, NULL, 'completed', 'files\\2026\\03\\5e67d774_clash-win.zip', NULL, NULL, 1773412040, 1773412044, 1773412044, 1773498440),
+(12, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', 'e0e39d3e-58fe-4621-ab61-2ca2859936dd', 10001, 5242880, 1, NULL, 'uploading', NULL, NULL, NULL, 1774089337, 1774089337, NULL, 1774175737),
+(13, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', '15d18d88-be09-425f-9f34-a7bd80ac7ea2', 10001, 5242880, 1, NULL, 'completed', 'files\\2026\\03\\15d18d88_image.png', NULL, NULL, 1774091459, 1774091459, 1774091459, 1774177859),
+(14, '1ddc2f51e88cd47ac13e2d734f9f90fee4a1a7b22b23ed51118a82e4b29e6018', 'Codex Installer.exe', 1127456, 'application/x-msdownload', 'fad8473d-fe6c-4b1a-8827-0285eb4e181c', 10001, 5242880, 1, NULL, 'completed', 'files\\2026\\03\\fad8473d_Codex_Installer.exe', NULL, NULL, 1774092381, 1774092382, 1774092382, 1774178781);
 
 -- Table: users
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
-  `email` varchar(120) COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱',
-  `password_hash` varchar(256) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '密码哈希',
-  `name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',
-  `avatar` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '头像URL',
-  `phone` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '手机号',
-  `department` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门',
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
+  `email` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱',
+  `password_hash` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '密码哈希',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '头像URL',
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '手机号',
+  `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门',
   `role_ids` json DEFAULT NULL COMMENT '角色ID列表',
   `valid` smallint DEFAULT NULL COMMENT '1=有效,0=禁用',
   `preferences` json DEFAULT NULL COMMENT '用户偏好设置 {lang, theme, ...}',
@@ -3432,9 +3425,9 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10011 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for users
+-- Data: users
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `name`, `avatar`, `phone`, `department`, `role_ids`, `valid`, `preferences`, `recent_project_ids`, `recent_sim_type_ids`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(10001, 'admin', 'admin@example.com', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', '系统管理员', NULL, NULL, '研发部', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1773838971, 1769962885, 1773810171),
+(10001, 'admin', 'admin@example.com', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', '系统管理员', NULL, NULL, '研发部', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1774089314, 1769962885, 1774060514),
 (10002, 'zhangsan', 'zhangsan@example.com', 'scrypt:32768:8:1$tHDVGtDqrZGS8XN0$f8e8efd924bc782a2cd22e585ac51c683cead0080156c110217aa337dd6ac105cf64cd706d94d52175c2c767d5c5d623cc46e3ee4fbe22339a0dd7b3403392b3', '张三', NULL, NULL, '研发部', '[2]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
 (10003, 'lisi', 'lisi@example.com', 'scrypt:32768:8:1$Xa4rTg1Y4wIYOCXP$b3d14f878599a71274d31c9f90be2a6da7c382d4e30509c96053bf12504bb511ef39a65819e6c0953ad4d3d5dbbcdf3bff068de977364757d28b6d3c6f0a85ba', '李四', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
 (10004, 'wangwu', 'wangwu@example.com', 'scrypt:32768:8:1$qVVj1W8ucWefiatr$7d08be611b4dd3f2084d581f16bfc75853bb85efb02aac95474b5a572ada8ec17bd25a6632911b15790d727484b4c4c15da4818591792a73701a03cf91520dbd', '王五', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
@@ -3449,21 +3442,21 @@ INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `name`, `avatar
 DROP TABLE IF EXISTS `workflows`;
 CREATE TABLE `workflows` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '工作流名称',
-  `code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '工作流编码',
-  `type` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: ORDER/SIM_TYPE/ROUND',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '工作流名称',
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '工作流编码',
+  `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: ORDER/SIM_TYPE/ROUND',
   `nodes` json DEFAULT NULL COMMENT '节点列表',
   `edges` json DEFAULT NULL COMMENT '边列表',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
-  `remark` text COLLATE utf8mb4_general_ci,
+  `remark` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data for workflows
+-- Data: workflows
 INSERT INTO `workflows` (`id`, `name`, `code`, `type`, `nodes`, `edges`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '标准仿真流程', 'STANDARD_SIM', 'ROUND', '[{"id": "node_1", "name": "模型预处理", "moduleId": 1, "position": {"x": 100, "y": 100}}, {"id": "node_2", "name": "网格划分", "moduleId": 2, "position": {"x": 250, "y": 100}}, {"id": "node_3", "name": "边界条件", "moduleId": 3, "position": {"x": 400, "y": 100}}, {"id": "node_4", "name": "提交求解", "moduleId": 4, "position": {"x": 550, "y": 100}}, {"id": "node_5", "name": "求解计算", "moduleId": 5, "position": {"x": 700, "y": 100}}, {"id": "node_6", "name": "结果提取", "moduleId": 6, "position": {"x": 850, "y": 100}}, {"id": "node_7", "name": "结果分析", "moduleId": 7, "position": {"x": 1000, "y": 100}}]', '[{"id": "e1", "source": "node_1", "target": "node_2"}, {"id": "e2", "source": "node_2", "target": "node_3"}, {"id": "e3", "source": "node_3", "target": "node_4"}, {"id": "e4", "source": "node_4", "target": "node_5"}, {"id": "e5", "source": "node_5", "target": "node_6"}, {"id": "e6", "source": "node_6", "target": "node_7"}]', 1, 100, NULL, 1769934088, 1769934088),
 (2, '快速仿真流程', 'QUICK_SIM', 'ROUND', '[{"id": "node_1", "name": "边界条件", "moduleId": 3, "position": {"x": 100, "y": 100}}, {"id": "node_2", "name": "提交求解", "moduleId": 4, "position": {"x": 250, "y": 100}}, {"id": "node_3", "name": "求解计算", "moduleId": 5, "position": {"x": 400, "y": 100}}, {"id": "node_4", "name": "结果提取", "moduleId": 6, "position": {"x": 550, "y": 100}}]', '[{"id": "e1", "source": "node_1", "target": "node_2"}, {"id": "e2", "source": "node_2", "target": "node_3"}, {"id": "e3", "source": "node_3", "target": "node_4"}]', 1, 100, NULL, 1769934088, 1769934088);
@@ -3491,15 +3484,10 @@ CREATE TABLE `working_conditions` (
   KEY `sim_type_id` (`sim_type_id`),
   KEY `default_param_group_id` (`default_param_group_id`),
   KEY `default_cond_out_group_id` (`default_cond_out_group_id`),
-  KEY `default_solver_id` (`default_solver_id`),
-  CONSTRAINT `working_conditions_ibfk_1` FOREIGN KEY (`fold_type_id`) REFERENCES `fold_types` (`id`),
-  CONSTRAINT `working_conditions_ibfk_2` FOREIGN KEY (`sim_type_id`) REFERENCES `sim_types` (`id`),
-  CONSTRAINT `working_conditions_ibfk_3` FOREIGN KEY (`default_param_group_id`) REFERENCES `param_groups` (`id`),
-  CONSTRAINT `working_conditions_ibfk_4` FOREIGN KEY (`default_cond_out_group_id`) REFERENCES `condition_output_groups` (`id`),
-  CONSTRAINT `working_conditions_ibfk_5` FOREIGN KEY (`default_solver_id`) REFERENCES `solvers` (`id`)
+  KEY `default_solver_id` (`default_solver_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data for working_conditions
+-- Data: working_conditions
 INSERT INTO `working_conditions` (`id`, `name`, `code`, `fold_type_id`, `sim_type_id`, `default_param_group_id`, `default_cond_out_group_id`, `default_solver_id`, `extra_config`, `valid`, `sort`, `remark`, `created_at`, `updated_at`) VALUES
 (1, '展开态-跌落', 'OPEN_DROP', 0, 1, NULL, NULL, NULL, NULL, 1, 10, NULL, 1769751512, 1769751512),
 (2, '展开态-落球', 'OPEN_BALL', 0, 2, NULL, NULL, NULL, NULL, 1, 20, NULL, 1769751512, 1769751512),

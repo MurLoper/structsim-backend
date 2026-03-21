@@ -2,8 +2,8 @@
 RBAC - 业务逻辑层
 """
 from typing import List, Dict
-from werkzeug.security import generate_password_hash
 from app.common.errors import NotFoundError, BusinessError
+
 from app.constants import ErrorCode
 from app.extensions import db
 from app.models.auth import User, Role, Permission
@@ -16,11 +16,19 @@ def _normalize_user_payload(data: dict) -> dict:
     payload = dict(data)
     if 'roleIds' in payload:
         payload['role_ids'] = payload.pop('roleIds')
-    if 'password' in payload:
-        password = payload.pop('password')
-        if password:
-            payload['password_hash'] = generate_password_hash(password)
+    if 'user_id' in payload and 'lc_user_id' not in payload:
+        payload['lc_user_id'] = payload.get('user_id')
+    if payload.get('domain_account'):
+        payload['domain_account'] = str(payload['domain_account']).strip().lower()
+        payload['username'] = payload['domain_account']
+    if 'user_name' in payload and payload.get('user_name') is not None:
+        payload['user_name'] = ''.join(str(payload['user_name']).split()) or None
+    # 密码不落库，仅透传给外部认证系统；管理接口中直接丢弃
+    payload.pop('password', None)
     return payload
+
+
+
 
 
 
@@ -141,9 +149,11 @@ class RbacService:
         payload = _normalize_user_payload(data)
         if user_repository.find_by_email(payload.get('email')):
             raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '邮箱已存在')
-        if user_repository.find_by_username(payload.get('username')):
-            raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '用户名已存在')
+
+        if payload.get('domain_account') and user_repository.find_by_domain_account(payload.get('domain_account')):
+            raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '域账号已存在')
         user = user_repository.create(payload)
+
         if _ensure_admin_role_for_user(user):
             self._commit_users([user])
         roles = role_repository.find_all_valid()
@@ -159,11 +169,18 @@ class RbacService:
             existing = user_repository.find_by_email(payload['email'])
             if existing and existing.id != user_id:
                 raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '邮箱已存在')
-        if 'username' in payload:
-            existing = user_repository.find_by_username(payload['username'])
+
+        if 'domain_account' in payload and payload.get('domain_account'):
+            existing = user_repository.find_by_domain_account(payload['domain_account'])
             if existing and existing.id != user_id:
-                raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '用户名已存在')
+                raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '域账号已存在')
+        if 'lc_user_id' in payload and payload.get('lc_user_id'):
+            existing = user_repository.find_by_lc_user_id(payload['lc_user_id'])
+            if existing and existing.id != user_id:
+                raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, '外部用户ID已存在')
         user = user_repository.update(user_id, payload)
+
+
         if not user:
             raise NotFoundError('用户', user_id)
         if _ensure_admin_role_for_user(user):

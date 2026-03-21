@@ -1,8 +1,8 @@
 # 后端 API 参考文档
 
-> **版本**: v2.0  
-> **最后更新**: 2025-01-18  
-> **状态**: ✅ 生产就绪
+面向当前仓库的接口参考摘要，优先描述主链路与稳定接口。
+
+**最后更新**: 2026-03-21
 
 ---
 
@@ -13,7 +13,8 @@
 3. [配置管理 API](#3-配置管理-api)
 4. [权限管理 API](#4-权限管理-api)
 5. [订单管理 API](#5-订单管理-api)
-6. [错误处理](#6-错误处理)
+6. [结果 API](#6-结果-api)
+7. [错误处理](#7-错误处理)
 
 ---
 
@@ -21,10 +22,11 @@
 
 ### 1.1 基础信息
 
-- **Base URL**: `http://localhost:5000/api/v1`
+- **Base URL**: `http://127.0.0.1:6060/api/v1`
 - **协议**: HTTP/HTTPS
 - **数据格式**: JSON
 - **字符编码**: UTF-8
+- **命名约定**: 前端可使用 `camelCase`，服务端内部为 `snake_case`
 
 ### 1.2 统一响应格式
 
@@ -76,7 +78,7 @@
 **请求参数**:
 ```json
 {
-  "username": "admin",
+  "email": "admin@example.com",
   "password": "password123"
 }
 ```
@@ -144,6 +146,23 @@ Authorization: Bearer <token>
   "trace_id": "abc123"
 }
 ```
+
+### 2.4 校验 token
+
+**接口**: `GET /auth/verify`
+
+**说明**:
+
+- 返回当前用户信息与菜单树
+- 前端登录恢复和页面初始化优先使用该接口
+
+### 2.5 刷新 token
+
+**接口**: `POST /auth/refresh`
+
+### 2.6 登录心跳
+
+**接口**: `GET /auth/heartbeat`
 
 ---
 
@@ -542,7 +561,57 @@ Authorization: Bearer <token>
 
 ---
 
-## 6. 错误处理
+### 5.2 获取订单详情
+
+**接口**: `GET /orders/:id`
+
+### 5.3 创建订单
+
+**接口**: `POST /orders`
+
+**说明**:
+
+- 当前订单创建接口是提单主链路核心接口
+- 请求体重点字段包括 `projectId`、`modelLevelId`、`originFile`、`foldTypeIds`、`participantIds`、`simTypeIds`、`inputJson`、`optParam`
+
+### 5.4 文件校验
+
+**接口**: `POST /orders/verify-file`
+
+### 5.5 统计接口
+
+- `GET /orders/statistics`
+- `GET /orders/trends`
+- `GET /orders/status-distribution`
+
+说明：
+
+- `GET /orders/:id/result` 在当前代码中仍为空实现，不作为主结果接口
+
+---
+
+## 6. 结果 API
+
+### 6.1 获取订单下的仿真类型结果
+
+**接口**: `GET /results/order/:order_id/sim-types`
+
+### 6.2 获取单个仿真类型结果详情
+
+**接口**: `GET /results/sim-type/:result_id`
+
+### 6.3 获取轮次分页数据
+
+**接口**: `GET /results/sim-type/:result_id/rounds`
+
+### 6.4 更新结果状态
+
+- `PATCH /results/sim-type/:result_id/status`
+- `PATCH /results/round/:round_id/status`
+
+---
+
+## 7. 错误处理
 
 ### 6.1 验证错误
 
@@ -600,6 +669,3 @@ Authorization: Bearer <token>
 ```
 
 ---
-
-**最后更新**: 2025-01-18  
-**维护者**: 后端团队

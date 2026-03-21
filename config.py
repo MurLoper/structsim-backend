@@ -45,6 +45,23 @@ class Config:
     REDIS_KEY_PREFIX = os.getenv('REDIS_KEY_PREFIX', 'structsim:')
     REDIS_DEFAULT_TTL = int(os.getenv('REDIS_DEFAULT_TTL', 3600))
 
+    # 登录/认证配置
+    AUTH_ENABLE_SSO = os.getenv('AUTH_ENABLE_SSO', 'false').lower() == 'true'
+    AUTH_SSO_LOGIN_URL = os.getenv('AUTH_SSO_LOGIN_URL', '')
+    AUTH_SSO_REDIRECT_URI = os.getenv('AUTH_SSO_REDIRECT_URI', '')
+
+    # 公司账号密码校验接口（后端代理校验，不落库存密码）
+    AUTH_COMPANY_PASSWORD_VERIFY_URL = os.getenv('AUTH_COMPANY_PASSWORD_VERIFY_URL', '')
+    AUTH_COMPANY_PASSWORD_VERIFY_METHOD = os.getenv('AUTH_COMPANY_PASSWORD_VERIFY_METHOD', 'POST').upper()
+    AUTH_COMPANY_PASSWORD_VERIFY_TIMEOUT = float(os.getenv('AUTH_COMPANY_PASSWORD_VERIFY_TIMEOUT', 8.0))
+    AUTH_USE_FAKE_COMPANY_VERIFY = os.getenv('AUTH_USE_FAKE_COMPANY_VERIFY', 'false').lower() == 'true'
+
+    # 通过 uid 获取公司用户信息接口（用于 SSO callback）
+    AUTH_COMPANY_UID_INFO_URL = os.getenv('AUTH_COMPANY_UID_INFO_URL', '')
+    AUTH_COMPANY_UID_EXPIRE_SECONDS = int(os.getenv('AUTH_COMPANY_UID_EXPIRE_SECONDS', 1800))
+    AUTH_COMPANY_APP_ID = os.getenv('AUTH_COMPANY_APP_ID', '')
+    AUTH_COMPANY_SECRET_CREDIT = os.getenv('AUTH_COMPANY_SECRET_CREDIT', '')
+
     # CORS
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001').split(',')
 

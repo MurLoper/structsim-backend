@@ -24,6 +24,24 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _auto_upgrade_identity_schema(app: Flask) -> None:
+    """应用启动时自动升级用户身份相关字段（兼容旧库）。"""
+    if os.getenv('AUTO_IDENTITY_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
+        logger.info('已禁用 AUTO_IDENTITY_UPGRADE，跳过身份字段升级')
+        return
+
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+    if not db_url or str(db_url).startswith('sqlite:'):
+        return
+
+    try:
+        from database.migrations.user_identity_upgrade import upgrade_identity_schema
+        upgrade_identity_schema(str(db_url), verbose=False)
+        logger.info('身份字段自动升级检查完成')
+    except Exception as exc:
+        logger.exception(f'身份字段自动升级失败: {exc}')
+
+
 def create_app(config_name=None):
     """Application factory."""
     if config_name is None:
@@ -34,6 +52,9 @@ def create_app(config_name=None):
 
     # 初始化扩展
     init_extensions(app)
+
+    # 自动升级身份字段（兼容旧数据库结构）
+    _auto_upgrade_identity_schema(app)
 
     # 初始化 Redis（可选，如果配置了 Redis）
     try:

@@ -20,14 +20,14 @@ class UploadFile(db.Model, ToDictMixin):
 
     # 上传会话
     upload_id = db.Column(db.String(36), unique=True, nullable=False, index=True, comment='上传会话UUID')
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, comment='上传用户ID')
+    user_id = db.Column(db.String(32), nullable=False, index=True, comment='上传用户标识(域账号)')
+
 
     # 分片配置
     chunk_size = db.Column(db.Integer, nullable=False, default=5242880, comment='分片大小(字节)')
     total_chunks = db.Column(db.Integer, nullable=False, comment='总分片数')
 
-    # 关联分片记录
-    chunks = db.relationship('UploadChunk', backref='upload_file', lazy='dynamic', cascade='all, delete-orphan')
+
 
     # 状态
     status = db.Column(db.String(20), nullable=False, default='uploading', comment='状态: uploading/merging/completed/failed')

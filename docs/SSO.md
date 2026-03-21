@@ -1,137 +1,78 @@
-# SSO单点登录集成指南
+# 登录与 SSO 说明
 
-## 概述
+面向当前后端实现维护。
 
-本项目支持SSO（单点登录）模式，可通过配置快速切换普通登录和SSO登录。
+**最后更新**: 2026-03-21
 
-## 后端配置
+## 1. 当前状态
 
-### 1. SSO路由
+当前系统同时存在两套登录能力：
 
-SSO服务已集成到后端，提供以下接口：
+- 普通登录：`/api/v1/auth/*`
+- SSO 相关接口：`/api/v1/sso/*`
 
-- `POST /api/v1/sso/login` - SSO登录
-- `GET /api/v1/sso/verify` - 验证token
-- `POST /api/v1/sso/logout` - 登出
+这说明系统正在从单一登录模式过渡到“可配置登录模式”。
 
-### 2. 使用SSO中间件
+## 2. 当前接口
 
-在需要SSO认证的路由上使用装饰器：
+### 2.1 普通登录
 
-```python
-from app.middleware.sso_auth import sso_required
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/auth/verify`
+- `POST /api/v1/auth/refresh`
+- `GET /api/v1/auth/heartbeat`
+- `POST /api/v1/auth/logout`
 
-@app.route('/api/protected')
-@sso_required
-def protected_route():
-    user = g.current_user
-    return jsonify({'user': user.username})
-```
+### 2.2 SSO 接口
 
-## 前端配置
+- `POST /api/v1/sso/login`
+- `GET /api/v1/sso/verify`
+- `POST /api/v1/sso/logout`
 
-### 1. 环境变量
+## 3. 当前实现判断
 
-在 `.env` 文件中配置：
+当前 SSO 更接近“内网单点登录接入过渡实现”，而不是最终统一认证方案。
 
-```bash
-# 开发环境 - 普通登录
-VITE_SSO_ENABLED=false
+现状特点：
 
-# 内网环境 - SSO登录
-VITE_SSO_ENABLED=true
-VITE_SSO_SERVER_URL=http://sso.company.com
-```
+- 已具备单独的 SSO token 生成与校验逻辑
+- 已具备前端 SSO 开关和服务封装
+- 登录页已经出现登录模式探测与 SSO 跳转能力
+- 但普通登录与 SSO 登录尚未完全收敛到同一套认证状态模型
 
-### 2. 使用SSO服务
+## 4. 推荐方向
 
-```typescript
-import { ssoLogin, verifySSOToken, ssoLogout } from '@/services/ssoService';
-import { SSO_CONFIG } from '@/config/sso';
+### 4.1 保留双模式，统一状态
 
-// 检查是否启用SSO
-if (SSO_CONFIG.enabled) {
-  // SSO登录
-  const { access_token, user } = await ssoLogin(username, password);
+建议保留两种接入方式，但统一以下边界：
 
-  // 验证token
-  const user = await verifySSOToken();
+- 前端只保留一个登录页
+- 后端提供统一的登录模式配置
+- 无论普通登录还是 SSO，最终都映射到同一种用户信息结构
+- 权限、菜单、认证校验尽量走同一套后续流程
 
-  // 登出
-  await ssoLogout();
-}
-```
+### 4.2 不建议继续扩散两套会话语义
 
-## 切换模式
+不建议让前端长期维持：
 
-### 开发环境（普通登录）
+- 一套 `auth_token`
+- 一套 `sso_access_token`
+- 两套不同用户结构
+- 两套不同权限模型
 
-```bash
-# .env
-VITE_SSO_ENABLED=false
-```
+否则后续配置中心、提单页、权限页都会反复做兼容判断。
 
-### 内网环境（SSO登录）
+## 5. 近期建议
 
-```bash
-# .env.production
-VITE_SSO_ENABLED=true
-VITE_SSO_SERVER_URL=http://internal-sso.company.com
-```
+### 必须优先完成
 
-## API接口
+- 增加统一的登录模式配置接口
+- 明确何时展示账号密码表单，何时自动跳转 SSO
+- 收口普通登录与 SSO 登录返回的用户结构
 
-### 登录
+### 建议随后完成
 
-```bash
-POST /api/v1/sso/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "password"
-}
-
-# 响应
-{
-  "access_token": "eyJ...",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "email": "admin@example.com",
-    "role": "admin"
-  }
-}
-```
-
-### 验证Token
-
-```bash
-GET /api/v1/sso/verify
-Authorization: Bearer eyJ...
-
-# 响应
-{
-  "valid": true,
-  "user": {...}
-}
-```
-
-### 登出
-
-```bash
-POST /api/v1/sso/logout
-Authorization: Bearer eyJ...
-
-# 响应
-{
-  "message": "登出成功"
-}
-```
-
-## 注意事项
-
-1. SSO token默认有效期24小时
-2. 前端自动在请求头添加 `Authorization: Bearer <token>`
-3. Token过期后自动跳转登录页
-4. 支持一键切换SSO和普通登录模式
+- 统一 token 校验后的用户、菜单、权限返回模型
+- 补登录主链路的联调文档
+- 增加登录失败、token 过期、SSO 失效的回退策略说明

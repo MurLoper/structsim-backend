@@ -36,7 +36,7 @@ class OrdersService:
         project_id: int = None,
         sim_type_id: int = None,
         order_no: str = None,
-        created_by: int = None,
+        created_by: str = None,
         start_date: int = None,
         end_date: int = None
     ) -> Dict:
@@ -92,12 +92,12 @@ class OrdersService:
         
         return order.to_dict()
     
-    def create_order(self, order_data: dict, user_id: int) -> Dict:
+    def create_order(self, order_data: dict, user_identity: str) -> Dict:
         """
         创建订单
         Args:
             order_data: 订单数据
-            user_id: 创建用户ID
+            user_identity: 创建用户域账号
         Returns:
             创建的订单信息
         """
@@ -123,7 +123,7 @@ class OrdersService:
             'workflow_id': order_data.get('workflow_id'),
             'submit_check': order_data.get('submit_check'),
             'client_meta': order_data.get('client_meta'),
-            'created_by': user_id,
+            'created_by': str(user_identity),
             'status': 0,  # 未开始/排队
             'progress': 0
         }

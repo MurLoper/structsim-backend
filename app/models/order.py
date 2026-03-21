@@ -59,8 +59,8 @@ class Order(db.Model):
     # 客户端元数据
     client_meta = db.Column(db.JSON, comment='客户端元数据 {lang, theme, ui_ver}')
     
-    # 创建人
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), comment='创建人ID')
+    # 创建人（域账号）
+    created_by = db.Column(db.String(32), index=True, comment='创建人域账号')
     
     # 时间戳
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))

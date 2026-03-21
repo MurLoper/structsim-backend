@@ -6,8 +6,14 @@ from pydantic import BaseModel, Field
 
 
 class UserCreate(BaseModel):
-    username: str = Field(..., min_length=1, max_length=50)
     email: str = Field(..., min_length=1, max_length=120)
+    domain_account: str = Field(..., min_length=1, max_length=32)
+
+
+    lc_user_id: Optional[str] = Field(None, min_length=1, max_length=64)
+    user_name: Optional[str] = Field(None, max_length=100)
+
+    real_name: Optional[str] = Field(None, max_length=100)
     name: Optional[str] = Field(None, max_length=100)
     password: Optional[str] = Field(None, min_length=6, max_length=128)
     avatar: Optional[str] = None
@@ -17,9 +23,15 @@ class UserCreate(BaseModel):
     valid: Optional[int] = Field(default=1, ge=0, le=1)
 
 
+
 class UserUpdate(BaseModel):
-    username: Optional[str] = Field(None, min_length=1, max_length=50)
     email: Optional[str] = Field(None, min_length=1, max_length=120)
+
+    domain_account: Optional[str] = Field(None, min_length=1, max_length=32)
+    lc_user_id: Optional[str] = Field(None, min_length=1, max_length=64)
+    user_name: Optional[str] = Field(None, max_length=100)
+
+    real_name: Optional[str] = Field(None, max_length=100)
     name: Optional[str] = Field(None, max_length=100)
     password: Optional[str] = Field(None, min_length=6, max_length=128)
     avatar: Optional[str] = None
@@ -27,6 +39,7 @@ class UserUpdate(BaseModel):
     department: Optional[str] = None
     role_ids: Optional[List[int]] = None
     valid: Optional[int] = Field(default=None, ge=0, le=1)
+
 
 
 

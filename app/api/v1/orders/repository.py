@@ -39,7 +39,7 @@ class OrdersRepository:
         project_id: Optional[int] = None,
         sim_type_id: Optional[int] = None,
         order_no: Optional[str] = None,
-        created_by: Optional[int] = None,
+        created_by: Optional[str] = None,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None
     ) -> Tuple[List[Order], int]:

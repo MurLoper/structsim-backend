@@ -69,6 +69,14 @@ class UserRepository(BaseRepository[User]):
     def find_by_username(self, username: str) -> Optional[User]:
         return self.session.query(self.model_class).filter_by(username=username, valid=1).first()
 
+    def find_by_domain_account(self, domain_account: str) -> Optional[User]:
+        return self.session.query(self.model_class).filter_by(domain_account=domain_account, valid=1).first()
+
+    def find_by_lc_user_id(self, lc_user_id: str) -> Optional[User]:
+        return self.session.query(self.model_class).filter_by(lc_user_id=lc_user_id, valid=1).first()
+
+
+
 
 class RoleRepository(BaseRepository[Role]):
     model_class = Role

@@ -2,7 +2,7 @@
 参数组合管理 - Pydantic Schemas
 职责：请求/响应数据校验
 """
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -11,6 +11,10 @@ class ParamGroupCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="组合名称")
     description: Optional[str] = Field(None, description="组合描述")
     project_ids: List[int] = Field(default_factory=list, description="关联项目ID列表，空=全局")
+    alg_type: Optional[int] = Field(2, description="默认算法: 1=贝叶斯, 2=DOE枚举, 5=DOE文件")
+    doe_file_name: Optional[str] = Field(None, description="DOE文件名")
+    doe_file_heads: Optional[List[str]] = Field(None, description="DOE文件表头")
+    doe_file_data: Optional[List[Dict[str, Any]]] = Field(None, description="DOE文件数据")
     sort: Optional[int] = Field(100, description="排序")
 
 
@@ -19,6 +23,10 @@ class ParamGroupUpdateRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100, description="组合名称")
     description: Optional[str] = Field(None, description="组合描述")
     project_ids: Optional[List[int]] = Field(None, description="关联项目ID列表")
+    alg_type: Optional[int] = Field(None, description="默认算法: 1=贝叶斯, 2=DOE枚举, 5=DOE文件")
+    doe_file_name: Optional[str] = Field(None, description="DOE文件名")
+    doe_file_heads: Optional[List[str]] = Field(None, description="DOE文件表头")
+    doe_file_data: Optional[List[Dict[str, Any]]] = Field(None, description="DOE文件数据")
     valid: Optional[int] = Field(None, description="是否有效")
     sort: Optional[int] = Field(None, description="排序")
 
@@ -29,6 +37,10 @@ class ParamGroupResponse(BaseModel):
     name: str
     description: Optional[str]
     project_ids: List[int] = []
+    alg_type: Optional[int] = 2
+    doe_file_name: Optional[str] = None
+    doe_file_heads: Optional[List[str]] = None
+    doe_file_data: Optional[List[Dict[str, Any]]] = None
     valid: int
     sort: int
     created_at: int
@@ -72,6 +84,10 @@ class ParamGroupDetailResponse(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    alg_type: Optional[int] = 2
+    doe_file_name: Optional[str] = None
+    doe_file_heads: Optional[List[str]] = None
+    doe_file_data: Optional[List[Dict[str, Any]]] = None
     valid: int
     sort: int
     created_at: int
