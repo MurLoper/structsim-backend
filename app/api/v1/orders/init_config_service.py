@@ -182,7 +182,7 @@ class OrderInitConfigService:
                         'valType': output_def.val_type,
                         # resp_details 预配置
                         'setName': output_rel.set_name or 'push',
-                        'component': output_rel.component or '35',
+                        'component': output_rel.component or '18',
                         'stepName': output_rel.step_name,
                         'sectionPoint': output_rel.section_point,
                         'specialOutputSet': output_rel.special_output_set,
@@ -226,4 +226,3 @@ class OrderInitConfigService:
                 })
 
         return options
-

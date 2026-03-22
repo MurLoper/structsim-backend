@@ -1,6 +1,6 @@
 -- StructSim DB Export
--- ExportedAt: 2026-03-21T19:34:44.283555
--- TableCount: 40
+-- ExportedAt: 2026-03-22T18:04:23.415507
+-- TableCount: 41
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
@@ -314,6 +314,43 @@ INSERT INTO `model_levels` (`id`, `name`, `code`, `valid`, `sort`, `remark`, `cr
 (2, '单件', '单件', 1, 20, NULL, 1769934087, 1769934087),
 (3, '部件', '部件', 1, 30, NULL, 1769934087, 1769934087);
 
+-- Table: order_condition_opti
+DROP TABLE IF EXISTS `order_condition_opti`;
+CREATE TABLE `order_condition_opti` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `order_id` bigint NOT NULL COMMENT '主单ID',
+  `order_no` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '主单编号冗余',
+  `opt_issue_id` int NOT NULL COMMENT '自动优化申请单ID',
+  `opt_job_id` int DEFAULT NULL COMMENT '自动化方案作业ID',
+  `condition_id` bigint NOT NULL COMMENT 'condition标识',
+  `fold_type_id` int NOT NULL COMMENT '姿态ID',
+  `fold_type_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姿态名称快照',
+  `sim_type_id` int NOT NULL COMMENT '仿真类型ID',
+  `sim_type_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '仿真类型名称快照',
+  `algorithm_type` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '算法类型',
+  `round_total` int DEFAULT '0' COMMENT '轮次数量概览',
+  `output_count` int DEFAULT '0' COMMENT '输出数量概览',
+  `solver_id` varchar(64) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '求解器标识，包含类型和版本语义',
+  `care_device_ids` json DEFAULT NULL COMMENT '关注器件ID列表',
+  `remark` text COLLATE utf8mb4_general_ci COMMENT 'condition级备注',
+  `running_module` varchar(64) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '当前运行模块',
+  `process` decimal(5,2) DEFAULT '0.00' COMMENT '进度百分比',
+  `status` smallint DEFAULT '0' COMMENT '状态',
+  `statistics_json` json DEFAULT NULL COMMENT '统计摘要',
+  `result_summary_json` json DEFAULT NULL COMMENT '结果摘要',
+  `condition_snapshot` json NOT NULL COMMENT '完整condition快照',
+  `external_meta` json DEFAULT NULL COMMENT '外部扩展信息',
+  `created_at` int DEFAULT NULL,
+  `updated_at` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_oco_order_condition` (`order_id`,`condition_id`),
+  UNIQUE KEY `uk_oco_opt_job_id` (`opt_job_id`),
+  KEY `idx_oco_opt_issue_id` (`opt_issue_id`),
+  KEY `idx_oco_order_status` (`order_id`,`status`),
+  KEY `idx_oco_order_simtype` (`order_id`,`sim_type_id`),
+  KEY `idx_oco_order_foldtype` (`order_id`,`fold_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='订单condition优化运行实体表';
+
 -- Table: order_results
 DROP TABLE IF EXISTS `order_results`;
 CREATE TABLE `order_results` (
@@ -350,7 +387,7 @@ CREATE TABLE `orders` (
   `cur_node_id` int DEFAULT NULL COMMENT '当前流程节点ID',
   `submit_check` json DEFAULT NULL COMMENT '提交校验配置',
   `client_meta` json DEFAULT NULL COMMENT '客户端元数据 {lang, theme, ui_ver}',
-  `created_by` int DEFAULT NULL COMMENT '创建人ID',
+  `created_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人域账号',
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
   `model_level_id` int DEFAULT NULL COMMENT '模型层级ID',
@@ -358,24 +395,26 @@ CREATE TABLE `orders` (
   `fold_type_ids` json DEFAULT NULL COMMENT '姿态类型ID列表',
   `input_json` json DEFAULT NULL COMMENT '输入JSON完整配置',
   `condition_summary` json DEFAULT NULL COMMENT '工况概览 {姿态名: [仿真类型名,...]}',
+  `opt_issue_id` int DEFAULT NULL COMMENT '自动优化申请单ID',
   PRIMARY KEY (`id`),
   UNIQUE KEY `order_no` (`order_no`),
   KEY `project_id` (`project_id`),
   KEY `fold_type_id` (`fold_type_id`),
   KEY `workflow_id` (`workflow_id`),
-  KEY `created_by` (`created_by`)
+  KEY `created_by` (`created_by`),
+  KEY `idx_orders_opt_issue_id` (`opt_issue_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1009 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: orders
-INSERT INTO `orders` (`id`, `order_no`, `project_id`, `origin_file_type`, `origin_file_name`, `origin_file_path`, `origin_file_id`, `fold_type_id`, `participant_uids`, `remark`, `sim_type_ids`, `opt_param`, `workflow_id`, `status`, `progress`, `cur_node_id`, `submit_check`, `client_meta`, `created_by`, `created_at`, `updated_at`, `model_level_id`, `origin_fold_type_id`, `fold_type_ids`, `input_json`, `condition_summary`) VALUES
-(1001, 'ORD-2025-001', 1751, 1, 'phone_model_v1.inp', '/models/phone/v1/phone_model_v1.inp', NULL, NULL, '[10001, 10002]', '【全部完成】折叠屏手机A跌落仿真测试 - 贝叶斯优化', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1002, 'ORD-2025-002', 1751, 1, 'phone_model_v2.inp', '/models/phone/v2/phone_model_v2.inp', NULL, 1, '[10001, 10003]', '【完成但有失败】折叠屏手机A折叠态跌落测试 - 部分轮次失败', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1003, 'ORD-2025-003', 1752, 1, 'phone_b_model.inp', '/models/phone_b/phone_b_model.inp', NULL, NULL, '[10002]', '【运行中-少量运行】折叠屏手机B振动测试 - 大部分完成少量运行中', '[3, 4]', NULL, NULL, 1, 85, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1004, 'ORD-2025-004', 1753, 1, 'tablet_model.inp', '/models/tablet/tablet_model.inp', NULL, 2, '[10001, 10002, 10003]', '【运行中-有失败】折叠屏平板综合测试 - 运行中且有失败', '[1, 3, 5]', NULL, NULL, 1, 60, NULL, NULL, NULL, 10003, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1005, 'ORD-2025-005', 1751, 1, 'phone_stress_test.inp', '/models/phone/stress/phone_stress_test.inp', NULL, NULL, '[10001]', '【大量失败】手机压力测试 - 多数轮次失败', '[1, 4]', NULL, NULL, 3, 100, NULL, NULL, NULL, 10001, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1006, 'ORD-2025-006', 1752, 1, 'phone_b_thermal.inp', '/models/phone_b/thermal/phone_b_thermal.inp', NULL, 1, '[10002, 10003]', '【待运行】折叠屏手机B热分析 - 等待执行', '[5]', NULL, NULL, 0, 0, NULL, NULL, NULL, 10002, 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL),
-(1007, 'ORD-20260313-70971', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379371, 1773379371, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL),
-(1008, 'ORD-20260313-72450', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', 10001, 1773379572, 1773379572, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL);
+INSERT INTO `orders` (`id`, `order_no`, `project_id`, `origin_file_type`, `origin_file_name`, `origin_file_path`, `origin_file_id`, `fold_type_id`, `participant_uids`, `remark`, `sim_type_ids`, `opt_param`, `workflow_id`, `status`, `progress`, `cur_node_id`, `submit_check`, `client_meta`, `created_by`, `created_at`, `updated_at`, `model_level_id`, `origin_fold_type_id`, `fold_type_ids`, `input_json`, `condition_summary`, `opt_issue_id`) VALUES
+(1001, 'ORD-2025-001', 1751, 1, 'phone_model_v1.inp', '/models/phone/v1/phone_model_v1.inp', NULL, NULL, '[10001, 10002]', '【全部完成】折叠屏手机A跌落仿真测试 - 贝叶斯优化', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, '10001', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1002, 'ORD-2025-002', 1751, 1, 'phone_model_v2.inp', '/models/phone/v2/phone_model_v2.inp', NULL, 1, '[10001, 10003]', '【完成但有失败】折叠屏手机A折叠态跌落测试 - 部分轮次失败', '[1, 2, 3]', NULL, NULL, 2, 100, NULL, NULL, NULL, '10001', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1003, 'ORD-2025-003', 1752, 1, 'phone_b_model.inp', '/models/phone_b/phone_b_model.inp', NULL, NULL, '[10002]', '【运行中-少量运行】折叠屏手机B振动测试 - 大部分完成少量运行中', '[3, 4]', NULL, NULL, 1, 85, NULL, NULL, NULL, '10002', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1004, 'ORD-2025-004', 1753, 1, 'tablet_model.inp', '/models/tablet/tablet_model.inp', NULL, 2, '[10001, 10002, 10003]', '【运行中-有失败】折叠屏平板综合测试 - 运行中且有失败', '[1, 3, 5]', NULL, NULL, 1, 60, NULL, NULL, NULL, '10003', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1005, 'ORD-2025-005', 1751, 1, 'phone_stress_test.inp', '/models/phone/stress/phone_stress_test.inp', NULL, NULL, '[10001]', '【大量失败】手机压力测试 - 多数轮次失败', '[1, 4]', NULL, NULL, 3, 100, NULL, NULL, NULL, '10001', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1006, 'ORD-2025-006', 1752, 1, 'phone_b_thermal.inp', '/models/phone_b/thermal/phone_b_thermal.inp', NULL, 1, '[10002, 10003]', '【待运行】折叠屏手机B热分析 - 等待执行', '[5]', NULL, NULL, 0, 0, NULL, NULL, NULL, '10002', 1769962888, 1769962888, NULL, NULL, NULL, NULL, NULL, NULL),
+(1007, 'ORD-20260313-70971', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', '10001', 1773379371, 1773379371, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL, NULL),
+(1008, 'ORD-20260313-72450', 1751, 2, '', '131231', 131231, NULL, '[10001, 10002, 10003]', '测试', '[1]', '{"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}}}', NULL, 1, 0, NULL, 'null', '{"lang": "zh"}', '10001', 1773379572, 1773379572, 1, 0, '[0]', '{"inp_sets": [], "opt_param": {"1": {"output": {"mode": "template", "resp_details": [{"set": "test", "weight": 1, "multiple": 1, "component": "other", "description": "Y方向位移", "lower_limit": null, "output_type": "LEP2", "target_type": "max", "upper_limit": null, "target_value": null}, {"set": "test2", "weight": 1, "multiple": 1, "component": "other", "description": "", "lower_limit": null, "output_type": "RF3", "target_type": "max", "upper_limit": null, "target_value": null}], "output_set_id": 1, "condition_values": {}, "selected_output_ids": [], "selected_condition_ids": []}, "params": {"mode": "template", "algorithm": "doe", "opt_params": {"domain": [{"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "x_deg", "range_list": [0]}, {"range": "0", "max_value": 360, "min_value": 0, "init_value": 0, "param_name": "y_deg", "range_list": [0]}, {"range": "0", "max_value": 90, "min_value": 0, "init_value": 0, "param_name": "z_deg", "range_list": [0]}, {"range": "1.0", "max_value": 2, "min_value": 0.5, "init_value": 1, "param_name": "drop_height", "range_list": [1]}], "alg_type": 2, "max_iter": 1, "batch_size": [{"value": 5}], "doe_param_data": [{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_height": 1}], "doe_param_heads": ["x_deg", "y_deg", "z_deg", "drop_height"]}, "custom_values": {}, "template_set_id": null, "template_item_id": null}, "solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "solver_version": "", "use_global_config": 0}, "sim_type_id": 1, "care_device_ids": ["SCREEN", "BATTERY"]}}, "global_solver": {"double": 0, "cpu_type": 1, "cpu_cores": 256, "solver_id": 39, "resource_id": 1, "apply_global": null, "apply_to_all": true, "solver_version": "", "use_global_config": 0}}', NULL, NULL);
 
 -- Table: output_defs
 DROP TABLE IF EXISTS `output_defs`;
@@ -469,14 +508,14 @@ CREATE TABLE `param_group_param_rels` (
   PRIMARY KEY (`id`),
   KEY `param_group_id` (`param_group_id`),
   KEY `param_def_id` (`param_def_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: param_group_param_rels
 INSERT INTO `param_group_param_rels` (`id`, `param_group_id`, `param_def_id`, `default_value`, `sort`, `created_at`, `min_val`, `max_val`, `enum_values`) VALUES
-(13, 1, 1, '0', 10, 1773932012, 0.0, 90.0, '0,15,30,45,60'),
-(14, 1, 2, '0', 20, 1773932012, 0.0, 360.0, '0,15,30,45,60'),
-(15, 1, 3, '0', 30, 1773932012, 0.0, 90.0, '0,15,30,45,60'),
-(16, 1, 4, '1.0', 40, 1773932012, 0.5, 2.0, '1');
+(25, 1, 1, '0', 10, 1774098822, 0.0, 90.0, '0'),
+(26, 1, 2, '0', 20, 1774098822, 0.0, 360.0, '0,60,90,80'),
+(27, 1, 3, '0', 30, 1774098822, 0.0, 90.0, '0,90,180,15'),
+(28, 1, 4, '1.0', 40, 1774098822, 0.5, 2.0, '1');
 
 -- Table: param_group_project_rels
 DROP TABLE IF EXISTS `param_group_project_rels`;
@@ -502,12 +541,15 @@ CREATE TABLE `param_groups` (
   `updated_at` int DEFAULT NULL,
   `project_id` int DEFAULT NULL,
   `alg_type` smallint DEFAULT '0',
+  `doe_file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'DOE文件名',
+  `doe_file_heads` json DEFAULT NULL COMMENT 'DOE文件表头',
+  `doe_file_data` json DEFAULT NULL COMMENT 'DOE文件数据',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: param_groups
-INSERT INTO `param_groups` (`id`, `name`, `description`, `valid`, `sort`, `created_at`, `updated_at`, `project_id`, `alg_type`) VALUES
-(1, '常规跌落', '常规跌落组合', 1, 100, 1773406965, 1773932012, NULL, 0);
+INSERT INTO `param_groups` (`id`, `name`, `description`, `valid`, `sort`, `created_at`, `updated_at`, `project_id`, `alg_type`, `doe_file_name`, `doe_file_heads`, `doe_file_data`) VALUES
+(1, '常规跌落', '常规跌落组合', 1, 100, 1773406965, 1774098822, NULL, 5, 'pasted_doe_1774098807039.csv', '["x_deg", "y_deg", "z_deg", "drop_height", "floor_size", "drop_time", "mass_scale"]', '[{"x_deg": 0, "y_deg": 0, "z_deg": 0, "drop_time": 1, "floor_size": 300, "mass_scale": 0.000005, "drop_height": 1}, {"x_deg": 0, "y_deg": 60, "z_deg": 0, "drop_time": 1, "floor_size": 300, "mass_scale": 0.000005, "drop_height": 1}, {"x_deg": 0, "y_deg": 0, "z_deg": 90, "drop_time": 1, "floor_size": 300, "mass_scale": 0.000005, "drop_height": 1}, {"x_deg": 0, "y_deg": 90, "z_deg": 180, "drop_time": 1, "floor_size": 300, "mass_scale": 0.000005, "drop_height": 1}, {"x_deg": 0, "y_deg": 80, "z_deg": 15, "drop_time": 1, "floor_size": 300, "mass_scale": 0.000005, "drop_height": 1}]');
 
 -- Table: param_tpl_items
 DROP TABLE IF EXISTS `param_tpl_items`;
@@ -626,17 +668,21 @@ CREATE TABLE `roles` (
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
+  `max_cpu_cores` int NOT NULL DEFAULT '192' COMMENT '可用CPU核数上限',
+  `max_batch_size` int NOT NULL DEFAULT '200' COMMENT '单次提单轮次上限',
+  `node_list` json DEFAULT NULL COMMENT '可用计算节点ID列表',
+  `daily_round_limit_default` int NOT NULL DEFAULT '500' COMMENT '角色默认日提单轮次上限',
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: roles
-INSERT INTO `roles` (`id`, `name`, `code`, `description`, `permission_ids`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
-(1, '超级管理员', 'ADMIN', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 10, 1769934085, 1769934085),
-(2, '项目经理', 'PM', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 20, 1769934085, 1769934085),
-(3, '开发工程师', 'ENGINEER', '', '[1, 2, 3, 4, 5, 9, 10, 11]', 1, 30, 1769934085, 1769934085),
-(4, '测试工程师', 'QA', '', '[1, 3, 4, 9, 10]', 1, 40, 1769934085, 1769934085),
-(5, '产品经理', 'PRODUCT', '', '[1, 2, 6, 9, 11]', 1, 50, 1769934085, 1769934085);
+INSERT INTO `roles` (`id`, `name`, `code`, `description`, `permission_ids`, `valid`, `sort`, `created_at`, `updated_at`, `max_cpu_cores`, `max_batch_size`, `node_list`, `daily_round_limit_default`) VALUES
+(1, '超级管理员', 'ADMIN', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 10, 1769934085, 1769934085, 192, 200, NULL, 500),
+(2, '项目经理', 'PM', '', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]', 1, 20, 1769934085, 1769934085, 192, 200, NULL, 500),
+(3, '开发工程师', 'ENGINEER', '', '[1, 2, 3, 4, 5, 9, 10, 11]', 1, 30, 1769934085, 1769934085, 192, 200, NULL, 500),
+(4, '测试工程师', 'QA', '', '[1, 3, 4, 9, 10]', 1, 40, 1769934085, 1769934085, 192, 200, NULL, 500),
+(5, '产品经理', 'PRODUCT', '', '[1, 2, 6, 9, 11]', 1, 50, 1769934085, 1769934085, 192, 200, NULL, 500);
 
 -- Table: rounds
 DROP TABLE IF EXISTS `rounds`;
@@ -3317,11 +3363,11 @@ INSERT INTO `solvers` (`id`, `name`, `code`, `version`, `cpu_core_min`, `cpu_cor
 -- Table: status_defs
 DROP TABLE IF EXISTS `status_defs`;
 CREATE TABLE `status_defs` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int NOT NULL COMMENT '状态ID',
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '状态名称',
   `code` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '状态编码',
   `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '类型: PROCESS/FINAL',
-  `color` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色样式',
+  `color_tag` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '颜色样式',
   `valid` smallint DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `created_at` int DEFAULT NULL,
@@ -3329,17 +3375,18 @@ CREATE TABLE `status_defs` (
   `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '图标样式',
   PRIMARY KEY (`id`),
   UNIQUE KEY `code` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: status_defs
-INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color`, `valid`, `sort`, `created_at`, `updated_at`, `icon`) VALUES
-(1, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1769934087, 'Clock'),
-(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1769934087, 'CheckCircle'),
-(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1769934087, 'XCircle'),
-(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1769934087, 'RotateCcw'),
-(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1769934087, 'Ban'),
-(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1769934087, 'Timer'),
-(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1769934087, 'CircleCheck');
+INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color_tag`, `valid`, `sort`, `created_at`, `updated_at`, `icon`) VALUES
+(0, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1774154394, 'Clock'),
+(1, '运行中', 'RUNNING', 'PROCESS', '#f59e0b', 1, 10, 1774154394, 1774154934, 'Hourglass'),
+(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1774154394, 'CheckCircle'),
+(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1774154394, 'XCircle'),
+(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1774154394, 'RotateCcw'),
+(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1774154394, 'Ban'),
+(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1774154394, 'Timer'),
+(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1774154394, 'CircleCheck');
 
 -- Table: upload_chunks
 DROP TABLE IF EXISTS `upload_chunks`;
@@ -3368,7 +3415,7 @@ CREATE TABLE `upload_files` (
   `file_size` bigint NOT NULL,
   `mime_type` varchar(100) DEFAULT NULL,
   `upload_id` varchar(36) NOT NULL,
-  `user_id` int NOT NULL,
+  `user_id` varchar(32) NOT NULL COMMENT '上传用户标识(域账号)',
   `chunk_size` int NOT NULL,
   `total_chunks` int NOT NULL,
   `uploaded_chunks` json DEFAULT NULL,
@@ -3381,34 +3428,33 @@ CREATE TABLE `upload_files` (
   `completed_at` int DEFAULT NULL,
   `expires_at` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`)
+  KEY `user_id` (`user_id`),
+  KEY `idx_upload_files_user_id` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data: upload_files
 INSERT INTO `upload_files` (`id`, `file_hash`, `file_name`, `file_size`, `mime_type`, `upload_id`, `user_id`, `chunk_size`, `total_chunks`, `uploaded_chunks`, `status`, `storage_path`, `extra_data`, `error_message`, `created_at`, `updated_at`, `completed_at`, `expires_at`) VALUES
-(1, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'c578a473-8007-4091-9ef9-04e89d64cd6e', 10001, 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410405, 1773410405, NULL, 1773496805),
-(2, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'aac17647-401d-4672-90aa-f58659e35568', 10001, 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410503, 1773410503, NULL, 1773496903),
-(3, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'ee85ca97-c228-4f36-9950-265688d3afc5', 10001, 5242880, 24, '[]', 'uploading', NULL, NULL, NULL, 1773410522, 1773410522, NULL, 1773496922),
-(4, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '7cae3782-0f07-4af7-aaf0-59f7b9a05d45', 10001, 5242880, 24, '[1]', 'uploading', NULL, NULL, NULL, 1773410873, 1773410875, NULL, 1773497273),
-(5, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '4c7a1148-4302-4adf-bc9d-daa925add3ae', 10001, 5242880, 24, '[2]', 'uploading', NULL, NULL, NULL, 1773411120, 1773411122, NULL, 1773497520),
-(6, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '2dccd990-1335-4620-b0d6-8ad6364026e4', 10001, 5242880, 24, '[2]', 'uploading', NULL, NULL, NULL, 1773411268, 1773411270, NULL, 1773497668),
-(7, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'de128676-916d-4709-a579-5c9d85c553a3', 10001, 5242880, 24, '[2, 5, 6, 8, 9, 11, 14, 16, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411375, 1773411378, NULL, 1773497775),
-(8, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5f7b37c1-6ed8-4e84-aef6-a62907aa4166', 10001, 5242880, 24, '[2, 4, 7, 11, 12, 14, 17, 19, 22, 23]', 'uploading', NULL, NULL, NULL, 1773411455, 1773411459, NULL, 1773497855),
-(9, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '4dc34899-ac7d-4b53-92ae-dc28c296cd31', 10001, 5242880, 24, '[2, 3, 5, 8, 9, 11, 13, 17, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411510, 1773411513, NULL, 1773497910),
-(10, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'd030bc3e-e646-4563-a009-a5c168b8ea28', 10001, 5242880, 24, '[1, 5, 7, 11, 13, 16, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411572, 1773411575, NULL, 1773497972),
-(11, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5e67d774-e50f-4fd8-83f8-76fa25cbc5f1', 10001, 5242880, 24, NULL, 'completed', 'files\\2026\\03\\5e67d774_clash-win.zip', NULL, NULL, 1773412040, 1773412044, 1773412044, 1773498440),
-(12, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', 'e0e39d3e-58fe-4621-ab61-2ca2859936dd', 10001, 5242880, 1, NULL, 'uploading', NULL, NULL, NULL, 1774089337, 1774089337, NULL, 1774175737),
-(13, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', '15d18d88-be09-425f-9f34-a7bd80ac7ea2', 10001, 5242880, 1, NULL, 'completed', 'files\\2026\\03\\15d18d88_image.png', NULL, NULL, 1774091459, 1774091459, 1774091459, 1774177859),
-(14, '1ddc2f51e88cd47ac13e2d734f9f90fee4a1a7b22b23ed51118a82e4b29e6018', 'Codex Installer.exe', 1127456, 'application/x-msdownload', 'fad8473d-fe6c-4b1a-8827-0285eb4e181c', 10001, 5242880, 1, NULL, 'completed', 'files\\2026\\03\\fad8473d_Codex_Installer.exe', NULL, NULL, 1774092381, 1774092382, 1774092382, 1774178781);
+(1, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'c578a473-8007-4091-9ef9-04e89d64cd6e', '10001', 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410405, 1773410405, NULL, 1773496805),
+(2, '905750997ed156071050707e3d9a305da0615a74c2381d65ed7968c39ac32c7c', 'FlyCursor-1.6.5-Full-windows-setup-09-26.zip', 120272774, 'application/x-zip-compressed', 'aac17647-401d-4672-90aa-f58659e35568', '10001', 5242880, 23, '[]', 'uploading', NULL, NULL, NULL, 1773410503, 1773410503, NULL, 1773496903),
+(3, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'ee85ca97-c228-4f36-9950-265688d3afc5', '10001', 5242880, 24, '[]', 'uploading', NULL, NULL, NULL, 1773410522, 1773410522, NULL, 1773496922),
+(4, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '7cae3782-0f07-4af7-aaf0-59f7b9a05d45', '10001', 5242880, 24, '[1]', 'uploading', NULL, NULL, NULL, 1773410873, 1773410875, NULL, 1773497273),
+(5, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '4c7a1148-4302-4adf-bc9d-daa925add3ae', '10001', 5242880, 24, '[2]', 'uploading', NULL, NULL, NULL, 1773411120, 1773411122, NULL, 1773497520),
+(6, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '2dccd990-1335-4620-b0d6-8ad6364026e4', '10001', 5242880, 24, '[2]', 'uploading', NULL, NULL, NULL, 1773411268, 1773411270, NULL, 1773497668),
+(7, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'de128676-916d-4709-a579-5c9d85c553a3', '10001', 5242880, 24, '[2, 5, 6, 8, 9, 11, 14, 16, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411375, 1773411378, NULL, 1773497775),
+(8, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5f7b37c1-6ed8-4e84-aef6-a62907aa4166', '10001', 5242880, 24, '[2, 4, 7, 11, 12, 14, 17, 19, 22, 23]', 'uploading', NULL, NULL, NULL, 1773411455, 1773411459, NULL, 1773497855),
+(9, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '4dc34899-ac7d-4b53-92ae-dc28c296cd31', '10001', 5242880, 24, '[2, 3, 5, 8, 9, 11, 13, 17, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411510, 1773411513, NULL, 1773497910),
+(10, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', 'd030bc3e-e646-4563-a009-a5c168b8ea28', '10001', 5242880, 24, '[1, 5, 7, 11, 13, 16, 19, 21, 23]', 'uploading', NULL, NULL, NULL, 1773411572, 1773411575, NULL, 1773497972),
+(11, '70c16480d0a020fde7ba5ea8cc0a4c857ec8663de035647ad8e305e1a3c93060', 'clash-win.zip', 123079296, 'application/x-zip-compressed', '5e67d774-e50f-4fd8-83f8-76fa25cbc5f1', '10001', 5242880, 24, NULL, 'completed', 'files\\2026\\03\\5e67d774_clash-win.zip', NULL, NULL, 1773412040, 1773412044, 1773412044, 1773498440),
+(12, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', 'e0e39d3e-58fe-4621-ab61-2ca2859936dd', '10001', 5242880, 1, NULL, 'uploading', NULL, NULL, NULL, 1774089337, 1774089337, NULL, 1774175737),
+(13, '0a412ee8d0595f2a3df143cb9f0cb489de6aa5df781a825129be7d720fe66c08', 'image.png', 144855, 'image/png', '15d18d88-be09-425f-9f34-a7bd80ac7ea2', '10001', 5242880, 1, NULL, 'completed', 'files\\2026\\03\\15d18d88_image.png', NULL, NULL, 1774091459, 1774091459, 1774091459, 1774177859),
+(14, '1ddc2f51e88cd47ac13e2d734f9f90fee4a1a7b22b23ed51118a82e4b29e6018', 'Codex Installer.exe', 1127456, 'application/x-msdownload', 'fad8473d-fe6c-4b1a-8827-0285eb4e181c', '10001', 5242880, 1, NULL, 'completed', 'files\\2026\\03\\fad8473d_Codex_Installer.exe', NULL, NULL, 1774092381, 1774092382, 1774092382, 1774178781);
 
 -- Table: users
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名',
   `email` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '邮箱',
   `password_hash` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '密码哈希',
-  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',
   `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '头像URL',
   `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '手机号',
   `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门',
@@ -3420,23 +3466,30 @@ CREATE TABLE `users` (
   `last_login_at` int DEFAULT NULL COMMENT '最后登录时间',
   `created_at` int DEFAULT NULL,
   `updated_at` int DEFAULT NULL,
+  `domain_account` varchar(32) COLLATE utf8mb4_general_ci NOT NULL COMMENT '域账号',
+  `lc_user_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门平台用户ID',
+  `user_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '用户展示名',
+  `real_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '真实姓名',
+  `daily_round_limit` int DEFAULT NULL COMMENT '用户日提单轮次上限，覆盖值',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=10011 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `uq_users_domain_account` (`domain_account`),
+  UNIQUE KEY `uq_users_lc_user_id` (`lc_user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10012 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: users
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `name`, `avatar`, `phone`, `department`, `role_ids`, `valid`, `preferences`, `recent_project_ids`, `recent_sim_type_ids`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(10001, 'admin', 'admin@example.com', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', '系统管理员', NULL, NULL, '研发部', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1774089314, 1769962885, 1774060514),
-(10002, 'zhangsan', 'zhangsan@example.com', 'scrypt:32768:8:1$tHDVGtDqrZGS8XN0$f8e8efd924bc782a2cd22e585ac51c683cead0080156c110217aa337dd6ac105cf64cd706d94d52175c2c767d5c5d623cc46e3ee4fbe22339a0dd7b3403392b3', '张三', NULL, NULL, '研发部', '[2]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10003, 'lisi', 'lisi@example.com', 'scrypt:32768:8:1$Xa4rTg1Y4wIYOCXP$b3d14f878599a71274d31c9f90be2a6da7c382d4e30509c96053bf12504bb511ef39a65819e6c0953ad4d3d5dbbcdf3bff068de977364757d28b6d3c6f0a85ba', '李四', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10004, 'wangwu', 'wangwu@example.com', 'scrypt:32768:8:1$qVVj1W8ucWefiatr$7d08be611b4dd3f2084d581f16bfc75853bb85efb02aac95474b5a572ada8ec17bd25a6632911b15790d727484b4c4c15da4818591792a73701a03cf91520dbd', '王五', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10005, 'zhaoliu', 'zhaoliu@example.com', 'scrypt:32768:8:1$3emZOZ3UM9Rjbonk$b49b806a343883226cd496a437b2dce65b5e293bf810772452d5519f823535de9107ed8cd2805b691b81c40ca1f3ee6438a28b0bf4cc58b521c07355ee5d10d4', '赵六', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10006, 'sunqi', 'sunqi@example.com', 'scrypt:32768:8:1$bBZHHimFBFoq0Yaa$394cb026a94d7f50cc894e15f5bcdfac865817d3fcc5b768165652f67dd56e553e065bac835c6b05525891a5dfdd46518ddd242ceb6f1315d6540d0bc4b1875b', '孙七', NULL, NULL, '产品部', '[5]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10007, 'zhouba', 'zhouba@example.com', 'scrypt:32768:8:1$DsRt58YHCZeTXFqD$be8d9f6b12cccb29b2cdb3b471c5eda8bc7460b40580a01b3c926f22591be838ea4a561a1b655ea4198c40c3918d54f5c9f9d8c2362bfc68b9ce68be486953f2', '周八', NULL, NULL, '产品部', '[5]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10008, 'wujiu', 'wujiu@example.com', 'scrypt:32768:8:1$ySQJ1bzpsATm14wU$96ad2d5b314974da2abc3a36e05ed1baeb9a3e076ede8ec80a026d93e67fa72615e318cc862f1a9d7193f10051a4bbc25184c01fb6e2ee49ed75a0f0155a4fe9', '吴九', NULL, NULL, '设计部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086),
-(10009, 'zhengshi', 'zhengshi@example.com', 'scrypt:32768:8:1$ENrEsPvvch0zlX0l$ed1b33dda69d3a9f84f73e621d94c67db58486000d8f951de397ae522d1bd12ea801e742869ad8c728e8ae14578ed92a02cac7e671c2fa3162c7f71fe71f09de', '郑十', NULL, NULL, '设计部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934087),
-(10010, 'test_user1', 'test1@example.com', 'scrypt:32768:8:1$RWiUGt4aBqL5JvZ6$e526164e9dc4202f5866ac7e74bc492820c8ae5770afad14f319d276474dfe8489fc3daf87c9db774c64b290aadbb94115c75bc184563ca13fa585cf741bf351', '测试用户1', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934087);
+INSERT INTO `users` (`id`, `email`, `password_hash`, `avatar`, `phone`, `department`, `role_ids`, `valid`, `preferences`, `recent_project_ids`, `recent_sim_type_ids`, `last_login_at`, `created_at`, `updated_at`, `domain_account`, `lc_user_id`, `user_name`, `real_name`, `daily_round_limit`) VALUES
+(10001, 'a00012346@company.local', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', NULL, NULL, 'mock', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1774154802, 1769962885, 1774126002, 'a00012346', NULL, 'a00012346', 'a00012346', 500),
+(10002, 'zhangsan@example.com', 'scrypt:32768:8:1$tHDVGtDqrZGS8XN0$f8e8efd924bc782a2cd22e585ac51c683cead0080156c110217aa337dd6ac105cf64cd706d94d52175c2c767d5c5d623cc46e3ee4fbe22339a0dd7b3403392b3', NULL, NULL, '研发部', '[2]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'z00012347', NULL, '张三', '张三', 500),
+(10003, 'lisi@example.com', 'scrypt:32768:8:1$Xa4rTg1Y4wIYOCXP$b3d14f878599a71274d31c9f90be2a6da7c382d4e30509c96053bf12504bb511ef39a65819e6c0953ad4d3d5dbbcdf3bff068de977364757d28b6d3c6f0a85ba', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'l00012348', NULL, '李四', '李四', 500),
+(10004, 'wangwu@example.com', 'scrypt:32768:8:1$qVVj1W8ucWefiatr$7d08be611b4dd3f2084d581f16bfc75853bb85efb02aac95474b5a572ada8ec17bd25a6632911b15790d727484b4c4c15da4818591792a73701a03cf91520dbd', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'w00012349', NULL, '王五', '王五', 500),
+(10005, 'zhaoliu@example.com', 'scrypt:32768:8:1$3emZOZ3UM9Rjbonk$b49b806a343883226cd496a437b2dce65b5e293bf810772452d5519f823535de9107ed8cd2805b691b81c40ca1f3ee6438a28b0bf4cc58b521c07355ee5d10d4', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'z00012350', NULL, '赵六', '赵六', 500),
+(10006, 'sunqi@example.com', 'scrypt:32768:8:1$bBZHHimFBFoq0Yaa$394cb026a94d7f50cc894e15f5bcdfac865817d3fcc5b768165652f67dd56e553e065bac835c6b05525891a5dfdd46518ddd242ceb6f1315d6540d0bc4b1875b', NULL, NULL, '产品部', '[5]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 's00012351', NULL, '孙七', '孙七', 500),
+(10007, 'zhouba@example.com', 'scrypt:32768:8:1$DsRt58YHCZeTXFqD$be8d9f6b12cccb29b2cdb3b471c5eda8bc7460b40580a01b3c926f22591be838ea4a561a1b655ea4198c40c3918d54f5c9f9d8c2362bfc68b9ce68be486953f2', NULL, NULL, '产品部', '[5]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'z00012352', NULL, '周八', '周八', 500),
+(10008, 'wujiu@example.com', 'scrypt:32768:8:1$ySQJ1bzpsATm14wU$96ad2d5b314974da2abc3a36e05ed1baeb9a3e076ede8ec80a026d93e67fa72615e318cc862f1a9d7193f10051a4bbc25184c01fb6e2ee49ed75a0f0155a4fe9', NULL, NULL, '设计部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'w00012353', NULL, '吴九', '吴九', 500),
+(10009, 'zhengshi@example.com', 'scrypt:32768:8:1$ENrEsPvvch0zlX0l$ed1b33dda69d3a9f84f73e621d94c67db58486000d8f951de397ae522d1bd12ea801e742869ad8c728e8ae14578ed92a02cac7e671c2fa3162c7f71fe71f09de', NULL, NULL, '设计部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934087, 'z00012354', NULL, '郑十', '郑十', 500),
+(10010, 'test1@example.com', 'scrypt:32768:8:1$RWiUGt4aBqL5JvZ6$e526164e9dc4202f5866ac7e74bc492820c8ae5770afad14f319d276474dfe8489fc3daf87c9db774c64b290aadbb94115c75bc184563ca13fa585cf741bf351', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934087, 'c00012356', NULL, '测试用户1', '测试用户1', 500),
+(10011, 'z00012345@company.local', NULL, NULL, NULL, 'mock', NULL, 1, NULL, NULL, NULL, 1774108909, 1774080109, 1774080109, 'z00012345', NULL, 'z00012345', 'z00012345', 500);
 
 -- Table: workflows
 DROP TABLE IF EXISTS `workflows`;

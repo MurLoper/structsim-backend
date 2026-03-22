@@ -19,6 +19,8 @@ class OrderCreate(BaseModel):
     sim_type_ids: Optional[List[int]] = Field(default_factory=list, description="仿真类型ID列表")
     opt_param: Optional[Dict[str, Any]] = Field(default_factory=dict, description="可选参数")
     input_json: Optional[Dict[str, Any]] = Field(default_factory=dict, description="输入JSON")
+    condition_summary: Optional[Dict[str, List[str]]] = Field(None, description="工况摘要")
+    opt_issue_id: Optional[int] = Field(None, description="自动优化申请单ID")
     workflow_id: Optional[int] = Field(None, description="工作流ID")
     submit_check: Optional[Dict[str, Any]] = Field(None, description="提交检查信息")
     client_meta: Optional[Dict[str, Any]] = Field(None, description="客户端元数据")
@@ -28,7 +30,18 @@ class OrderUpdate(BaseModel):
     """更新订单请求"""
     remark: Optional[str] = Field(None, description="备注")
     participant_uids: Optional[List[int]] = Field(None, description="参与者用户ID列表")
+    participant_ids: Optional[List[str]] = Field(None, description="参与者域账号列表")
     opt_param: Optional[Dict[str, Any]] = Field(None, description="可选参数")
+    input_json: Optional[Dict[str, Any]] = Field(None, description="输入JSON")
+    sim_type_ids: Optional[List[int]] = Field(None, description="仿真类型ID列表")
+    fold_type_ids: Optional[List[int]] = Field(None, description="姿态ID列表")
+    origin_fold_type_id: Optional[int] = Field(None, description="原始姿态ID")
+    model_level_id: Optional[int] = Field(None, description="模型层级ID")
+    condition_summary: Optional[Dict[str, List[str]]] = Field(None, description="工况摘要")
+    workflow_id: Optional[int] = Field(None, description="工作流ID")
+    submit_check: Optional[Dict[str, Any]] = Field(None, description="提交检查信息")
+    client_meta: Optional[Dict[str, Any]] = Field(None, description="客户端元数据")
+    opt_issue_id: Optional[int] = Field(None, description="自动优化申请单ID")
 
 
 class VerifyFileRequest(BaseModel):

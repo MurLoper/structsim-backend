@@ -1,7 +1,7 @@
 # 后端文档目录
 
 面向 `structsim-backend` 当前代码实现的后端文档索引。
-**最后更新**: 2026-03-21
+**最后更新**: 2026-03-22
 
 ## 1. 首先阅读
 
@@ -11,7 +11,10 @@
 2. [登录与 SSO 说明](./SSO.md)
 3. [提单初始化与订单快照协议](./architecture/SUBMISSION_PROTOCOL.md)
 4. [提单主链路字段清单与联调清单](./architecture/SUBMISSION_FIELD_CHECKLIST.md)
-5. [配置驱动提单系统设计](./architecture/CONFIG_SYSTEM_DESIGN.md)
+5. [结果页与详情页快照消费迁移清单](./architecture/RESULTS_AND_DETAIL_MIGRATION.md)
+6. [订单与 Condition 运行实体拆分设计](./architecture/ORDER_CONDITION_OPTI_DESIGN.md)
+7. [订单与 Condition 运行实体改造执行稿](./architecture/ORDER_CONDITION_OPTI_EXECUTION_PLAN.md)
+8. [配置驱动提单系统设计](./architecture/CONFIG_SYSTEM_DESIGN.md)
 
 ## 2. 架构文档
 
@@ -21,6 +24,9 @@
 | [SSO.md](./SSO.md) | 登录模式、SSO 现状与收口方案 |
 | [SUBMISSION_PROTOCOL.md](./architecture/SUBMISSION_PROTOCOL.md) | 提单协议、快照边界与兼容字段 |
 | [SUBMISSION_FIELD_CHECKLIST.md](./architecture/SUBMISSION_FIELD_CHECKLIST.md) | 字段清单、恢复逻辑与联调检查项 |
+| [RESULTS_AND_DETAIL_MIGRATION.md](./architecture/RESULTS_AND_DETAIL_MIGRATION.md) | 结果页、列表页、编辑页的快照消费迁移清单 |
+| [ORDER_CONDITION_OPTI_DESIGN.md](./architecture/ORDER_CONDITION_OPTI_DESIGN.md) | `orders + order_condition_opti + opt_issue_id / opt_job_id` 设计稿 |
+| [ORDER_CONDITION_OPTI_EXECUTION_PLAN.md](./architecture/ORDER_CONDITION_OPTI_EXECUTION_PLAN.md) | 面向当前后端代码的执行任务清单 |
 | [CONFIG_SYSTEM_DESIGN.md](./architecture/CONFIG_SYSTEM_DESIGN.md) | 配置驱动提单的目标结构与收口方向 |
 | [API_DESIGN.md](./architecture/API_DESIGN.md) | 通用 API 设计规范 |
 | [DATABASE.md](./architecture/DATABASE.md) | 数据库结构说明 |
@@ -49,4 +55,3 @@
 
 - [前端文档目录](../../structsim-ai-platform/docs/README.md)
 - [前端现状与开发计划](../../structsim-ai-platform/docs/architecture/CURRENT_STATUS_AND_PLAN.md)
-

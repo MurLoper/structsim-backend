@@ -9,13 +9,6 @@
       "primary_key": 1
     },
     {
-      "name": "username",
-      "type": "VARCHAR(50)",
-      "nullable": false,
-      "default": null,
-      "primary_key": 0
-    },
-    {
       "name": "email",
       "type": "VARCHAR(120)",
       "nullable": false,
@@ -25,7 +18,7 @@
     {
       "name": "domain_account",
       "type": "VARCHAR(32)",
-      "nullable": true,
+      "nullable": false,
       "default": null,
       "primary_key": 0
     },
@@ -52,15 +45,7 @@
     },
     {
       "name": "password_hash",
-
       "type": "VARCHAR(256)",
-      "nullable": true,
-      "default": null,
-      "primary_key": 0
-    },
-    {
-      "name": "name",
-      "type": "VARCHAR(100)",
       "nullable": true,
       "default": null,
       "primary_key": 0
@@ -167,13 +152,6 @@
     }
   ],
   "unique_constraints": [
-
-    {
-      "name": null,
-      "column_names": [
-        "username"
-      ]
-    },
     {
       "name": null,
       "column_names": [

@@ -18,12 +18,14 @@ class AlgorithmType(str, Enum):
 
 class OrderStatus(IntEnum):
     """订单状态"""
-    DRAFT = 0
-    PENDING = 1
-    RUNNING = 2
-    COMPLETED = 3
-    FAILED = 4
+    NOT_STARTED = 0
+    RUNNING = 1
+    COMPLETED = 2
+    FAILED = 3
+    DRAFT = 4
     CANCELLED = 5
+    STARTING = 6
+    PARTIAL_COMPLETED = 7
 
 
 class SimCategory(str, Enum):

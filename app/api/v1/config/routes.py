@@ -307,6 +307,18 @@ def list_output_defs():
     return success(data)
 
 
+@config_bp.route('/post-process-modes', methods=['GET'])
+def list_post_process_modes():
+    """
+    获取后处理方式配置。
+
+    当前先返回后端 mock 数据，后续外部平台联通后保持该接口路径不变，
+    直接在 service 内替换数据来源即可。
+    """
+    data = config_service.get_post_process_modes()
+    return success(data)
+
+
 @config_bp.route('/output-defs/batch', methods=['POST'])
 def batch_create_output_defs():
     """批量创建输出定义"""
@@ -682,4 +694,3 @@ def remove_sim_type_from_fold_type(fold_type_id: int, sim_type_id: int):
     """移除姿态-仿真类型关联"""
     config_service.remove_sim_type_from_fold_type(fold_type_id, sim_type_id)
     return success(msg="移除成功")
-

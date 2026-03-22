@@ -46,6 +46,7 @@ from app.models.order import (
     Order,
     OrderResult
 )
+from app.models.order_condition_opti import OrderConditionOpti
 
 # 结果模型
 from app.models.result import (
@@ -101,6 +102,7 @@ __all__ = [
     # 订单
     'Order',
     'OrderResult',
+    'OrderConditionOpti',
     # 结果
     'SimTypeResult',
     'Round',
@@ -113,4 +115,3 @@ __all__ = [
     'UploadFile',
     'UploadChunk'
 ]
-

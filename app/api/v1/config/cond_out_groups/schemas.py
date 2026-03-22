@@ -47,7 +47,7 @@ class AddOutputToGroupRequest(BaseModel):
     """添加输出到组合请求（含 resp_details 预配置）"""
     output_def_id: int = Field(..., description="输出定义ID")
     set_name: Optional[str] = Field('push', description="set集名称，默认push")
-    component: Optional[str] = Field('35', description="component，默认35(other)")
+    component: Optional[str] = Field('18', description="后处理方式编码，默认 18(Other)")
     step_name: Optional[str] = Field(None, description="分析步名称，特殊输出才需要")
     section_point: Optional[str] = Field(None, description="积分点，特殊输出才需要")
     special_output_set: Optional[str] = Field(None, description="特殊输出set")
@@ -82,7 +82,7 @@ class OutputInGroupResponse(BaseModel):
     output_def_id: int
     # resp_details 预配置
     set_name: Optional[str] = 'push'
-    component: Optional[str] = '35'
+    component: Optional[str] = '18'
     step_name: Optional[str] = None
     section_point: Optional[str] = None
     special_output_set: Optional[str] = None
@@ -113,4 +113,3 @@ class CondOutGroupDetailResponse(BaseModel):
     updated_at: int
     conditions: List[ConditionInGroupResponse] = []
     outputs: List[OutputInGroupResponse] = []
-

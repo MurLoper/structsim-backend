@@ -252,7 +252,7 @@ class CondOutGroupService:
             'cond_out_group_id': group_id,
             'output_def_id': output_def_id,
             'set_name': data.get('set_name', 'push'),
-            'component': data.get('component', '35'),
+            'component': data.get('component', '18'),
             'step_name': data.get('step_name'),
             'section_point': data.get('section_point'),
             'special_output_set': data.get('special_output_set'),
@@ -407,4 +407,3 @@ class CondOutGroupService:
         except Exception as e:
             db.session.rollback()
             raise BusinessError(f"创建并添加输出失败: {str(e)}")
-

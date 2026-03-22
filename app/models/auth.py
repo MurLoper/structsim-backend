@@ -1,73 +1,88 @@
 """
-权限菜单模型 - 用户、角色、权限、菜单
-按照 requirement_and_design.md 规范设计
+权限与菜单模型。
+
+用户身份以 `domain_account` 作为业务唯一标识。
+数据库仍保留自增 `id` 作为内部代理键，避免一次性改动所有外键关系。
 """
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import db
 from app.models.base import ToDictMixin
 
 
 class User(db.Model, ToDictMixin):
     """用户表"""
-    __tablename__ = 'users'
-    _exclude_fields = {'password_hash'}  # 排除敏感字段
-    
+
+    __tablename__ = "users"
+    _exclude_fields = {"password_hash"}
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(50), unique=True, nullable=True, comment='用户名(兼容影子字段，不参与业务)')
-    email = db.Column(db.String(120), unique=True, nullable=False, comment='邮箱')
-    domain_account = db.Column(db.String(32), unique=True, index=True, nullable=False, comment='域账号，如 z00012345 / lwx0045644')
-    lc_user_id = db.Column(db.String(64), unique=True, index=True, comment='部门平台用户ID(外部ID)，可对应 lc_user_id / user_id')
-    user_name = db.Column(db.String(100), comment='用户展示名')
-    real_name = db.Column(db.String(100), comment='真实姓名')
-    password_hash = db.Column(db.String(256), comment='密码哈希(保留字段，当前登录不使用)')
-    name = db.Column(db.String(100), comment='姓名(兼容字段)')
-    avatar = db.Column(db.String(255), comment='头像URL')
-    phone = db.Column(db.String(20), comment='手机号')
-    department = db.Column(db.String(100), comment='部门')
-    
-    # 角色ID列表
-    role_ids = db.Column(db.JSON, comment='角色ID列表')
-    
-    # 状态
-    valid = db.Column(db.SmallInteger, default=1, comment='1=有效,0=禁用')
-    
-    # 用户偏好
-    preferences = db.Column(db.JSON, comment='用户偏好设置 {lang, theme, ...}')
-    
-    # 最近使用（用于置顶）
-    recent_project_ids = db.Column(db.JSON, comment='最近使用的项目ID')
-    recent_sim_type_ids = db.Column(db.JSON, comment='最近使用的仿真类型ID')
-    
-    # 时间戳
-    last_login_at = db.Column(db.Integer, comment='最后登录时间')
+    email = db.Column(db.String(120), unique=True, nullable=False, comment="邮箱")
+    domain_account = db.Column(
+        db.String(32),
+        unique=True,
+        index=True,
+        nullable=False,
+        comment="域账号，作为业务唯一标识",
+    )
+    lc_user_id = db.Column(
+        db.String(64),
+        unique=True,
+        index=True,
+        comment="外部平台用户ID",
+    )
+    user_name = db.Column(db.String(100), comment="用户展示名")
+    real_name = db.Column(db.String(100), comment="真实姓名")
+    password_hash = db.Column(db.String(256), comment="密码哈希")
+    avatar = db.Column(db.String(255), comment="头像URL")
+    phone = db.Column(db.String(20), comment="手机号")
+    department = db.Column(db.String(100), comment="部门")
+
+    role_ids = db.Column(db.JSON, comment="角色ID列表")
+    valid = db.Column(db.SmallInteger, default=1, comment="1=有效,0=禁用")
+    preferences = db.Column(db.JSON, comment="用户偏好设置")
+    recent_project_ids = db.Column(db.JSON, comment="最近使用的项目ID")
+    recent_sim_type_ids = db.Column(db.JSON, comment="最近使用的仿真类型ID")
+    daily_round_limit = db.Column(
+        db.Integer,
+        nullable=True,
+        default=None,
+        comment="用户日提单轮次上限，None 表示继承角色默认值",
+    )
+
+    last_login_at = db.Column(db.Integer, comment="最后登录时间")
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
-                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(
+        db.Integer,
+        default=lambda: int(datetime.utcnow().timestamp()),
+        onupdate=lambda: int(datetime.utcnow().timestamp()),
+    )
 
     def to_public_dict(self):
-        """公开信息（用于参与人选择等）"""
-        display_name = self.real_name or self.name or self.domain_account
+        """公开用户信息，统一以 domain_account 作为主键"""
+        display_name = self.real_name or self.user_name or self.domain_account
         return {
-            'id': self.domain_account,
-            'db_id': self.id,
-            'user_id': self.lc_user_id,
-            'name': display_name,
-            'real_name': self.real_name,
-            'user_name': self.user_name,
-            'domain_account': self.domain_account,
-            'lc_user_id': self.lc_user_id,
-            'email': self.email,
-            'avatar': self.avatar,
-            'department': self.department
+            "id": self.domain_account,
+            "domain_account": self.domain_account,
+            "domainAccount": self.domain_account,
+            "lc_user_id": self.lc_user_id,
+            "lcUserId": self.lc_user_id,
+            "user_name": self.user_name,
+            "userName": self.user_name,
+            "real_name": self.real_name,
+            "realName": self.real_name,
+            "display_name": display_name,
+            "email": self.email,
+            "avatar": self.avatar,
+            "department": self.department,
         }
 
     def set_password(self, password: str):
-        """设置密码"""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
-        """验证密码"""
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
@@ -75,69 +90,72 @@ class User(db.Model, ToDictMixin):
 
 class Role(db.Model, ToDictMixin):
     """角色表"""
-    __tablename__ = 'roles'
-    
+
+    __tablename__ = "roles"
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(50), nullable=False, comment='角色名称')
-    code = db.Column(db.String(30), unique=True, comment='角色编码')
-    description = db.Column(db.String(200), comment='角色描述')
-    
-    # 权限ID列表
-    permission_ids = db.Column(db.JSON, comment='权限ID列表')
-    
-    # 状态
+    name = db.Column(db.String(50), nullable=False, comment="角色名称")
+    code = db.Column(db.String(30), unique=True, comment="角色编码")
+    description = db.Column(db.String(200), comment="角色描述")
+    permission_ids = db.Column(db.JSON, comment="权限ID列表")
+
+    max_cpu_cores = db.Column(db.Integer, default=192, comment="可用CPU核数上限")
+    max_batch_size = db.Column(db.Integer, default=200, comment="单次提单轮次上限")
+    node_list = db.Column(db.JSON, comment="可用计算节点ID列表")
+    daily_round_limit_default = db.Column(db.Integer, default=500, comment="角色默认日提单轮次上限")
+
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
-    
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
-                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(
+        db.Integer,
+        default=lambda: int(datetime.utcnow().timestamp()),
+        onupdate=lambda: int(datetime.utcnow().timestamp()),
+    )
 
 
 class Permission(db.Model, ToDictMixin):
     """权限表"""
-    __tablename__ = 'permissions'
-    
+
+    __tablename__ = "permissions"
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(50), nullable=False, comment='权限名称')
-    code = db.Column(db.String(50), unique=True, comment='权限编码')
-    type = db.Column(db.String(20), comment='类型: PAGE/ACTION/DATA')
-    resource = db.Column(db.String(100), comment='资源标识')
-    description = db.Column(db.String(200), comment='权限描述')
-    
+    name = db.Column(db.String(50), nullable=False, comment="权限名称")
+    code = db.Column(db.String(50), unique=True, comment="权限编码")
+    type = db.Column(db.String(20), comment="类型: PAGE/ACTION/DATA")
+    resource = db.Column(db.String(100), comment="资源标识")
+    description = db.Column(db.String(200), comment="权限描述")
+
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
-    
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
-                          onupdate=lambda: int(datetime.utcnow().timestamp()))
+    updated_at = db.Column(
+        db.Integer,
+        default=lambda: int(datetime.utcnow().timestamp()),
+        onupdate=lambda: int(datetime.utcnow().timestamp()),
+    )
 
 
 class Menu(db.Model, ToDictMixin):
     """菜单表"""
-    __tablename__ = 'menus'
+
+    __tablename__ = "menus"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    parent_id = db.Column(db.Integer, default=0, comment='父菜单ID，0为顶级')
-    name = db.Column(db.String(50), nullable=False, comment='菜单名称')
-    title_i18n_key = db.Column(db.String(100), comment='国际化标题key')
-    icon = db.Column(db.String(50), comment='图标名称')
-    path = db.Column(db.String(200), comment='路由路径')
-    component = db.Column(db.String(200), comment='前端组件路径')
-
-    # 菜单类型: MENU=菜单, BUTTON=按钮
-    menu_type = db.Column(db.String(20), default='MENU', comment='菜单类型')
-    # 是否隐藏菜单（不在侧边栏显示，但路由可访问）
-    hidden = db.Column(db.SmallInteger, default=0, comment='是否隐藏')
-
-    # 关联权限
-    permission_code = db.Column(db.String(50), comment='所需权限编码')
-
-    # 状态
+    parent_id = db.Column(db.Integer, default=0, comment="父菜单ID，0 为顶级")
+    name = db.Column(db.String(50), nullable=False, comment="菜单名称")
+    title_i18n_key = db.Column(db.String(100), comment="国际化标题 key")
+    icon = db.Column(db.String(50), comment="图标名称")
+    path = db.Column(db.String(200), comment="路由路径")
+    component = db.Column(db.String(200), comment="前端组件路径")
+    menu_type = db.Column(db.String(20), default="MENU", comment="菜单类型")
+    hidden = db.Column(db.SmallInteger, default=0, comment="是否隐藏")
+    permission_code = db.Column(db.String(50), comment="所需权限编码")
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
-
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
-    updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
-                          onupdate=lambda: int(datetime.utcnow().timestamp()))
-
+    updated_at = db.Column(
+        db.Integer,
+        default=lambda: int(datetime.utcnow().timestamp()),
+        onupdate=lambda: int(datetime.utcnow().timestamp()),
+    )

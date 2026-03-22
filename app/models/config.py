@@ -196,11 +196,11 @@ class StatusDef(db.Model):
     """状态定义表"""
     __tablename__ = 'status_defs'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     name = db.Column(db.String(50), nullable=False, comment='状态名称')
     code = db.Column(db.String(30), unique=True, comment='状态编码')
     type = db.Column(db.String(20), comment='类型: PROCESS/FINAL')
-    color = db.Column(db.String(100), comment='颜色样式')
+    color_tag = db.Column(db.String(100), comment='颜色样式')
     icon = db.Column(db.String(100), comment='图标样式')
     valid = db.Column(db.SmallInteger, default=1)
     sort = db.Column(db.Integer, default=100)
@@ -214,9 +214,8 @@ class StatusDef(db.Model):
             'name': self.name,
             'code': self.code,
             'status_type': self.type,
-            'color_tag': self.color,
+            'color_tag': self.color_tag,
             'icon': self.icon,
-            'color': self.color,
             'valid': self.valid,
             'sort': self.sort
         }

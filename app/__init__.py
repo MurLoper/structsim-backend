@@ -42,6 +42,42 @@ def _auto_upgrade_identity_schema(app: Flask) -> None:
         logger.exception(f'身份字段自动升级失败: {exc}')
 
 
+def _auto_upgrade_order_condition_schema(app: Flask) -> None:
+    """应用启动时自动升级订单 condition 运行实体相关表结构。"""
+    if os.getenv('AUTO_ORDER_CONDITION_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
+        logger.info('已禁用 AUTO_ORDER_CONDITION_UPGRADE，跳过订单 condition 表结构升级')
+        return
+
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+    if not db_url or str(db_url).startswith('sqlite:'):
+        return
+
+    try:
+        from database.migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
+        upgrade_order_condition_schema(str(db_url), verbose=False)
+        logger.info('订单 condition 表结构自动升级检查完成')
+    except Exception as exc:
+        logger.exception(f'订单 condition 表结构自动升级失败: {exc}')
+
+
+def _auto_upgrade_status_defs_schema(app: Flask) -> None:
+    """应用启动时自动修正状态定义ID语义（0=未开始，1=运行中）。"""
+    if os.getenv('AUTO_STATUS_DEFS_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
+        logger.info('已禁用 AUTO_STATUS_DEFS_UPGRADE，跳过状态定义升级')
+        return
+
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+    if not db_url or str(db_url).startswith('sqlite:'):
+        return
+
+    try:
+        from database.migrations.status_defs_upgrade import upgrade_status_defs_schema
+        upgrade_status_defs_schema(str(db_url), verbose=False)
+        logger.info('状态定义自动升级检查完成')
+    except Exception as exc:
+        logger.exception(f'状态定义自动升级失败: {exc}')
+
+
 def create_app(config_name=None):
     """Application factory."""
     if config_name is None:
@@ -55,6 +91,8 @@ def create_app(config_name=None):
 
     # 自动升级身份字段（兼容旧数据库结构）
     _auto_upgrade_identity_schema(app)
+    _auto_upgrade_order_condition_schema(app)
+    _auto_upgrade_status_defs_schema(app)
 
     # 初始化 Redis（可选，如果配置了 Redis）
     try:
@@ -168,4 +206,3 @@ def create_app(config_name=None):
 
     logger.info(f"App created with config: {config_name}")
     return app
-

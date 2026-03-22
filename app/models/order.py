@@ -41,12 +41,13 @@ class Order(db.Model):
     # 核心：各仿真类型的配置（大JSON）
     opt_param = db.Column(db.JSON, comment='各仿真类型配置 {sim_type_id: {...}}')
     input_json = db.Column(db.JSON, comment='输入JSON完整配置')
+    opt_issue_id = db.Column(db.Integer, index=True, comment='自动优化申请单ID')
     
     # 工作流
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflows.id'), comment='工作流ID')
     
     # 状态与进度
-    status = db.Column(db.SmallInteger, default=1, comment='状态: 1=待处理,2=运行中,3=完成,4=失败')
+    status = db.Column(db.SmallInteger, default=0, comment='状态: 0=未开始/排队,1=运行中,2=完成,3=失败,4=草稿,5=取消')
     progress = db.Column(db.SmallInteger, default=0, comment='进度百分比 0-100')
     cur_node_id = db.Column(db.Integer, comment='当前流程节点ID')
     
@@ -87,6 +88,7 @@ class Order(db.Model):
             'sim_type_ids': self.sim_type_ids,
             'opt_param': self.opt_param,
             'input_json': self.input_json,
+            'opt_issue_id': self.__dict__.get('opt_issue_id'),
             'workflow_id': self.workflow_id,
             'status': self.status,
             'progress': self.progress,
@@ -108,6 +110,7 @@ class Order(db.Model):
             'sim_type_ids': self.sim_type_ids,
             'fold_type_ids': self.fold_type_ids,
             'condition_summary': self.__dict__.get('condition_summary'),
+            'opt_issue_id': self.__dict__.get('opt_issue_id'),
             'status': self.status,
             'progress': self.progress,
             'created_by': self.created_by,
@@ -135,4 +138,3 @@ class OrderResult(db.Model, ToDictMixin):
     created_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()))
     updated_at = db.Column(db.Integer, default=lambda: int(datetime.utcnow().timestamp()),
                           onupdate=lambda: int(datetime.utcnow().timestamp()))
-

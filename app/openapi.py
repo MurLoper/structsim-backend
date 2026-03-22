@@ -50,18 +50,24 @@ OPENAPI_SPEC = {
             "LoginRequest": {
                 "type": "object",
                 "properties": {
-                    "email": {"type": "string"},
+                    "domainAccount": {"type": "string"},
                     "password": {"type": "string"}
                 },
-                "required": ["email", "password"]
+                "required": ["domainAccount", "password"]
             },
             "UserPublicInfo": {
                 "type": "object",
                 "properties": {
-                    "id": {"type": "integer"},
-                    "username": {"type": "string"},
+                    "id": {"type": "string"},
+                    "domainAccount": {"type": "string"},
+                    "userName": {"type": "string", "nullable": True},
+                    "realName": {"type": "string", "nullable": True},
+                    "lcUserId": {"type": "string", "nullable": True},
                     "email": {"type": "string"},
-                    "role": {"type": "string"}
+                    "role": {"type": "string", "nullable": True},
+                    "roleIds": {"type": "array", "items": {"type": "integer"}},
+                    "roleCodes": {"type": "array", "items": {"type": "string"}},
+                    "permissionCodes": {"type": "array", "items": {"type": "string"}}
                 }
             },
             "LoginResponse": {
@@ -194,29 +200,35 @@ OPENAPI_SPEC = {
             "UserCreate": {
                 "type": "object",
                 "properties": {
-                    "username": {"type": "string"},
+                    "domainAccount": {"type": "string"},
                     "email": {"type": "string"},
-                    "name": {"type": "string", "nullable": True},
+                    "lcUserId": {"type": "string", "nullable": True},
+                    "userName": {"type": "string", "nullable": True},
+                    "realName": {"type": "string", "nullable": True},
                     "password": {"type": "string", "nullable": True},
                     "avatar": {"type": "string", "nullable": True},
                     "phone": {"type": "string", "nullable": True},
                     "department": {"type": "string", "nullable": True},
                     "roleIds": {"type": "array", "items": {"type": "integer"}},
+                    "dailyRoundLimit": {"type": "integer", "nullable": True},
                     "valid": {"type": "integer", "nullable": True}
                 },
-                "required": ["username", "email"]
+                "required": ["domainAccount", "email"]
             },
             "UserUpdate": {
                 "type": "object",
                 "properties": {
-                    "username": {"type": "string", "nullable": True},
+                    "domainAccount": {"type": "string", "nullable": True},
                     "email": {"type": "string", "nullable": True},
-                    "name": {"type": "string", "nullable": True},
+                    "lcUserId": {"type": "string", "nullable": True},
+                    "userName": {"type": "string", "nullable": True},
+                    "realName": {"type": "string", "nullable": True},
                     "password": {"type": "string", "nullable": True},
                     "avatar": {"type": "string", "nullable": True},
                     "phone": {"type": "string", "nullable": True},
                     "department": {"type": "string", "nullable": True},
                     "roleIds": {"type": "array", "items": {"type": "integer"}},
+                    "dailyRoundLimit": {"type": "integer", "nullable": True},
                     "valid": {"type": "integer", "nullable": True}
                 }
             },
@@ -1128,13 +1140,13 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/api/v1/rbac/users/{id}": {
+        "/api/v1/rbac/users/{domain_account}": {
             "put": {
                 "tags": ["rbac"],
                 "summary": "Update user",
                 "security": [{"BearerAuth": []}],
                 "parameters": [
-                    {"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                    {"name": "domain_account", "in": "path", "required": True, "schema": {"type": "string"}}
                 ],
                 "requestBody": {
                     "required": True,
@@ -1147,7 +1159,7 @@ OPENAPI_SPEC = {
                 "summary": "Delete user",
                 "security": [{"BearerAuth": []}],
                 "parameters": [
-                    {"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                    {"name": "domain_account", "in": "path", "required": True, "schema": {"type": "string"}}
                 ],
                 "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
             }

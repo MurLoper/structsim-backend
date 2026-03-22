@@ -117,6 +117,30 @@ class ConfigService:
             raise NotFoundError(name, id)
         return True
 
+    def get_post_process_modes(self) -> List[Dict[str, Any]]:
+        """
+        获取后处理方式配置。
+
+        当前开发环境暂时无法接入外部平台，这里先通过正式接口返回 mock 数据。
+        后续接入其他平台时，只需要替换这里的数据来源，前端调用路径保持不变。
+        """
+        return [
+            {
+                "code": "18",
+                "name": "Other",
+                "is_default": 1,
+                "source": "mock",
+                "remark": "默认后处理方式",
+            },
+            {
+                "code": "35",
+                "name": "RF_AT_XX",
+                "is_default": 0,
+                "source": "mock",
+                "remark": "特殊后处理方式示例",
+            },
+        ]
+
     # ============ 项目配置 ============
     def get_projects(self, user_id: Optional[int] = None) -> List[Dict]:
         """
@@ -513,4 +537,3 @@ class ConfigService:
 
 # 单例实例
 config_service = ConfigService()
-

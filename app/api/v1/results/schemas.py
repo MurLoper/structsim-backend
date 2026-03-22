@@ -11,7 +11,7 @@ class RoundsQueryParams(BaseModel):
     """轮次查询参数"""
     page: int = Field(1, ge=1, description="页码")
     page_size: int = Field(100, ge=1, le=500, description="每页数量，最大500")
-    status: Optional[int] = Field(None, description="状态筛选: 1=待处理,2=运行中,3=成功,4=失败")
+    status: Optional[int] = Field(None, description="状态筛选: 0=未开始,1=运行中,2=完成,3=失败")
 
 
 class SimTypeResultResponse(BaseModel):
@@ -64,6 +64,6 @@ class RoundsPaginatedResponse(BaseModel):
 
 class UpdateStatusRequest(BaseModel):
     """更新状态请求"""
-    status: int = Field(..., ge=1, le=4, description="状态: 1=待处理,2=运行中,3=成功,4=失败")
+    status: int = Field(..., ge=0, le=7, description="状态: 0=未开始,1=运行中,2=完成,3=失败,4=草稿,5=取消,6=启动中,7=小模块完成")
     progress: Optional[int] = Field(None, ge=0, le=100, description="进度百分比")
     error_msg: Optional[str] = Field(None, description="错误信息")

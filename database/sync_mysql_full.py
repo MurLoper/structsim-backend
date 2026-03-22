@@ -21,10 +21,12 @@ try:
     from .export_mysql import build_output_file, export_database, parse_csv
     from .import_mysql import import_database
     from .migrations.user_identity_upgrade import upgrade_identity_schema
+    from .migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
 except ImportError:
     from export_mysql import build_output_file, export_database, parse_csv  # pyright: ignore[reportImplicitRelativeImport]
     from import_mysql import import_database  # pyright: ignore[reportImplicitRelativeImport]
     from migrations.user_identity_upgrade import upgrade_identity_schema  # pyright: ignore[reportImplicitRelativeImport]
+    from migrations.order_condition_opti_upgrade import upgrade_order_condition_schema  # pyright: ignore[reportImplicitRelativeImport]
 
 
 
@@ -66,6 +68,8 @@ def main() -> int:
     if not args.skip_identity_upgrade:
         print('预处理: 升级源库用户身份字段...')
         upgrade_identity_schema(args.source_db_url, verbose=True)
+        print('预处理: 升级源库订单 condition 表结构...')
+        upgrade_order_condition_schema(args.source_db_url, verbose=True)
 
     exported = export_database(
 
@@ -98,6 +102,8 @@ def main() -> int:
     if ok and not args.skip_identity_upgrade:
         print('后处理: 升级目标库用户身份字段...')
         upgrade_identity_schema(args.target_db_url, verbose=True)
+        print('后处理: 升级目标库订单 condition 表结构...')
+        upgrade_order_condition_schema(args.target_db_url, verbose=True)
 
     if not ok:
 

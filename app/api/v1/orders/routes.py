@@ -69,6 +69,17 @@ def get_order(order_id: int):
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
 
+@orders_bp.route('/<int:order_id>/conditions', methods=['GET'])
+@jwt_required()
+def get_order_conditions(order_id: int):
+    """获取订单下的 condition 运行实体列表"""
+    try:
+        result = orders_service.get_order_conditions(order_id)
+        return success(result)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
 @orders_bp.route('', methods=['POST'])
 @jwt_required()
 def create_order():
@@ -121,6 +132,22 @@ def delete_order(order_id: int):
 def get_order_result(order_id: int):
     """获取订单结果"""
     pass
+
+
+@orders_bp.route('/submit-limits', methods=['GET'])
+@jwt_required()
+def get_submit_limits():
+    """获取当前用户提单限制（单次/单日）与当日已用轮次"""
+    try:
+        identity = get_jwt_identity()
+        if isinstance(identity, dict):
+            user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
+        else:
+            user_identity = identity
+        data = orders_service.get_submit_limits(str(user_identity))
+        return success(data)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
 
 
 @orders_bp.route('/statistics', methods=['GET'])
@@ -266,4 +293,3 @@ def validate_params():
         return success(result)
     except Exception as e:
         return error(ErrorCode.INTERNAL_ERROR, str(e), http_status=500)
-
