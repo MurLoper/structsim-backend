@@ -1,5 +1,5 @@
 -- StructSim DB Export
--- ExportedAt: 2026-03-22T18:04:23.415507
+-- ExportedAt: 2026-03-22T23:05:47.240806
 -- TableCount: 41
 
 SET NAMES utf8mb4;
@@ -98,12 +98,12 @@ CREATE TABLE `cond_out_group_output_rels` (
   PRIMARY KEY (`id`),
   KEY `cond_out_group_id` (`cond_out_group_id`),
   KEY `output_def_id` (`output_def_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data: cond_out_group_output_rels
 INSERT INTO `cond_out_group_output_rels` (`id`, `cond_out_group_id`, `output_def_id`, `sort`, `created_at`, `set_name`, `component`, `step_name`, `section_point`, `special_output_set`, `description`, `weight`, `multiple`, `lower_limit`, `upper_limit`, `target_type`, `target_value`) VALUES
-(4, 1, 2, 100, 1773929490, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL),
-(5, 1, 2, 100, 1773929490, 'push', '35', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL);
+(6, 1, 2, 100, 1774185138, 'push', '18', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL),
+(7, 1, 2, 100, 1774185138, 'push', '18', NULL, NULL, NULL, NULL, 1.0, 1.0, 0.0, NULL, 1, NULL);
 
 -- Table: cond_out_sets
 DROP TABLE IF EXISTS `cond_out_sets`;
@@ -189,7 +189,7 @@ CREATE TABLE `condition_output_groups` (
 
 -- Data: condition_output_groups
 INSERT INTO `condition_output_groups` (`id`, `name`, `description`, `valid`, `sort`, `created_at`, `updated_at`, `project_id`, `alg_type`) VALUES
-(1, '常规输出', '常规输出', 1, 100, 1773406992, 1773929490, NULL, 0);
+(1, '常规输出', '常规输出', 1, 100, 1773406992, 1774185137, NULL, 0);
 
 -- Table: departments
 DROP TABLE IF EXISTS `departments`;
@@ -3479,7 +3479,7 @@ CREATE TABLE `users` (
 
 -- Data: users
 INSERT INTO `users` (`id`, `email`, `password_hash`, `avatar`, `phone`, `department`, `role_ids`, `valid`, `preferences`, `recent_project_ids`, `recent_sim_type_ids`, `last_login_at`, `created_at`, `updated_at`, `domain_account`, `lc_user_id`, `user_name`, `real_name`, `daily_round_limit`) VALUES
-(10001, 'a00012346@company.local', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', NULL, NULL, 'mock', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1774154802, 1769962885, 1774126002, 'a00012346', NULL, 'a00012346', 'a00012346', 500),
+(10001, 'a00012346@company.local', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', NULL, NULL, 'mock', '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1774154802, 1769962885, 1774179507, 'a00012346', NULL, 'aili', 'aili', 500),
 (10002, 'zhangsan@example.com', 'scrypt:32768:8:1$tHDVGtDqrZGS8XN0$f8e8efd924bc782a2cd22e585ac51c683cead0080156c110217aa337dd6ac105cf64cd706d94d52175c2c767d5c5d623cc46e3ee4fbe22339a0dd7b3403392b3', NULL, NULL, '研发部', '[2]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'z00012347', NULL, '张三', '张三', 500),
 (10003, 'lisi@example.com', 'scrypt:32768:8:1$Xa4rTg1Y4wIYOCXP$b3d14f878599a71274d31c9f90be2a6da7c382d4e30509c96053bf12504bb511ef39a65819e6c0953ad4d3d5dbbcdf3bff068de977364757d28b6d3c6f0a85ba', NULL, NULL, '研发部', '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'l00012348', NULL, '李四', '李四', 500),
 (10004, 'wangwu@example.com', 'scrypt:32768:8:1$qVVj1W8ucWefiatr$7d08be611b4dd3f2084d581f16bfc75853bb85efb02aac95474b5a572ada8ec17bd25a6632911b15790d727484b4c4c15da4818591792a73701a03cf91520dbd', NULL, NULL, '测试部', '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'w00012349', NULL, '王五', '王五', 500),

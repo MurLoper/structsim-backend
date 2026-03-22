@@ -134,31 +134,57 @@ def get_latest_export_file() -> Path | None:
     return files[0] if files else None
 
 
+def apply_fk_statements(conn, fk_sql_file: str) -> None:
+    fk_path = Path(fk_sql_file)
+    if not fk_path.exists():
+        print(f'警告: 外键恢复文件不存在，已跳过: {fk_path}')
+        return
+
+    fk_statements = split_sql_statements(fk_path.read_text(encoding='utf-8'))
+    print(f'开始恢复外键: {fk_path} ({len(fk_statements)} 条)')
+    for stmt in fk_statements:
+        conn.exec_driver_sql(stmt)
+        conn.commit()
+    print('外键恢复完成')
+
+
 def import_database(
-    sql_file: str,
+    sql_file: str | None,
     db_url: str,
     stop_on_error: bool = True,
     fk_sql_file: str | None = None,
     required_tables: list[str] | None = None,
     drop_all_first: bool = False,
+    fk_only: bool = False,
 ) -> bool:
-    sql_path = Path(sql_file)
-    if not sql_path.exists():
-        print(f'错误: SQL 文件不存在: {sql_path}')
-        return False
+    sql_path: Path | None = None
+    statements: List[str] = []
 
-    content = sql_path.read_text(encoding='utf-8')
-    statements = split_sql_statements(content)
-    if not statements:
-        print('错误: SQL 文件为空或无可执行语句')
+    if sql_file:
+        sql_path = Path(sql_file)
+        if not sql_path.exists():
+            print(f'错误: SQL 文件不存在: {sql_path}')
+            return False
+
+        content = sql_path.read_text(encoding='utf-8')
+        statements = split_sql_statements(content)
+        if not statements:
+            print('错误: SQL 文件为空或无可执行语句')
+            return False
+
+    if not statements and not fk_sql_file:
+        print('错误: 请提供可执行的 --sql-file，或使用 --fk-sql-file 配合 --fk-only')
         return False
 
     print('=' * 60)
-    print('导入数据库')
+    print('导入数据库' if not fk_only else '恢复外键')
     print('=' * 60)
     print(f'目标库: {db_url}')
-    print(f'SQL文件: {sql_path}')
-    print(f'语句数: {len(statements)}')
+    if statements and sql_path is not None:
+        print(f'SQL文件: {sql_path}')
+        print(f'语句数: {len(statements)}')
+    if fk_only and fk_sql_file:
+        print(f'外键文件: {fk_sql_file}')
 
     required_tables = required_tables or []
     engine = create_engine(db_url)
@@ -168,34 +194,26 @@ def import_database(
         conn.execute(text('SET FOREIGN_KEY_CHECKS=0'))
         conn.commit()
         try:
-            if drop_all_first:
+            if drop_all_first and statements:
                 print('先清空目标库所有表...')
                 drop_all_tables(conn)
 
-            for idx, stmt in enumerate(statements, 1):
-                try:
-                    conn.exec_driver_sql(stmt)
-                    conn.commit()
-                    if idx % 50 == 0 or idx == len(statements):
-                        print(f'已执行: {idx}/{len(statements)}')
-                except Exception as exc:
-                    failed += 1
-                    conn.rollback()
-                    print(f'[失败] {idx}/{len(statements)}: {str(exc)[:200]}')
-                    if stop_on_error:
-                        raise
-
-            if fk_sql_file:
-                fk_path = Path(fk_sql_file)
-                if fk_path.exists():
-                    fk_statements = split_sql_statements(fk_path.read_text(encoding='utf-8'))
-                    print(f'开始恢复外键: {fk_path} ({len(fk_statements)} 条)')
-                    for idx, stmt in enumerate(fk_statements, 1):
+            if statements and not fk_only:
+                for idx, stmt in enumerate(statements, 1):
+                    try:
                         conn.exec_driver_sql(stmt)
                         conn.commit()
-                    print('外键恢复完成')
-                else:
-                    print(f'⚠️ 外键恢复文件不存在，已跳过: {fk_path}')
+                        if idx % 50 == 0 or idx == len(statements):
+                            print(f'已执行: {idx}/{len(statements)}')
+                    except Exception as exc:
+                        failed += 1
+                        conn.rollback()
+                        print(f'[失败] {idx}/{len(statements)}: {str(exc)[:200]}')
+                        if stop_on_error:
+                            raise
+
+            if fk_sql_file:
+                apply_fk_statements(conn, fk_sql_file)
         finally:
             conn.execute(text('SET FOREIGN_KEY_CHECKS=1'))
             conn.commit()
@@ -222,6 +240,7 @@ def main() -> int:
     parser.add_argument('--db-url', default=os.getenv('DATABASE_URL'), help='目标数据库连接 URL，默认读取 DATABASE_URL')
     parser.add_argument('--fk-sql-file', default=None, help='导入完成后执行的外键恢复 SQL 文件路径')
     parser.add_argument('--apply-latest-fk', action='store_true', help='自动应用与 --latest SQL 对应的 *_foreign_keys.sql')
+    parser.add_argument('--fk-only', action='store_true', help='仅执行外键恢复，不重新导入主 SQL')
     parser.add_argument('--required-tables', default='upload_files,upload_chunks', help='导入后必须存在的关键表，逗号分隔')
     parser.add_argument('--drop-all-first', action='store_true', help='导入前先删除目标库全部业务表（用于全量覆盖）')
     parser.add_argument('--continue-on-error', action='store_true', help='遇错继续执行，不中断')
@@ -240,13 +259,17 @@ def main() -> int:
             return 1
         sql_file = str(latest)
 
-    if not sql_file:
+    if not sql_file and not args.fk_only:
         print('错误: 请提供 --sql-file 或使用 --latest')
         return 1
 
     fk_sql_file = args.fk_sql_file
     if args.apply_latest_fk and latest is not None:
         fk_sql_file = str(latest.with_name(f'{latest.stem}_foreign_keys.sql'))
+
+    if args.fk_only and not fk_sql_file:
+        print('错误: --fk-only 模式下必须提供 --fk-sql-file，或配合 --latest --apply-latest-fk 使用')
+        return 1
 
     required_tables = parse_csv(args.required_tables)
 
@@ -257,6 +280,7 @@ def main() -> int:
         fk_sql_file=fk_sql_file,
         required_tables=required_tables,
         drop_all_first=args.drop_all_first,
+        fk_only=args.fk_only,
     )
     return 0 if ok else 2
 

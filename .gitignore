@@ -62,6 +62,7 @@ dist/
 
 # 迁移文件（根据需要）
 # migrations/versions/*.py
+database/export_backup/
 
 # 上传文件（如果有）
 uploads/

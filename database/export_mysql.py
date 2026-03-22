@@ -184,14 +184,17 @@ def export_database(
 
         f.write('SET FOREIGN_KEY_CHECKS=1;\n')
 
-    if strip_fk and fk_restore_statements:
+    if strip_fk:
         fk_file = output_file.with_name(f'{output_file.stem}_foreign_keys.sql')
         with open(fk_file, 'w', encoding='utf-8', newline='\n') as fk:
             fk.write('-- StructSim FK Restore SQL\n')
             fk.write(f'-- ExportedAt: {datetime.now().isoformat()}\n\n')
             fk.write('SET FOREIGN_KEY_CHECKS=0;\n')
-            for stmt in fk_restore_statements:
-                fk.write(f'{stmt}\n')
+            if fk_restore_statements:
+                for stmt in fk_restore_statements:
+                    fk.write(f'{stmt}\n')
+            else:
+                fk.write('-- 当前最新导出未生成额外外键恢复语句，此文件保留为空占位文件，避免误用历史外键脚本。\n')
             fk.write('SET FOREIGN_KEY_CHECKS=1;\n')
 
     return output_file

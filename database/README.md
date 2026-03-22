@@ -1,57 +1,47 @@
 # database 目录说明
 
+当前目录只保留离线同步口径，和 `database/MIGRATION.md` 保持一致。
+
 ## 核心脚本
 
-- `export_mysql.py`：导出完整 MySQL，默认剥离外键，并生成配套的 `*_foreign_keys.sql`
-- `import_mysql.py`：导入 SQL 到目标库，支持按需清空目标库并恢复外键
-- `sync_mysql_full.py`：一键全量同步，流程为“导出源库 -> 覆盖导入目标库”
-- `migrations/`：保留需要单独执行的补库脚本和 Python 升级脚本
-- `export/`：默认导出目录，保存最新导出的 SQL 文件
+- `export_mysql.py`：从开发环境导出最新完整库，生成 `full_latest.sql`
+- `import_mysql.py`：向目标库导入主 SQL，或单独执行外键恢复
+- `export/`：导出目录，保存本次要交付到内网环境的 SQL 文件
+- `migrations/`：保留历史补库脚本，仅在需要手工排障时参考
 
-## 当前迁移脚本
+## 离线同步 3 步
 
-- `migrations/add_upload_chunks_table.sql`：补上传分片表
-- `migrations/add_order_condition_opti_table.sql`：补 `orders.opt_issue_id`、`orders.condition_summary` 和 `order_condition_opti`
-- `migrations/user_identity_upgrade.py`：补用户身份字段、角色资源限制字段
-- `migrations/order_condition_opti_upgrade.py`：补订单 condition 运行实体相关表结构
+### 第 1 步：开发环境更新导出包
 
-## 推荐链路
-
-1. 源库先执行自动升级或手工迁移，确保 schema 已补齐
-2. 用 `export_mysql.py` 导出最新完整库
-3. 用 `sync_mysql_full.py` 覆盖同步到目标库，或用 `import_mysql.py` 导入已有 SQL
-
-## 自动升级开关
-
-- `AUTO_IDENTITY_UPGRADE=true`：应用启动时自动检查并补用户身份相关字段
-- `AUTO_ORDER_CONDITION_UPGRADE=true`：应用启动时自动检查并补订单 condition 相关字段和表
-
-两个开关默认开启，仅在 MySQL 主库上生效，SQLite 开发库会自动跳过。
-
-## 常用命令
-
-导出当前库：
+先备份 `database/export/` 下需要保留的历史 SQL，再清理旧的 `database/export/*.sql`，然后执行：
 
 ```bash
-python database/export_mysql.py --source-db-url "mysql+pymysql://USER:PASS@HOST:3306/DB" --output-file "database/export/full_latest.sql"
+python database/export_mysql.py --source-db-url "mysql+pymysql://SOURCE_USER:SOURCE_PASS@SOURCE_HOST:3306/SOURCE_DB" --output-file "database/export/full_latest.sql"
 ```
 
-导入到目标库：
+执行完成后，交付这两个文件即可：
+
+- `database/export/full_latest.sql`
+- `database/export/full_latest_foreign_keys.sql`
+
+### 第 2 步：离线环境覆盖导入到目标库
+
+目标数据库需要提前创建好。将第 1 步生成的 SQL 带到内网环境后执行：
 
 ```bash
-python database/import_mysql.py --db-url "mysql+pymysql://USER:PASS@HOST:3306/DB" --sql-file "database/export/full_latest.sql"
+python database/import_mysql.py --db-url "mysql+pymysql://TARGET_USER:TARGET_PASS@TARGET_HOST:3306/TARGET_DB" --sql-file "database/export/full_latest.sql" --drop-all-first
 ```
 
-覆盖同步到目标库：
+### 第 3 步：按需恢复外键
+
+如果本次需要恢复外键，再执行：
 
 ```bash
-python database/sync_mysql_full.py --source-db-url "mysql+pymysql://SOURCE_USER:PASS@SOURCE_HOST:3306/SOURCE_DB" --target-db-url "mysql+pymysql://TARGET_USER:PASS@TARGET_HOST:3306/TARGET_DB" --output-file "database/export/full_sync_latest.sql"
+python database/import_mysql.py --db-url "mysql+pymysql://TARGET_USER:TARGET_PASS@TARGET_HOST:3306/TARGET_DB" --fk-sql-file "database/export/full_latest_foreign_keys.sql" --fk-only
 ```
 
-手工补订单 condition 相关表结构：
+## 说明
 
-```bash
-python database/migrations/order_condition_opti_upgrade.py --db-url "mysql+pymysql://USER:PASS@HOST:3306/DB"
-```
-
-更多迁移说明见 `database/MIGRATION.md`。
+- 默认以“先完成结构和数据覆盖导入”为主，不强制恢复外键
+- `full_latest_foreign_keys.sql` 可能是空占位文件；如果当前导出未生成额外外键恢复语句，属于正常现象
+- 更详细的说明见 `database/MIGRATION.md`
