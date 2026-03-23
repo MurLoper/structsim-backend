@@ -1,8 +1,7 @@
 """
 权限与菜单模型。
-
-用户身份以 `domain_account` 作为业务唯一标识。
-数据库仍保留自增 `id` 作为内部代理键，避免一次性改动所有外键关系。
+用户身份统一使用 `domain_account` 作为业务唯一标识，数据库仍保留自增 `id`
+作为内部代理键，避免一次性改动所有外键关系。
 """
 from datetime import datetime
 
@@ -33,12 +32,18 @@ class User(db.Model, ToDictMixin):
         index=True,
         comment="外部平台用户ID",
     )
-    user_name = db.Column(db.String(100), comment="用户展示名")
+    user_name = db.Column(db.String(100), comment="用户显示名")
     real_name = db.Column(db.String(100), comment="真实姓名")
     password_hash = db.Column(db.String(256), comment="密码哈希")
     avatar = db.Column(db.String(255), comment="头像URL")
     phone = db.Column(db.String(20), comment="手机号")
-    department = db.Column(db.String(100), comment="部门")
+    department_id = db.Column(
+        db.Integer,
+        db.ForeignKey("departments.id"),
+        nullable=True,
+        comment="部门ID",
+    )
+    department_ref = db.relationship("Department", lazy="joined", foreign_keys=[department_id])
 
     role_ids = db.Column(db.JSON, comment="角色ID列表")
     valid = db.Column(db.SmallInteger, default=1, comment="1=有效,0=禁用")
@@ -60,8 +65,12 @@ class User(db.Model, ToDictMixin):
         onupdate=lambda: int(datetime.utcnow().timestamp()),
     )
 
+    @property
+    def department_name(self):
+        return self.department_ref.name if self.department_ref else None
+
     def to_public_dict(self):
-        """公开用户信息，统一以 domain_account 作为主键"""
+        """公开用户信息，统一使用 domain_account 作为主键"""
         display_name = self.real_name or self.user_name or self.domain_account
         return {
             "id": self.domain_account,
@@ -74,9 +83,12 @@ class User(db.Model, ToDictMixin):
             "real_name": self.real_name,
             "realName": self.real_name,
             "display_name": display_name,
+            "displayName": display_name,
             "email": self.email,
             "avatar": self.avatar,
-            "department": self.department,
+            "department_id": self.department_id,
+            "departmentId": self.department_id,
+            "department": self.department_name,
         }
 
     def set_password(self, password: str):

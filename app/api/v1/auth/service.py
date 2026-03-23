@@ -13,6 +13,7 @@ from flask_jwt_extended import create_access_token
 from app.common.errors import BusinessError, NotFoundError
 from app.constants import ErrorCode
 from app.models.auth import Menu, Permission, Role, User
+from app.models.config import Department
 from .repository import auth_repository
 
 
@@ -102,6 +103,33 @@ class AuthService:
         return normalized or None
 
     @staticmethod
+    def _resolve_department_id(
+        department_id: Any = None,
+        department_name: Optional[str] = None,
+    ) -> Optional[int]:
+        if department_id not in (None, ""):
+            try:
+                resolved_id = int(department_id)
+            except (TypeError, ValueError):
+                resolved_id = None
+            if resolved_id:
+                department = Department.query.filter(
+                    Department.id == resolved_id, Department.valid == 1
+                ).first()
+                if department:
+                    return department.id
+
+        normalized_name = str(department_name or "").strip()
+        if not normalized_name:
+            return None
+
+        department = Department.query.filter(
+            Department.valid == 1,
+            (Department.name == normalized_name) | (Department.code == normalized_name),
+        ).first()
+        return department.id if department else None
+
+    @staticmethod
     def _is_success_payload(payload: Dict[str, Any]) -> bool:
         if not isinstance(payload, dict):
             return False
@@ -117,6 +145,7 @@ class AuthService:
     def _serialize_user(user: User, roles: List[Role], permission_codes: List[str]) -> Dict[str, Any]:
         limits = AuthService._merge_role_limits(roles)
         role_ids = list(user.role_ids or [])
+        department_name = user.department_name
         return {
             "id": user.domain_account,
             "domainAccount": user.domain_account,
@@ -126,7 +155,8 @@ class AuthService:
             "email": user.email,
             "avatar": user.avatar,
             "phone": user.phone,
-            "department": user.department,
+            "departmentId": user.department_id,
+            "department": department_name,
             "roleIds": role_ids,
             "roleIdList": role_ids,
             "roleCodes": [role.code for role in roles if role.code],
@@ -149,6 +179,9 @@ class AuthService:
         sso_enabled = bool(current_app.config.get("AUTH_ENABLE_SSO", False))
         sso_login_url = current_app.config.get("AUTH_SSO_LOGIN_URL", "")
         redirect_uri = current_app.config.get("AUTH_SSO_REDIRECT_URI", "")
+        test_account_bypass_enabled = bool(
+            current_app.config.get("AUTH_ALLOW_TEST_ACCOUNT_BYPASS", False)
+        )
         if sso_enabled and sso_login_url and redirect_uri:
             joiner = "&" if "?" in sso_login_url else "?"
             sso_redirect_url = f"{sso_login_url}{joiner}redirect={redirect_uri}"
@@ -158,10 +191,30 @@ class AuthService:
         return {
             "sso_enabled": sso_enabled,
             "sso_redirect_url": sso_redirect_url,
+            "test_account_bypass_enabled": test_account_bypass_enabled,
             "uid_expire_seconds": int(
                 current_app.config.get("AUTH_COMPANY_UID_EXPIRE_SECONDS", 1800)
             ),
         }
+
+    def _is_test_account_bypass_allowed(self, domain_account: str) -> bool:
+        if not bool(current_app.config.get("AUTH_ALLOW_TEST_ACCOUNT_BYPASS", False)):
+            return False
+        allowlist = current_app.config.get("AUTH_TEST_BYPASS_USERS", []) or []
+        normalized_domain = self._normalize_domain_account(domain_account)
+        return normalized_domain in set(allowlist)
+
+    def _login_by_existing_db_user(self, domain_account: str) -> Dict[str, Any]:
+        normalized_domain = self._normalize_domain_account(domain_account)
+        user = self.repository.get_user_by_domain_account(normalized_domain)
+        if not user:
+            raise BusinessError(
+                ErrorCode.VALIDATION_ERROR,
+                "测试账号直登已开启，但该账号不在当前数据库中",
+            )
+        if user.valid != 1:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
+        return self._issue_login_result(user)
 
     def _verify_password_by_company_api(self, domain_account: str, password: str) -> Dict[str, Any]:
         verify_url = current_app.config.get("AUTH_COMPANY_PASSWORD_VERIFY_URL", "")
@@ -173,6 +226,7 @@ class AuthService:
                     "real_name": domain_account,
                     "email": f"{domain_account}@company.local",
                     "department": "mock",
+                    "department_id": self._resolve_department_id(department_name="mock"),
                 }
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "未配置公司账号密码校验接口")
 
@@ -253,7 +307,11 @@ class AuthService:
             or normalized_domain
         )
         email = info.get("email") or f"{normalized_domain}@company.local"
-        department = info.get("department")
+        department_name = info.get("department") or info.get("departmentName")
+        department_id = self._resolve_department_id(
+            department_id=info.get("department_id") or info.get("departmentId"),
+            department_name=department_name,
+        )
         lc_user_id = (
             info.get("lc_user_id")
             or info.get("lcUserId")
@@ -269,7 +327,7 @@ class AuthService:
             "user_name": str(user_name) if user_name else None,
             "real_name": str(real_name) if real_name else normalized_domain,
             "email": str(email),
-            "department": department,
+            "department_id": department_id,
             "valid": 1,
         }
 
@@ -289,6 +347,9 @@ class AuthService:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "当前已启用 SSO，请走 SSO 登录")
 
         normalized_domain = self._normalize_domain_account(domain_account)
+        if self._is_test_account_bypass_allowed(normalized_domain):
+            return self._login_by_existing_db_user(normalized_domain)
+
         info = self._verify_password_by_company_api(normalized_domain, password)
         payload = self._build_user_payload(normalized_domain, info)
 
@@ -305,7 +366,7 @@ class AuthService:
                 legacy.lc_user_id = payload.get("lc_user_id")
                 legacy.user_name = payload["user_name"]
                 legacy.real_name = payload["real_name"]
-                legacy.department = payload["department"]
+                legacy.department_id = payload.get("department_id")
                 legacy.valid = 1
                 user = legacy
                 self.repository.update_last_login(user, int(time.time()))

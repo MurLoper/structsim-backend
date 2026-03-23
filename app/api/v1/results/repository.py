@@ -7,7 +7,8 @@ from typing import List, Optional, Tuple
 from sqlalchemy import func, inspect
 
 from app.extensions import db
-from app.models.config import SimType
+from app.models.config import FoldType, SimType
+from app.models.order import Order
 from app.models.order_condition_opti import OrderConditionOpti
 from app.models.result import Round, SimTypeResult
 
@@ -93,6 +94,10 @@ class ResultsRepository:
         sim_type = self.session.get(SimType, sim_type_id)
         return sim_type.name if sim_type else None
 
+    def get_fold_type_name(self, fold_type_id: int) -> Optional[str]:
+        fold_type = self.session.get(FoldType, fold_type_id)
+        return fold_type.name if fold_type else None
+
     def get_result_statistics(self, sim_type_result_id: int) -> dict:
         result = self.get_sim_type_result_by_id(sim_type_result_id)
         if not result:
@@ -126,6 +131,9 @@ class ResultsRepository:
         if not self._has_order_condition_opti_table():
             return None
         return self.session.get(OrderConditionOpti, order_condition_id)
+
+    def get_order_by_id(self, order_id: int) -> Optional[Order]:
+        return self.session.get(Order, order_id)
 
 
 results_repository = ResultsRepository()

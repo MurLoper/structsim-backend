@@ -15,14 +15,14 @@ from sqlalchemy import create_engine, inspect, text
 
 
 TARGET_STATUS_DEFS = [
-    {'id': 0, 'name': '未开始', 'code': 'NOT_STARTED', 'type': 'PROCESS', 'color': '#6b7280', 'icon': 'Clock', 'sort': 0},
-    {'id': 1, 'name': '运行中', 'code': 'RUNNING', 'type': 'PROCESS', 'color': '#f59e0b', 'icon': 'Hourglass', 'sort': 10},
-    {'id': 2, 'name': '已完成', 'code': 'COMPLETED', 'type': 'FINAL', 'color': '#4ec110', 'icon': 'CheckCircle', 'sort': 20},
-    {'id': 3, 'name': '运行失败', 'code': 'FAILED', 'type': 'FINAL', 'color': '#FF0000', 'icon': 'XCircle', 'sort': 30},
-    {'id': 4, 'name': '草稿箱', 'code': 'DRAFT', 'type': 'PROCESS', 'color': '#8798b0', 'icon': 'RotateCcw', 'sort': 40},
-    {'id': 5, 'name': '手动终止', 'code': 'CANCELLED', 'type': 'FINAL', 'color': '#595040', 'icon': 'Ban', 'sort': 50},
-    {'id': 6, 'name': '启动中', 'code': 'STARTING', 'type': 'PROCESS', 'color': '#edaf02', 'icon': 'Timer', 'sort': 60},
-    {'id': 7, 'name': '小模块完成', 'code': 'PARTIAL_COMPLETED', 'type': 'PROCESS', 'color': '#84cc16', 'icon': 'CircleCheck', 'sort': 70},
+    {'id': 0, 'name': '未开始', 'code': 'NOT_STARTED', 'type': 'PROCESS', 'color_tag': '#6b7280', 'icon': 'Clock', 'sort': 0},
+    {'id': 1, 'name': '运行中', 'code': 'RUNNING', 'type': 'PROCESS', 'color_tag': '#f59e0b', 'icon': 'Hourglass', 'sort': 10},
+    {'id': 2, 'name': '已完成', 'code': 'COMPLETED', 'type': 'FINAL', 'color_tag': '#4ec110', 'icon': 'CheckCircle', 'sort': 20},
+    {'id': 3, 'name': '运行失败', 'code': 'FAILED', 'type': 'FINAL', 'color_tag': '#FF0000', 'icon': 'XCircle', 'sort': 30},
+    {'id': 4, 'name': '草稿箱', 'code': 'DRAFT', 'type': 'PROCESS', 'color_tag': '#8798b0', 'icon': 'RotateCcw', 'sort': 40},
+    {'id': 5, 'name': '手动终止', 'code': 'CANCELLED', 'type': 'FINAL', 'color_tag': '#595040', 'icon': 'Ban', 'sort': 50},
+    {'id': 6, 'name': '启动中', 'code': 'STARTING', 'type': 'PROCESS', 'color_tag': '#edaf02', 'icon': 'Timer', 'sort': 60},
+    {'id': 7, 'name': '小模块完成', 'code': 'PARTIAL_COMPLETED', 'type': 'PROCESS', 'color_tag': '#84cc16', 'icon': 'CircleCheck', 'sort': 70},
 ]
 
 
@@ -45,6 +45,28 @@ def upgrade_status_defs_schema(db_url: str, verbose: bool = True) -> None:
     with engine.connect() as conn:
         # 关键：移除 AUTO_INCREMENT，允许显式写入 id=0
         conn.execute(text("ALTER TABLE status_defs MODIFY COLUMN id INT NOT NULL COMMENT '状态ID'"))
+        column_names = {
+            str(column.get('name'))
+            for column in inspect(engine).get_columns('status_defs')
+            if column.get('name')
+        }
+        if 'color_tag' not in column_names and 'color' in column_names:
+            conn.execute(
+                text(
+                    "ALTER TABLE status_defs CHANGE COLUMN color color_tag VARCHAR(100) NULL COMMENT '颜色样式'"
+                )
+            )
+            column_names = {
+                str(column.get('name'))
+                for column in inspect(engine).get_columns('status_defs')
+                if column.get('name')
+            }
+        if 'color_tag' not in column_names:
+            conn.execute(
+                text(
+                    "ALTER TABLE status_defs ADD COLUMN color_tag VARCHAR(100) NULL COMMENT '颜色样式'"
+                )
+            )
 
         rows = conn.execute(text('SELECT id, code FROM status_defs')).fetchall()
         temp_seed = -1000
@@ -85,6 +107,7 @@ def upgrade_status_defs_schema(db_url: str, verbose: bool = True) -> None:
                         SET id = :id,
                             name = :name,
                             type = :type,
+                            color_tag = :color_tag,
                             icon = :icon,
                             valid = 1,
                             sort = :sort,
@@ -95,32 +118,27 @@ def upgrade_status_defs_schema(db_url: str, verbose: bool = True) -> None:
                     'id': item['id'],
                     'name': item['name'],
                     'type': item['type'],
+                    'color_tag': item['color_tag'],
                     'icon': item['icon'],
                     'sort': item['sort'],
                     'updated_at': now_ts,
                     'code': item['code'],
                 }
-                if color_col:
-                    update_sql = update_sql.replace('icon = :icon,', f"{color_col} = :color,\n                            icon = :icon,")
-                    params['color'] = item['color']
                 conn.execute(text(update_sql), params)
             else:
-                insert_cols = ['id', 'name', 'code', 'type']
-                insert_vals = [':id', ':name', ':code', ':type']
+                insert_cols = ['id', 'name', 'code', 'type', 'color_tag']
+                insert_vals = [':id', ':name', ':code', ':type', ':color_tag']
                 params = {
                     'id': item['id'],
                     'name': item['name'],
                     'code': item['code'],
                     'type': item['type'],
+                    'color_tag': item['color_tag'],
                     'icon': item['icon'],
                     'sort': item['sort'],
                     'created_at': now_ts,
                     'updated_at': now_ts,
                 }
-                if color_col:
-                    insert_cols.append(color_col)
-                    insert_vals.append(':color')
-                    params['color'] = item['color']
                 insert_cols.extend(['icon', 'valid', 'sort', 'created_at', 'updated_at'])
                 insert_vals.extend([':icon', '1', ':sort', ':created_at', ':updated_at'])
                 conn.execute(

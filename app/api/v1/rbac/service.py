@@ -7,6 +7,7 @@ from app.common.errors import BusinessError, NotFoundError
 from app.constants import ErrorCode
 from app.extensions import db
 from app.models.auth import Menu, Permission, Role, User
+from app.models.config import Department
 from .repository import (
     menu_repository,
     permission_repository,
@@ -21,6 +22,8 @@ def _normalize_user_payload(data: dict) -> dict:
     payload = dict(data)
     if "roleIds" in payload:
         payload["role_ids"] = payload.pop("roleIds")
+    if "departmentId" in payload:
+        payload["department_id"] = payload.pop("departmentId")
     if "user_id" in payload and "lc_user_id" not in payload:
         payload["lc_user_id"] = payload.get("user_id")
     if payload.get("domain_account"):
@@ -29,6 +32,46 @@ def _normalize_user_payload(data: dict) -> dict:
         payload["user_name"] = "".join(str(payload["user_name"]).split()) or None
     payload.pop("password", None)
     return payload
+
+
+def _resolve_department_id(payload: dict) -> dict:
+    normalized = dict(payload)
+    if "department_id" not in normalized and "department" not in normalized:
+        return normalized
+
+    department_id = normalized.get("department_id")
+    department_name = normalized.get("department")
+
+    if department_id not in (None, ""):
+        try:
+            department_id = int(department_id)
+        except (TypeError, ValueError):
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "部门ID不合法")
+        department = Department.query.filter(
+            Department.id == department_id, Department.valid == 1
+        ).first()
+        if not department:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "部门不存在或已禁用")
+        normalized["department_id"] = department.id
+        normalized.pop("department", None)
+        return normalized
+
+    department_name = str(department_name or "").strip()
+    if not department_name:
+        normalized["department_id"] = None
+        normalized.pop("department", None)
+        return normalized
+
+    department = Department.query.filter(
+        Department.valid == 1,
+        (Department.name == department_name) | (Department.code == department_name),
+    ).first()
+    if not department:
+        raise BusinessError(ErrorCode.VALIDATION_ERROR, "部门不存在，请先在部门配置中维护")
+
+    normalized["department_id"] = department.id
+    normalized.pop("department", None)
+    return normalized
 
 
 def _normalize_role_payload(data: dict) -> dict:
@@ -170,7 +213,8 @@ def _user_to_dict(user: User, roles: List[Role], permissions: List[Permission]) 
         "email": user.email,
         "avatar": user.avatar,
         "phone": user.phone,
-        "department": user.department,
+        "departmentId": user.department_id,
+        "department": user.department_name,
         "roleIds": role_ids,
         "roleIdList": role_ids,
         "roleNames": [role.name for role in user_roles],
@@ -297,7 +341,7 @@ class RbacService:
         return [_user_to_dict(user, roles, permissions) for user in users]
 
     def create_user(self, data: dict) -> Dict:
-        payload = _normalize_user_payload(data)
+        payload = _resolve_department_id(_normalize_user_payload(data))
         if user_repository.find_by_email(payload.get("email")):
             raise BusinessError(ErrorCode.DUPLICATE_RESOURCE, "邮箱已存在")
         if payload.get("domain_account") and user_repository.find_by_domain_account(
@@ -318,7 +362,7 @@ class RbacService:
 
     def update_user(self, domain_account: str, data: dict) -> Dict:
         normalized_identity = str(domain_account).strip().lower()
-        payload = _normalize_user_payload(data)
+        payload = _resolve_department_id(_normalize_user_payload(data))
         target_user = user_repository.find_by_domain_account(normalized_identity)
         if not target_user:
             raise NotFoundError("用户", normalized_identity)

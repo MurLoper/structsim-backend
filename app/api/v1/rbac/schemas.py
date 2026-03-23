@@ -16,6 +16,7 @@ class UserCreate(BaseModel):
     avatar: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
+    department_id: Optional[int] = Field(default=None, ge=1)
     role_ids: Optional[List[int]] = None
     daily_round_limit: Optional[int] = Field(default=None, ge=1)
     valid: Optional[int] = Field(default=1, ge=0, le=1)
@@ -31,6 +32,7 @@ class UserUpdate(BaseModel):
     avatar: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
+    department_id: Optional[int] = Field(default=None, ge=1)
     role_ids: Optional[List[int]] = None
     daily_round_limit: Optional[int] = Field(default=None, ge=1)
     valid: Optional[int] = Field(default=None, ge=0, le=1)

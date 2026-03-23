@@ -33,7 +33,8 @@ def test_rbac_routes_crud(client, app):
     user_resp = client.post(
         '/api/v1/rbac/users',
         json={
-            'username': 'user_test',
+            'domainAccount': 'user_test',
+            'userName': 'user_test',
             'email': 'user_test@example.com',
             'password': 'secret123',
             'roleIds': [role_id],
@@ -49,7 +50,7 @@ def test_rbac_routes_crud(client, app):
 
     update_user = client.put(
         f'/api/v1/rbac/users/{user_id}',
-        json={'name': '新名称'},
+        json={'realName': 'new_name'},
         headers=headers
     )
     assert update_user.get_json()['code'] == ErrorCode.SUCCESS

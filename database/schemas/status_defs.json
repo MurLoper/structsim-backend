@@ -30,7 +30,7 @@
       "primary_key": 0
     },
     {
-      "name": "color",
+      "name": "color_tag",
       "type": "VARCHAR(100)",
       "nullable": true,
       "default": null,

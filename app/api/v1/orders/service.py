@@ -87,32 +87,88 @@ class OrdersService:
             return values[0] * max_iter
         return sum(values) + values[-1] * (max_iter - len(values))
 
-    def _estimate_order_rounds(self, input_json: Optional[dict], opt_param: Optional[dict]) -> int:
-        total = 0
-        if isinstance(input_json, dict):
-            conditions = input_json.get('conditions')
-            if isinstance(conditions, list):
-                for cond in conditions:
-                    if not isinstance(cond, dict):
-                        continue
-                    params = cond.get('params')
-                    if not isinstance(params, dict):
-                        continue
-                    total += self._estimate_rounds_from_opt_params(
-                        params.get('opt_params', params.get('optParams'))
-                    )
-                return total
+    @staticmethod
+    def _dedupe_int_list(values: List[int]) -> List[int]:
+        seen = set()
+        result: List[int] = []
+        for value in values:
+            if value in seen:
+                continue
+            seen.add(value)
+            result.append(value)
+        return result
 
-        if isinstance(opt_param, dict):
-            for cfg in opt_param.values():
-                if not isinstance(cfg, dict):
-                    continue
-                params = cfg.get('params')
-                if not isinstance(params, dict):
-                    continue
-                total += self._estimate_rounds_from_opt_params(
-                    params.get('opt_params', params.get('optParams'))
-                )
+    def _get_input_conditions(self, input_json: Optional[dict]) -> List[Dict[str, Any]]:
+        payload = self._normalize_json_dict(input_json)
+        return self._normalize_json_list(payload.get('conditions'))
+
+    def _sanitize_order_input_json(self, input_json: Optional[dict]) -> Dict[str, Any]:
+        payload = dict(self._normalize_json_dict(input_json))
+        payload.pop('opt_param', None)
+        return payload
+
+    def _build_condition_summary(self, conditions: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+        summary: Dict[str, List[str]] = {}
+        for condition in conditions:
+            fold_type_id = self._to_int(
+                condition.get('foldTypeId', condition.get('fold_type_id')),
+                0,
+            )
+            sim_type_id = self._to_int(
+                condition.get('simTypeId', condition.get('sim_type_id')),
+                0,
+            )
+            fold_type_name = condition.get('foldTypeName', condition.get('fold_type_name'))
+            sim_type_name = condition.get('simTypeName', condition.get('sim_type_name'))
+            fold_label = (
+                str(fold_type_name).strip()
+                if isinstance(fold_type_name, str) and fold_type_name.strip()
+                else f'姿态-{fold_type_id}'
+            )
+            sim_label = (
+                str(sim_type_name).strip()
+                if isinstance(sim_type_name, str) and sim_type_name.strip()
+                else f'仿真类型-{sim_type_id}'
+            )
+            summary.setdefault(fold_label, [])
+            if sim_label not in summary[fold_label]:
+                summary[fold_label].append(sim_label)
+        return summary
+
+    def _derive_order_fields_from_input_json(self, input_json: Optional[dict]) -> Dict[str, Any]:
+        sanitized_input_json = self._sanitize_order_input_json(input_json)
+        conditions = self._get_input_conditions(sanitized_input_json)
+        fold_type_ids = self._dedupe_int_list(
+            [
+                self._to_int(condition.get('foldTypeId', condition.get('fold_type_id')), 0)
+                for condition in conditions
+                if self._to_int(condition.get('foldTypeId', condition.get('fold_type_id')), 0) >= 0
+            ]
+        )
+        sim_type_ids = self._dedupe_int_list(
+            [
+                self._to_int(condition.get('simTypeId', condition.get('sim_type_id')), 0)
+                for condition in conditions
+                if self._to_int(condition.get('simTypeId', condition.get('sim_type_id')), 0) > 0
+            ]
+        )
+        return {
+            'input_json': sanitized_input_json,
+            'conditions': conditions,
+            'fold_type_ids': fold_type_ids,
+            'sim_type_ids': sim_type_ids,
+            'condition_summary': self._build_condition_summary(conditions),
+        }
+
+    def _estimate_order_rounds(self, input_json: Optional[dict]) -> int:
+        total = 0
+        for cond in self._get_input_conditions(input_json):
+            params = cond.get('params')
+            if not isinstance(params, dict):
+                continue
+            total += self._estimate_rounds_from_opt_params(
+                params.get('opt_params', params.get('optParams'))
+            )
         return total
 
     @staticmethod
@@ -271,7 +327,7 @@ class OrdersService:
         end_ts = int(datetime.datetime(now.year, now.month, now.day, 23, 59, 59).timestamp())
         orders = self.repository.get_orders_by_creator_between(str(user_identity), start_ts, end_ts)
         return sum(
-            self._estimate_order_rounds(getattr(order, 'input_json', None), getattr(order, 'opt_param', None))
+            self._estimate_order_rounds(getattr(order, 'input_json', None))
             for order in orders
         )
 
@@ -364,10 +420,11 @@ class OrdersService:
         Returns:
             创建的订单信息
         """
-        order_rounds = self._estimate_order_rounds(
-            order_data.get('input_json'),
-            order_data.get('opt_param'),
-        )
+        derived_fields = self._derive_order_fields_from_input_json(order_data.get('input_json'))
+        if not derived_fields['conditions']:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, 'input_json.conditions 不能为空')
+
+        order_rounds = self._estimate_order_rounds(derived_fields['input_json'])
         limits = self._get_user_submit_limits(str(user_identity))
         if order_rounds > int(limits['max_batch_size']):
             raise BusinessError(
@@ -385,6 +442,13 @@ class OrdersService:
 
         # 准备订单数据
         origin_file = order_data.get('origin_file', {})
+        project_info = self._normalize_json_dict(derived_fields['input_json'].get('projectInfo'))
+        participant_ids = order_data.get('participant_ids')
+        if participant_ids is None:
+            participant_ids = project_info.get('participantIds', [])
+        origin_fold_type_id = order_data.get('origin_fold_type_id')
+        if origin_fold_type_id is None:
+            origin_fold_type_id = project_info.get('originFoldTypeId')
 
         order_dict = {
             'order_no': generate_order_no(),
@@ -394,15 +458,15 @@ class OrdersService:
             'origin_file_name': origin_file.get('name'),
             'origin_file_path': origin_file.get('path'),
             'origin_file_id': origin_file.get('file_id'),
-            'origin_fold_type_id': order_data.get('origin_fold_type_id'),
-            'fold_type_ids': order_data.get('fold_type_ids', []),
-            'participant_uids': order_data.get('participant_ids', []),
+            'origin_fold_type_id': origin_fold_type_id,
+            'fold_type_ids': derived_fields['fold_type_ids'],
+            'participant_uids': participant_ids or [],
             'remark': order_data.get('remark'),
-            'sim_type_ids': order_data.get('sim_type_ids', []),
-            'opt_param': order_data.get('opt_param', {}),
-            'input_json': order_data.get('input_json', {}),
+            'sim_type_ids': derived_fields['sim_type_ids'],
+            'opt_param': None,
+            'input_json': derived_fields['input_json'],
             'opt_issue_id': order_data.get('opt_issue_id'),
-            'condition_summary': order_data.get('condition_summary'),
+            'condition_summary': derived_fields['condition_summary'],
             'workflow_id': order_data.get('workflow_id'),
             'submit_check': order_data.get('submit_check'),
             'client_meta': order_data.get('client_meta'),
@@ -441,10 +505,10 @@ class OrdersService:
         
         # 允许更新的字段（编辑态需要全量更新提单数据）
         allowed_fields = [
-            'remark', 'participant_uids', 'opt_param',
-            'input_json', 'sim_type_ids', 'fold_type_ids',
+            'remark', 'participant_uids',
+            'input_json',
             'origin_file_type', 'origin_file_name', 'origin_file_path', 'origin_file_id',
-            'origin_fold_type_id', 'model_level_id', 'condition_summary',
+            'origin_fold_type_id', 'model_level_id',
             'workflow_id', 'submit_check', 'client_meta', 'opt_issue_id',
         ]
         filtered_data = {
@@ -453,6 +517,13 @@ class OrdersService:
         }
         if 'participant_ids' in update_data and update_data['participant_ids'] is not None:
             filtered_data['participant_uids'] = update_data['participant_ids']
+        if 'input_json' in filtered_data:
+            derived_fields = self._derive_order_fields_from_input_json(filtered_data.get('input_json'))
+            filtered_data['input_json'] = derived_fields['input_json']
+            filtered_data['fold_type_ids'] = derived_fields['fold_type_ids']
+            filtered_data['sim_type_ids'] = derived_fields['sim_type_ids']
+            filtered_data['condition_summary'] = derived_fields['condition_summary']
+        filtered_data['opt_param'] = None
 
         try:
             order = self.repository.update_order(order, filtered_data)

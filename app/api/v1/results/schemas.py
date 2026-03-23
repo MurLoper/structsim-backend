@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class RoundsQueryParams(BaseModel):
     """轮次查询参数"""
     page: int = Field(1, ge=1, description="页码")
-    page_size: int = Field(100, ge=1, le=500, description="每页数量，最大500")
+    page_size: int = Field(100, ge=1, le=20000, description="每页数量，最大20000")
     status: Optional[int] = Field(None, description="状态筛选: 0=未开始,1=运行中,2=完成,3=失败")
 
 

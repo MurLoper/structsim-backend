@@ -61,6 +61,14 @@ class Config:
     AUTH_COMPANY_UID_EXPIRE_SECONDS = int(os.getenv('AUTH_COMPANY_UID_EXPIRE_SECONDS', 1800))
     AUTH_COMPANY_APP_ID = os.getenv('AUTH_COMPANY_APP_ID', '')
     AUTH_COMPANY_SECRET_CREDIT = os.getenv('AUTH_COMPANY_SECRET_CREDIT', '')
+    AUTH_ALLOW_TEST_ACCOUNT_BYPASS = (
+        os.getenv('AUTH_ALLOW_TEST_ACCOUNT_BYPASS', 'false').lower() == 'true'
+    )
+    AUTH_TEST_BYPASS_USERS = [
+        item.strip().lower()
+        for item in os.getenv('AUTH_TEST_BYPASS_USERS', '').split(',')
+        if item.strip()
+    ]
 
     # CORS
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001').split(',')
@@ -95,4 +103,3 @@ config = {
     'testing': TestingConfig,
     'default': DevelopmentConfig
 }
-

@@ -32,7 +32,13 @@ def db_session(app):
 
 @pytest.fixture()
 def user(db_session):
-    user = User(username='tester', email='tester@example.com', valid=1)
+    user = User(
+        domain_account='tester',
+        user_name='tester',
+        real_name='Tester',
+        email='tester@example.com',
+        valid=1,
+    )
     db_session.add(user)
     db_session.commit()
     return user

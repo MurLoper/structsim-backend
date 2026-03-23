@@ -27,28 +27,41 @@ class FakeRole:
         self.name = name
         self.code = code
         self.permission_ids = permission_ids or []
+        self.max_cpu_cores = 192
+        self.max_batch_size = 200
+        self.daily_round_limit_default = 500
+        self.node_list = []
 
     def to_dict(self):
         return {'id': self.id, 'name': self.name, 'code': self.code}
 
 
 class FakeUser:
-    def __init__(self, id, username, email, role_ids=None, valid=1):
+    def __init__(self, id, domain_account, email, role_ids=None, valid=1):
         self.id = id
-        self.username = username
+        self.domain_account = domain_account
+        self.user_name = domain_account
+        self.real_name = domain_account
         self.email = email
         self.role_ids = role_ids or []
+        self.department_id = None
+        self.department_name = None
+        self.avatar = None
+        self.phone = None
+        self.daily_round_limit = None
+        self.created_at = None
+        self.updated_at = None
         self.valid = valid
 
     def to_dict(self):
-        return {'id': self.id, 'username': self.username, 'email': self.email}
+        return {'id': self.id, 'domain_account': self.domain_account, 'email': self.email}
 
 
 def test_normalize_user_payload():
     payload = _normalize_user_payload({'roleIds': [1], 'password': 'secret', 'email': 'a@b.com'})
     assert 'role_ids' in payload
     assert 'password' not in payload
-    assert 'password_hash' in payload
+    assert 'password_hash' not in payload
 
 
 def test_normalize_role_payload():
@@ -98,18 +111,16 @@ def test_list_users_assign_admin_role(monkeypatch):
 
 def test_create_user_duplicate_email(monkeypatch):
     monkeypatch.setattr(rbac_service_module.user_repository, 'find_by_email', lambda email: FakeUser(1, 'u', email))
-    monkeypatch.setattr(rbac_service_module.user_repository, 'find_by_username', lambda username: None)
 
     with pytest.raises(BusinessError) as exc:
-        rbac_service.create_user({'email': 'a@b.com', 'username': 'u1', 'password': 'x'})
+        rbac_service.create_user({'email': 'a@b.com', 'domain_account': 'u1', 'password': 'x'})
 
     assert exc.value.code == ErrorCode.DUPLICATE_RESOURCE
 
 
 def test_update_user_not_found(monkeypatch):
     monkeypatch.setattr(rbac_service_module.user_repository, 'find_by_email', lambda email: None)
-    monkeypatch.setattr(rbac_service_module.user_repository, 'find_by_username', lambda username: None)
-    monkeypatch.setattr(rbac_service_module.user_repository, 'update', lambda user_id, data: None)
+    monkeypatch.setattr(rbac_service_module.user_repository, 'find_by_domain_account', lambda domain_account: None)
 
     with pytest.raises(NotFoundError):
         rbac_service.update_user(999, {'email': 'a@b.com'})
