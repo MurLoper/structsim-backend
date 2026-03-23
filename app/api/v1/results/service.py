@@ -989,19 +989,28 @@ class ResultsService:
         total = max(self._resolve_mock_total_rounds(condition), 1)
         condition_payload = self._serialize_order_condition(condition, include_mock_summary=True)
         summary = self._normalize_dict(condition_payload.get("statistics"))
-        all_items = [
-            self._build_mock_round_item(condition, round_index, summary)
-            for round_index in range(1, total + 1)
-        ]
-        if status is not None:
-            all_items = [item for item in all_items if item["status"] == status]
-
         page = max(page, 1)
         page_size = max(page_size, 1)
-        filtered_total = len(all_items)
-        start = (page - 1) * page_size + 1
-        end = min(start + page_size - 1, filtered_total)
-        items = all_items[start - 1:end] if start <= filtered_total else []
+
+        if status is None:
+            filtered_total = total
+            start = (page - 1) * page_size + 1
+            end = min(start + page_size - 1, filtered_total)
+            indices = range(start, end + 1) if start <= filtered_total else []
+            items = [
+                self._build_mock_round_item(condition, round_index, summary)
+                for round_index in indices
+            ]
+        else:
+            filtered_items = [
+                self._build_mock_round_item(condition, round_index, summary)
+                for round_index in range(1, total + 1)
+            ]
+            filtered_items = [item for item in filtered_items if item["status"] == status]
+            filtered_total = len(filtered_items)
+            start = (page - 1) * page_size + 1
+            end = min(start + page_size - 1, filtered_total)
+            items = filtered_items[start - 1:end] if start <= filtered_total else []
 
         completed = self._to_int(summary.get("completedRounds"), 0)
         failed = self._to_int(summary.get("failedRounds"), 0)
