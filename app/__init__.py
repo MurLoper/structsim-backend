@@ -96,6 +96,24 @@ def _auto_upgrade_user_department_schema(app: Flask) -> None:
         logger.exception(f'用户部门字段自动升级失败: {exc}')
 
 
+def _auto_upgrade_platform_features_schema(app: Flask) -> None:
+    """应用启动时自动升级平台公告、隐私协议与埋点表结构。"""
+    if os.getenv('AUTO_PLATFORM_FEATURES_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
+        logger.info('已禁用 AUTO_PLATFORM_FEATURES_UPGRADE，跳过平台功能表结构升级')
+        return
+
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+    if not db_url or str(db_url).startswith('sqlite:'):
+        return
+
+    try:
+        from database.migrations.platform_features_upgrade import upgrade_platform_features_schema
+        upgrade_platform_features_schema(str(db_url), verbose=False)
+        logger.info('平台功能表结构自动升级检查完成')
+    except Exception as exc:
+        logger.exception(f'平台功能表结构自动升级失败: {exc}')
+
+
 def create_app(config_name=None):
     """Application factory."""
     if config_name is None:
@@ -112,6 +130,7 @@ def create_app(config_name=None):
     _auto_upgrade_order_condition_schema(app)
     _auto_upgrade_status_defs_schema(app)
     _auto_upgrade_user_department_schema(app)
+    _auto_upgrade_platform_features_schema(app)
 
     # 初始化 Redis（可选，如果配置了 Redis）
     try:

@@ -12,6 +12,7 @@ from .orders import orders_bp, init_config_bp
 from .rbac import rbac_bp
 from .results.routes import results_bp
 from .sso import sso_bp
+from .platform import platform_bp
 
 v1_bp.register_blueprint(config_bp)
 v1_bp.register_blueprint(param_groups_bp)
@@ -24,4 +25,5 @@ v1_bp.register_blueprint(init_config_bp)
 v1_bp.register_blueprint(rbac_bp)
 v1_bp.register_blueprint(results_bp)
 v1_bp.register_blueprint(sso_bp)
+v1_bp.register_blueprint(platform_bp)
 

@@ -26,6 +26,7 @@ chardet>=5.0.0
 # 工具
 python-dotenv>=1.0.0
 requests>=2.32.0
+gunicorn>=23.0.0
 
 # 测试
 pytest>=9.0.0

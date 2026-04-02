@@ -61,6 +61,12 @@ from app.models.auth import (
     Permission,
     Menu
 )
+from app.models.platform import (
+    PlatformSetting,
+    Announcement,
+    PrivacyPolicyAcceptance,
+    TrackingEvent,
+)
 
 # 上传模型
 from app.models.upload import UploadFile
@@ -111,6 +117,10 @@ __all__ = [
     'Role',
     'Permission',
     'Menu',
+    'PlatformSetting',
+    'Announcement',
+    'PrivacyPolicyAcceptance',
+    'TrackingEvent',
     # 上传
     'UploadFile',
     'UploadChunk'

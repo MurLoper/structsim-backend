@@ -25,7 +25,7 @@ def require_permission(permission: str):
                 claims = get_jwt() or {}
                 user_permissions = claims.get('permissions', [])
                 if isinstance(identity, dict):
-                    user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
+                    user_identity = identity.get('domain_account') or identity.get('domainAccount')
                 else:
                     user_identity = identity
 
@@ -77,4 +77,3 @@ def validate_json(schema_class):
                 return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
         return decorated_function
     return decorator
-
