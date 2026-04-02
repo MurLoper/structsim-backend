@@ -23,7 +23,6 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     token: str = Field(..., description="JWT 访问令牌")
-    user: dict = Field(..., description="用户信息")
 
 
 class UserPublicInfo(BaseModel):

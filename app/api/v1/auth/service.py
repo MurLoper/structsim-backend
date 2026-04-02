@@ -332,14 +332,13 @@ class AuthService:
         }
 
     def _issue_login_result(self, user: User) -> Dict[str, Any]:
-        roles = self._get_valid_roles(user.role_ids)
         permission_codes = self._get_permission_codes(user.role_ids)
         access_token = create_access_token(
             identity=str(user.domain_account),
             additional_claims={"permissions": permission_codes},
         )
         self.repository.update_last_login(user, int(time.time()))
-        return {"token": access_token, "user": self._serialize_user(user, roles, permission_codes)}
+        return {"token": access_token}
 
     def login(self, domain_account: str, password: str) -> Dict[str, Any]:
         login_mode = self.get_login_mode()

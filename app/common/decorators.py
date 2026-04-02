@@ -28,15 +28,18 @@ def require_permission(permission: str):
                     user_identity = identity.get('domain_account') or identity.get('domainAccount')
                 else:
                     user_identity = identity
-
-                if permission not in user_permissions:
-                    logger.warning(f"Permission denied: {permission} for user {user_identity}")
-                    return error(ErrorCode.PERMISSION_DENIED, f"缺少权限: {permission}", http_status=403)
-                
-                return f(*args, **kwargs)
             except Exception as e:
                 logger.error(f"Permission check failed: {e}")
                 return error(ErrorCode.TOKEN_INVALID, "认证失败", http_status=401)
+
+            if not isinstance(user_permissions, (list, tuple, set)):
+                user_permissions = []
+
+            if permission not in user_permissions:
+                logger.warning(f"Permission denied: {permission} for user {user_identity}")
+                return error(ErrorCode.PERMISSION_DENIED, f"缺少权限: {permission}", http_status=403)
+
+            return f(*args, **kwargs)
         return decorated_function
     return decorator
 
