@@ -36,6 +36,32 @@ class OrdersService:
         except (TypeError, ValueError):
             return default
 
+    @staticmethod
+    def _normalize_domain_account(value: Any) -> str:
+        return str(value or '').strip().lower()
+
+    def _find_valid_user(self, user_identity: str) -> Optional[User]:
+        normalized_identity = self._normalize_domain_account(user_identity)
+        if not normalized_identity:
+            return None
+
+        user = User.query.filter(
+            User.domain_account == normalized_identity,
+            User.valid == 1,
+        ).first()
+        if user:
+            return user
+
+        if normalized_identity.isdigit():
+            return User.query.filter(User.id == int(normalized_identity), User.valid == 1).first()
+        return None
+
+    def _get_submit_user_or_raise(self, user_identity: str) -> User:
+        user = self._find_valid_user(user_identity)
+        if not user:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, '提交用户不存在或已被禁用')
+        return user
+
     def _estimate_rounds_from_opt_params(self, opt_params: Optional[dict]) -> int:
         if not isinstance(opt_params, dict):
             return 0
@@ -306,7 +332,7 @@ class OrdersService:
         }
 
     def _get_user_submit_limits(self, user_identity: str) -> Dict[str, int]:
-        user = User.query.filter(User.domain_account == str(user_identity), User.valid == 1).first()
+        user = self._find_valid_user(user_identity)
         if not user:
             return {
                 'max_batch_size': 200,
@@ -322,18 +348,21 @@ class OrdersService:
         return merged
 
     def _sum_today_rounds(self, user_identity: str) -> int:
+        normalized_identity = self._normalize_domain_account(user_identity)
         now = datetime.datetime.now()
         start_ts = int(datetime.datetime(now.year, now.month, now.day, 0, 0, 0).timestamp())
         end_ts = int(datetime.datetime(now.year, now.month, now.day, 23, 59, 59).timestamp())
-        orders = self.repository.get_orders_by_creator_between(str(user_identity), start_ts, end_ts)
+        orders = self.repository.get_orders_by_creator_between(normalized_identity, start_ts, end_ts)
         return sum(
             self._estimate_order_rounds(getattr(order, 'input_json', None))
             for order in orders
         )
 
     def get_submit_limits(self, user_identity: str) -> Dict[str, int]:
-        limits = self._get_user_submit_limits(user_identity)
-        today_used_rounds = self._sum_today_rounds(user_identity)
+        user = self._get_submit_user_or_raise(user_identity)
+        normalized_identity = self._normalize_domain_account(user.domain_account)
+        limits = self._get_user_submit_limits(normalized_identity)
+        today_used_rounds = self._sum_today_rounds(normalized_identity)
         return {
             'max_batch_size': limits['max_batch_size'],
             'max_cpu_cores': limits['max_cpu_cores'],
@@ -351,7 +380,9 @@ class OrdersService:
         project_id: int = None,
         sim_type_id: int = None,
         order_no: str = None,
+        domain_account: str = None,
         created_by: str = None,
+        remark: str = None,
         start_date: int = None,
         end_date: int = None
     ) -> Dict:
@@ -377,7 +408,9 @@ class OrdersService:
             project_id=project_id,
             sim_type_id=sim_type_id,
             order_no=order_no,
+            domain_account=domain_account,
             created_by=created_by,
+            remark=remark,
             start_date=start_date,
             end_date=end_date
         )
@@ -420,19 +453,21 @@ class OrdersService:
         Returns:
             创建的订单信息
         """
+        user = self._get_submit_user_or_raise(user_identity)
+        normalized_identity = self._normalize_domain_account(user.domain_account)
         derived_fields = self._derive_order_fields_from_input_json(order_data.get('input_json'))
         if not derived_fields['conditions']:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, 'input_json.conditions 不能为空')
 
         order_rounds = self._estimate_order_rounds(derived_fields['input_json'])
-        limits = self._get_user_submit_limits(str(user_identity))
+        limits = self._get_user_submit_limits(normalized_identity)
         if order_rounds > int(limits['max_batch_size']):
             raise BusinessError(
                 ErrorCode.VALIDATION_ERROR,
                 f'本次提单轮次 {order_rounds} 超过上限 {limits["max_batch_size"]}，请减少轮次后再提交'
             )
 
-        today_used_rounds = self._sum_today_rounds(str(user_identity))
+        today_used_rounds = self._sum_today_rounds(normalized_identity)
         daily_round_limit = int(limits['daily_round_limit'])
         if today_used_rounds + order_rounds > daily_round_limit:
             raise BusinessError(
@@ -463,14 +498,15 @@ class OrdersService:
             'participant_uids': participant_ids or [],
             'remark': order_data.get('remark'),
             'sim_type_ids': derived_fields['sim_type_ids'],
-            'opt_param': None,
             'input_json': derived_fields['input_json'],
             'opt_issue_id': order_data.get('opt_issue_id'),
+            'domain_account': normalized_identity,
+            'base_dir': order_data.get('base_dir'),
             'condition_summary': derived_fields['condition_summary'],
             'workflow_id': order_data.get('workflow_id'),
             'submit_check': order_data.get('submit_check'),
             'client_meta': order_data.get('client_meta'),
-            'created_by': str(user_identity),
+            'created_by': normalized_identity,
             'status': 0,  # 未开始/排队
             'progress': 0
         }
@@ -509,7 +545,7 @@ class OrdersService:
             'input_json',
             'origin_file_type', 'origin_file_name', 'origin_file_path', 'origin_file_id',
             'origin_fold_type_id', 'model_level_id',
-            'workflow_id', 'submit_check', 'client_meta', 'opt_issue_id',
+            'workflow_id', 'submit_check', 'client_meta', 'opt_issue_id', 'base_dir',
         ]
         filtered_data = {
             k: v for k, v in update_data.items()
@@ -523,7 +559,6 @@ class OrdersService:
             filtered_data['fold_type_ids'] = derived_fields['fold_type_ids']
             filtered_data['sim_type_ids'] = derived_fields['sim_type_ids']
             filtered_data['condition_summary'] = derived_fields['condition_summary']
-        filtered_data['opt_param'] = None
 
         try:
             order = self.repository.update_order(order, filtered_data)

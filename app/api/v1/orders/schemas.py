@@ -17,13 +17,13 @@ class OrderCreate(BaseModel):
     participant_ids: Optional[List[str]] = Field(default_factory=list, description="参与者域账号列表")
     remark: Optional[str] = Field(None, description="备注")
     sim_type_ids: Optional[List[int]] = Field(default_factory=list, description="仿真类型ID列表")
-    opt_param: Optional[Dict[str, Any]] = Field(default_factory=dict, description="可选参数")
     input_json: Optional[Dict[str, Any]] = Field(default_factory=dict, description="输入JSON")
     condition_summary: Optional[Dict[str, List[str]]] = Field(None, description="工况摘要")
     opt_issue_id: Optional[int] = Field(None, description="自动优化申请单ID")
     workflow_id: Optional[int] = Field(None, description="工作流ID")
     submit_check: Optional[Dict[str, Any]] = Field(None, description="提交检查信息")
     client_meta: Optional[Dict[str, Any]] = Field(None, description="客户端元数据")
+    base_dir: Optional[str] = Field(None, description="申请单工作目录")
 
 
 class OrderUpdate(BaseModel):
@@ -31,7 +31,6 @@ class OrderUpdate(BaseModel):
     remark: Optional[str] = Field(None, description="备注")
     participant_uids: Optional[List[int]] = Field(None, description="参与者用户ID列表")
     participant_ids: Optional[List[str]] = Field(None, description="参与者域账号列表")
-    opt_param: Optional[Dict[str, Any]] = Field(None, description="可选参数")
     input_json: Optional[Dict[str, Any]] = Field(None, description="输入JSON")
     sim_type_ids: Optional[List[int]] = Field(None, description="仿真类型ID列表")
     fold_type_ids: Optional[List[int]] = Field(None, description="姿态ID列表")
@@ -42,6 +41,7 @@ class OrderUpdate(BaseModel):
     submit_check: Optional[Dict[str, Any]] = Field(None, description="提交检查信息")
     client_meta: Optional[Dict[str, Any]] = Field(None, description="客户端元数据")
     opt_issue_id: Optional[int] = Field(None, description="自动优化申请单ID")
+    base_dir: Optional[str] = Field(None, description="申请单工作目录")
 
 
 class VerifyFileRequest(BaseModel):
@@ -58,6 +58,8 @@ class OrderQuery(BaseModel):
     project_id: Optional[int] = Field(None, description="项目ID")
     sim_type_id: Optional[int] = Field(None, description="仿真类型ID")
     order_no: Optional[str] = Field(None, description="订单编号(模糊搜索)")
+    domain_account: Optional[str] = Field(None, description="提交用户域账号")
     created_by: Optional[str] = Field(None, description="创建人域账号")
+    remark: Optional[str] = Field(None, description="备注(模糊搜索)")
     start_date: Optional[int] = Field(None, description="开始日期时间戳")
     end_date: Optional[int] = Field(None, description="结束日期时间戳")

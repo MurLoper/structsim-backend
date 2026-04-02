@@ -7,7 +7,6 @@ def test_results_conditions_fallback_to_order_input_json(client, auth_headers, d
         project_id=project.id,
         sim_type_ids=[21],
         fold_type_ids=[11],
-        opt_param={},
         input_json={
             'conditions': [
                 {
@@ -66,7 +65,6 @@ def test_results_mock_payload_follows_order_status(client, auth_headers, db_sess
         project_id=project.id,
         sim_type_ids=[21, 22, 23],
         fold_type_ids=[11],
-        opt_param={},
         status=1,
         progress=52,
         input_json={

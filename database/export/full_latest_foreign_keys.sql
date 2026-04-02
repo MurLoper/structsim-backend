@@ -1,6 +1,6 @@
 -- StructSim FK Restore SQL
--- ExportedAt: 2026-03-22T23:05:48.161319
+-- ExportedAt: 2026-04-02T19:45:57.706716
 
 SET FOREIGN_KEY_CHECKS=0;
--- 当前最新导出未生成额外外键恢复语句，此文件保留为空占位文件，避免误用历史外键脚本。
+ALTER TABLE `users` ADD CONSTRAINT `fk_users_department_id` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`);
 SET FOREIGN_KEY_CHECKS=1;

@@ -43,6 +43,10 @@ class OrdersRepository:
             query = query.options(defer(Order.condition_summary))
         if not cls._has_order_column('opt_issue_id'):
             query = query.options(defer(Order.opt_issue_id))
+        if not cls._has_order_column('domain_account'):
+            query = query.options(defer(Order.domain_account))
+        if not cls._has_order_column('base_dir'):
+            query = query.options(defer(Order.base_dir))
         return query
 
     @classmethod
@@ -54,7 +58,9 @@ class OrdersRepository:
         project_id: Optional[int] = None,
         sim_type_id: Optional[int] = None,
         order_no: Optional[str] = None,
+        domain_account: Optional[str] = None,
         created_by: Optional[str] = None,
+        remark: Optional[str] = None,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None
     ) -> Tuple[List[Order], int]:
@@ -69,10 +75,17 @@ class OrdersRepository:
             query = query.filter_by(status=status)
         if project_id is not None:
             query = query.filter_by(project_id=project_id)
+        if domain_account is not None:
+            if cls._has_order_column('domain_account'):
+                query = query.filter_by(domain_account=domain_account)
+            else:
+                query = query.filter_by(created_by=domain_account)
         if created_by is not None:
             query = query.filter_by(created_by=created_by)
         if order_no is not None:
             query = query.filter(Order.order_no.ilike(f'%{order_no}%'))
+        if remark is not None:
+            query = query.filter(Order.remark.ilike(f'%{remark}%'))
         if sim_type_id is not None:
             query = query.filter(Order.sim_type_ids.contains([sim_type_id]))
         if start_date is not None:
@@ -96,7 +109,7 @@ class OrdersRepository:
     def create_order(cls, order_data: dict) -> Order:
         """创建订单并 flush，不在仓储层提交事务。"""
         missing_columns = {
-            name for name in ('condition_summary', 'opt_issue_id')
+            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir')
             if name in order_data and not cls._has_order_column(name)
         }
         if missing_columns:
@@ -119,7 +132,7 @@ class OrdersRepository:
     def update_order(cls, order: Order, update_data: dict) -> Order:
         """更新订单，不在仓储层提交事务。"""
         missing_columns = {
-            name for name in ('condition_summary', 'opt_issue_id')
+            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir')
             if name in update_data and not cls._has_order_column(name)
         }
         if missing_columns:

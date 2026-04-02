@@ -38,10 +38,10 @@ class Order(db.Model):
     # 选中的仿真类型列表
     sim_type_ids = db.Column(db.JSON, comment='选中的仿真类型ID列表')
 
-    # 核心：各仿真类型的配置（大JSON）
-    opt_param = db.Column(db.JSON, comment='各仿真类型配置 {sim_type_id: {...}}')
     input_json = db.Column(db.JSON, comment='输入JSON完整配置')
     opt_issue_id = db.Column(db.Integer, index=True, comment='自动优化申请单ID')
+    domain_account = db.Column(db.String(32), index=True, comment='提交用户域账号')
+    base_dir = db.Column(db.String(500), comment='申请单工作目录')
     
     # 工作流
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflows.id'), comment='工作流ID')
@@ -86,9 +86,10 @@ class Order(db.Model):
             'participant_uids': self.participant_uids,
             'remark': self.remark,
             'sim_type_ids': self.sim_type_ids,
-            'opt_param': self.opt_param,
             'input_json': self.input_json,
             'opt_issue_id': self.__dict__.get('opt_issue_id'),
+            'domain_account': self.__dict__.get('domain_account'),
+            'base_dir': self.__dict__.get('base_dir'),
             'workflow_id': self.workflow_id,
             'status': self.status,
             'progress': self.progress,
@@ -107,10 +108,13 @@ class Order(db.Model):
             'id': self.id,
             'order_no': self.order_no,
             'project_id': self.project_id,
+            'remark': self.remark,
             'sim_type_ids': self.sim_type_ids,
             'fold_type_ids': self.fold_type_ids,
             'condition_summary': self.__dict__.get('condition_summary'),
             'opt_issue_id': self.__dict__.get('opt_issue_id'),
+            'domain_account': self.__dict__.get('domain_account'),
+            'base_dir': self.__dict__.get('base_dir'),
             'status': self.status,
             'progress': self.progress,
             'created_by': self.created_by,

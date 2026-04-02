@@ -32,7 +32,9 @@ def get_orders():
             'project_id': request.args.get('project_id') or request.args.get('projectId'),
             'sim_type_id': request.args.get('sim_type_id') or request.args.get('simTypeId'),
             'order_no': request.args.get('order_no') or request.args.get('orderNo'),
+            'domain_account': request.args.get('domain_account') or request.args.get('domainAccount'),
             'created_by': request.args.get('created_by') or request.args.get('createdBy'),
+            'remark': request.args.get('remark'),
             'start_date': request.args.get('start_date') or request.args.get('startDate'),
             'end_date': request.args.get('end_date') or request.args.get('endDate'),
         }
@@ -49,7 +51,9 @@ def get_orders():
             project_id=validated.project_id,
             sim_type_id=validated.sim_type_id,
             order_no=validated.order_no,
+            domain_account=validated.domain_account,
             created_by=validated.created_by,
+            remark=validated.remark,
             start_date=validated.start_date,
             end_date=validated.end_date,
         )

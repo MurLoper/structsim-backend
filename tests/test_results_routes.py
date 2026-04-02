@@ -21,7 +21,7 @@ def test_results_endpoints(client, app, db_session):
     db_session.add(sim_type)
     db_session.commit()
 
-    order = Order(order_no='ORD_001', project_id=project.id, sim_type_ids=[sim_type.id], opt_param={})
+    order = Order(order_no='ORD_001', project_id=project.id, sim_type_ids=[sim_type.id])
     db_session.add(order)
     db_session.commit()
 
