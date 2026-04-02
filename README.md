@@ -65,6 +65,12 @@ python run.py --init-db && gunicorn -c gunicorn_conf.py wsgi:app
 - [`wsgi.py`](./wsgi.py)
 - [`deploy/k3s/structsim-backend.yaml`](./deploy/k3s/structsim-backend.yaml)
 
+当前 K3s 默认口径：
+
+- `4` 副本
+- `NodePort: 30060`
+- 其他内网服务器通过 `http://<主节点IP>:30060` 访问
+
 ## 平台功能接口
 
 本轮新增平台能力：

@@ -114,9 +114,10 @@ docker run -d --name structsim-backend --restart unless-stopped -p 6060:6060 \
 K3s 方案使用：
 
 - 单 Deployment
-- 单 ClusterIP Service
+- 单 NodePort Service
 - 多个 `hostPath` 挂载外部路径
 - 本地导入镜像，不依赖公网镜像仓库
+- `4` 个副本做 Pod 级流量分发
 
 清单位于：
 
@@ -147,6 +148,12 @@ sudo k3s ctr images import structsim-backend-py312.tar
 - `CORS_ORIGINS`
 - `hostPath.path`
 
+清单默认已固定：
+
+- `replicas: 4`
+- `type: NodePort`
+- `nodePort: 30060`
+
 默认挂载如下：
 
 - `/data/structsim/upload -> /mnt/external/upload`
@@ -154,6 +161,15 @@ sudo k3s ctr images import structsim-backend-py312.tar
 - `/data/structsim/logs -> /mnt/external/logs`
 
 如果内网路径不同，只改 `hostPath.path` 即可。
+
+重要前提：
+
+- 所有可能调度到 Pod 的节点，都必须预先存在相同目录：
+  - `/data/structsim/upload`
+  - `/data/structsim/shared`
+  - `/data/structsim/logs`
+- 如果任一节点目录缺失，不允许直接扩到 `4` 副本
+- 这份清单依赖 K3s `Service` 在 `4` 个 `Ready` Pod 之间做流量分发，不做网关层策略路由
 
 ### 3.4 应用部署
 
@@ -164,24 +180,29 @@ kubectl apply -f deploy/k3s/structsim-backend.yaml
 ### 3.5 查看运行状态
 
 ```bash
-kubectl -n structsim get pods
+kubectl -n structsim get pods -o wide
 kubectl -n structsim get svc
 kubectl -n structsim logs deploy/structsim-backend
 ```
 
 ### 3.6 内网访问
 
-默认是 `ClusterIP`，适合通过内网网关或 Ingress 访问。  
-如果需要临时直连验证，可执行：
+当前清单使用 `NodePort`，其他内网服务器可直接访问：
 
 ```bash
-kubectl -n structsim port-forward svc/structsim-backend 6060:6060
+curl http://<主节点IP>:30060/health
 ```
 
-然后访问：
+说明：
+
+- 外部请求先到 `主节点IP:30060`
+- 再经由 Kubernetes `NodePort + Service` 转发到 `4` 个 `Ready` Pod
+- 这是 Pod 级别的自动负载分发，不是应用层网关智能路由
+
+如需在主节点本机快速验证，也可执行：
 
 ```bash
-curl http://127.0.0.1:6060/health
+curl http://127.0.0.1:30060/health
 ```
 
 ## 4. 并发建议
@@ -191,13 +212,14 @@ curl http://127.0.0.1:6060/health
 - `2` workers
 - `8` threads
 
-适合中小规模内网接口并发。建议：
+配合当前 K3s `4` 副本部署，整体可提供更高的内网并发承载。建议：
 
 - 4 核机器：保持 `2 x 8`
 - 8 核机器：可尝试 `4 x 8`
 - 如果接口等待 MySQL/外部 IO 较多，优先加 `threads`
 
 不建议一开始就把 `workers` 开太大，否则会放大数据库连接占用。
+如果 MySQL 连接压力过大，优先缩容副本数或调低 `GUNICORN_WORKERS/GUNICORN_THREADS`，不要盲目继续扩副本。
 
 ## 5. 平台功能相关说明
 
@@ -208,6 +230,29 @@ curl http://127.0.0.1:6060/health
 - 隐私协议接口
 - 埋点事件写入接口
 - 埋点分析汇总接口
+
+平台功能入口固定为：
+
+- 公告查看：前端布局顶部公告横幅
+- 公告配置：系统配置 -> 平台内容
+- 埋点分析查看：`/analytics`
+- 隐私协议查看：头像菜单 -> 查看隐私协议
+
+权限边界固定为：
+
+- 埋点分析：`VIEW_DASHBOARD`
+- 平台内容与公告管理：`MANAGE_CONFIG`
+- 隐私协议查看：所有已登录用户可访问
+
+埋点工作方式：
+
+- 前端本地队列批量上报事件
+- 路由切换自动采集 `page_view`
+- 公告曝光与关闭分别记录
+- 隐私协议查看与同意分别记录
+- 后端只负责写入与汇总分析
+
+这是平台内网自有埋点体系，不接入第三方 SaaS，也不依赖外网统计平台。
 
 后端启动时会自动检查并升级这些表：
 

@@ -30,7 +30,7 @@ metadata:
   name: structsim-backend
   namespace: structsim
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: structsim-backend
@@ -98,4 +98,5 @@ spec:
     - name: http
       port: 6060
       targetPort: http
-  type: ClusterIP
+      nodePort: 30060
+  type: NodePort
