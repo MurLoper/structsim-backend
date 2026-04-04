@@ -6,6 +6,7 @@
 from typing import Optional, List, Dict, Any
 from app.common.errors import NotFoundError
 from app.common.serializers import serialize_model, serialize_models
+from app.services.external_data import output_component_repository
 from app.api.v1.config.repository import (
     ProjectRepository, SimTypeRepository, ParamDefRepository, SolverRepository,
     ConditionDefRepository, OutputDefRepository, FoldTypeRepository,

@@ -13,6 +13,7 @@ from app.common.errors import NotFoundError, BusinessError
 from app.common.serializers import get_snake_json
 from .schemas import LoginRequest
 from .service import auth_service
+from .crypto_service import auth_crypto_service
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -32,12 +33,25 @@ def get_login_mode():
     return success(result)
 
 
+@auth_bp.route('/public-key', methods=['GET'])
+def get_login_public_key():
+    """获取登录公钥"""
+    try:
+        return success(auth_crypto_service.get_public_key())
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
+
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """用户密码登录（域账号 + 密码）"""
     try:
         validated = LoginRequest(**(get_snake_json() or {}))
-        result = auth_service.login(validated.domain_account, validated.password)
+        password = auth_crypto_service.decrypt_password(
+            validated.password_ciphertext,
+            validated.key_id,
+        )
+        result = auth_service.login(validated.domain_account, password)
         return success(result, "登录成功")
     except ValidationError as e:
         return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
@@ -70,6 +84,18 @@ def get_current_user():
     try:
         user_identity = _get_identity_value()
         result = auth_service.get_current_user(user_identity)
+        return success(result)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@auth_bp.route('/session', methods=['GET'])
+@jwt_required()
+def get_current_session():
+    """获取当前用户会话（用户信息 + 菜单）"""
+    try:
+        user_identity = _get_identity_value()
+        result = auth_service.get_current_session(user_identity)
         return success(result)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
@@ -109,11 +135,7 @@ def verify_token():
     """验证Token并返回完整用户信息"""
     try:
         user_identity = _get_identity_value()
-
-        user_data = auth_service.get_current_user(user_identity)
-        menus = auth_service.get_user_menus(user_identity)
-
-        return success({'user': user_data, 'menus': menus})
+        return success(auth_service.get_current_session(user_identity))
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 

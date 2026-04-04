@@ -10,7 +10,8 @@ class LoginRequest(BaseModel):
     """密码登录请求：域账号 + 密码"""
 
     domain_account: str = Field(..., description="域账号")
-    password: str = Field(..., min_length=1, description="密码")
+    password_ciphertext: str = Field(..., min_length=1, description="RSA-OAEP 加密后的密码")
+    key_id: str = Field(..., min_length=1, max_length=64, description="公钥版本标识")
 
     @field_validator("domain_account")
     @classmethod
@@ -23,6 +24,17 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     token: str = Field(..., description="JWT 访问令牌")
+
+
+class LoginPublicKeyResponse(BaseModel):
+    key_id: str = Field(..., description="登录公钥版本标识")
+    algorithm: str = Field(..., description="加密算法")
+    public_key_pem: str = Field(..., description="PEM 格式公钥")
+
+
+class SessionResponse(BaseModel):
+    user: dict = Field(..., description="当前用户信息")
+    menus: list[dict] = Field(..., description="当前用户菜单")
 
 
 class UserPublicInfo(BaseModel):

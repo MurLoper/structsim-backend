@@ -49,4 +49,3 @@ class TrackingEventBatchRequest(BaseModel):
 
 class AnalyticsQueryRequest(BaseModel):
     days: int = Field(default=7, ge=1, le=90)
-

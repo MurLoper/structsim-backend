@@ -10,6 +10,7 @@ from typing import Optional, List, Dict, Any
 class OrderCreate(BaseModel):
     """创建订单请求"""
     project_id: int = Field(..., description="项目ID")
+    phase_id: Optional[int] = Field(None, description="项目阶段ID")
     model_level_id: Optional[int] = Field(None, description="模型层级ID")
     origin_file: Dict[str, Any] = Field(..., description="原始文件信息")
     origin_fold_type_id: Optional[int] = Field(None, description="原始折叠类型ID")
@@ -29,6 +30,7 @@ class OrderCreate(BaseModel):
 class OrderUpdate(BaseModel):
     """更新订单请求"""
     remark: Optional[str] = Field(None, description="备注")
+    phase_id: Optional[int] = Field(None, description="项目阶段ID")
     participant_uids: Optional[List[int]] = Field(None, description="参与者用户ID列表")
     participant_ids: Optional[List[str]] = Field(None, description="参与者域账号列表")
     input_json: Optional[Dict[str, Any]] = Field(None, description="输入JSON")

@@ -10,6 +10,7 @@ from app.common import success, error
 from app.constants import ErrorCode
 from app.common.errors import NotFoundError, BusinessError
 from app.common.serializers import get_snake_json
+from app.services.external_data import output_component_repository
 from .schemas import (
     ProjectCreate, ProjectUpdate,
     SimTypeCreate, SimTypeUpdate,
@@ -315,7 +316,7 @@ def list_post_process_modes():
     当前先返回后端 mock 数据，后续外部平台联通后保持该接口路径不变，
     直接在 service 内替换数据来源即可。
     """
-    data = config_service.get_post_process_modes()
+    data = output_component_repository.list_components()
     return success(data)
 
 

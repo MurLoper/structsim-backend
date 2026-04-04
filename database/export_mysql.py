@@ -30,9 +30,11 @@ from sqlalchemy import MetaData, create_engine, text, inspect
 try:
     from .migrations.user_identity_upgrade import upgrade_identity_schema
     from .migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
+    from .migrations.order_phase_upgrade import upgrade_order_phase_schema
 except Exception:  # pragma: no cover
     from migrations.user_identity_upgrade import upgrade_identity_schema  # pyright: ignore[reportImplicitRelativeImport]
     from migrations.order_condition_opti_upgrade import upgrade_order_condition_schema  # pyright: ignore[reportImplicitRelativeImport]
+    from migrations.order_phase_upgrade import upgrade_order_phase_schema  # pyright: ignore[reportImplicitRelativeImport]
 
 
 
@@ -246,6 +248,8 @@ def main() -> int:
         upgrade_identity_schema(args.source_db_url, verbose=True)
         print('预处理: 升级源库订单 condition 表结构...')
         upgrade_order_condition_schema(args.source_db_url, verbose=True)
+        print('预处理: 升级源库 orders.phase_id 字段...')
+        upgrade_order_phase_schema(args.source_db_url, verbose=True)
 
     exported = export_database(
 

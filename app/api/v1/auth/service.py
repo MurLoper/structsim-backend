@@ -216,29 +216,49 @@ class AuthService:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
         return self._issue_login_result(user)
 
+    def _get_or_create_default_role(self) -> Role:
+        role_code = str(current_app.config.get("AUTH_DEFAULT_ROLE_CODE") or "GUEST").strip() or "GUEST"
+        role = self.repository.get_role_by_code(role_code)
+        if role:
+            return role
+
+        permission_codes = [
+            "VIEW_DASHBOARD",
+            "VIEW_RESULTS",
+            "CREATE_ORDER",
+            "ORDER_VIEW",
+            "ORDER_CREATE",
+        ]
+        permissions = self.repository.get_permissions_by_codes(permission_codes)
+        role = self.repository.create_role(
+            {
+                "name": "游客",
+                "code": role_code,
+                "description": "系统自动分配的默认访客角色",
+                "permission_ids": [item.id for item in permissions],
+                "valid": 1,
+                "sort": 900,
+            }
+        )
+        return role
+
     def _verify_password_by_company_api(self, domain_account: str, password: str) -> Dict[str, Any]:
         verify_url = current_app.config.get("AUTH_COMPANY_PASSWORD_VERIFY_URL", "")
         if not verify_url:
             if bool(current_app.config.get("AUTH_USE_FAKE_COMPANY_VERIFY", False)):
-                return {
-                    "domain_account": domain_account,
-                    "user_name": domain_account,
-                    "real_name": domain_account,
-                    "email": f"{domain_account}@company.local",
-                    "department": "mock",
-                    "department_id": self._resolve_department_id(department_name="mock"),
-                }
+                return {"success": True, "domain_account": domain_account}
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "未配置公司账号密码校验接口")
 
         timeout = float(current_app.config.get("AUTH_COMPANY_PASSWORD_VERIFY_TIMEOUT", 8.0))
         method = current_app.config.get("AUTH_COMPANY_PASSWORD_VERIFY_METHOD", "POST").upper()
         payload = {"domain_account": domain_account, "password": password}
+        headers = self._get_company_api_headers()
 
         try:
             if method == "GET":
-                response = requests.get(verify_url, params=payload, timeout=timeout)
+                response = requests.get(verify_url, params=payload, headers=headers, timeout=timeout)
             else:
-                response = requests.post(verify_url, json=payload, timeout=timeout)
+                response = requests.post(verify_url, json=payload, headers=headers, timeout=timeout)
         except requests.RequestException as exc:
             raise BusinessError(ErrorCode.INTERNAL_ERROR, f"公司认证服务不可用: {exc}") from exc
 
@@ -254,6 +274,101 @@ class AuthService:
             msg = data.get("msg") or data.get("message") or "账号或密码错误"
             raise BusinessError(ErrorCode.VALIDATION_ERROR, msg)
 
+        verify_info = data.get("data") if isinstance(data.get("data"), dict) else data
+        return verify_info if isinstance(verify_info, dict) else {}
+
+    def _get_company_api_headers(self) -> Dict[str, str]:
+        app_id = current_app.config.get("AUTH_COMPANY_APP_ID", "")
+        secret_credit = current_app.config.get("AUTH_COMPANY_SECRET_CREDIT", "")
+        headers: Dict[str, str] = {}
+        if app_id:
+            headers["X-App-Id"] = app_id
+        if secret_credit:
+            headers["X-Secret-Credit"] = secret_credit
+        return headers
+
+    @staticmethod
+    def _extract_company_access_token(payload: Optional[Dict[str, Any]]) -> Optional[str]:
+        if not isinstance(payload, dict):
+            return None
+        candidates = [
+            payload.get("access_token"),
+            payload.get("accessToken"),
+            payload.get("token"),
+        ]
+        auth_data = payload.get("auth") if isinstance(payload.get("auth"), dict) else None
+        if auth_data:
+            candidates.extend(
+                [
+                    auth_data.get("access_token"),
+                    auth_data.get("accessToken"),
+                    auth_data.get("token"),
+                ]
+            )
+
+        for item in candidates:
+            value = str(item or "").strip()
+            if value:
+                return value
+        return None
+
+    def _fetch_user_info_by_domain_account(
+        self,
+        domain_account: str,
+        access_token: Optional[str] = None,
+        cookies: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        info_url = current_app.config.get("AUTH_GET_USER_INFO_URL", "")
+        if not info_url:
+            if bool(current_app.config.get("AUTH_USE_FAKE_COMPANY_VERIFY", False)):
+                return {
+                    "domain_account": domain_account,
+                    "user_name": domain_account,
+                    "real_name": domain_account,
+                    "email": f"{domain_account}@company.local",
+                    "department": "mock",
+                    "department_id": self._resolve_department_id(department_name="mock"),
+                }
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "未配置公司用户信息接口")
+
+        timeout = float(current_app.config.get("AUTH_GET_USER_INFO_TIMEOUT", 8.0))
+        method = current_app.config.get("AUTH_GET_USER_INFO_METHOD", "GET").upper()
+        headers = self._get_company_api_headers()
+        payload = {"domain_account": domain_account}
+        normalized_access_token = str(access_token or "").strip()
+        if normalized_access_token:
+            payload["access_token"] = normalized_access_token
+            headers["Authorization"] = f"Bearer {normalized_access_token}"
+
+        try:
+            if method == "POST":
+                response = requests.post(
+                    info_url,
+                    json=payload,
+                    headers=headers,
+                    timeout=timeout,
+                    cookies=cookies,
+                )
+            else:
+                response = requests.get(
+                    info_url,
+                    params=payload,
+                    headers=headers,
+                    timeout=timeout,
+                    cookies=cookies,
+                )
+        except requests.RequestException as exc:
+            raise BusinessError(ErrorCode.INTERNAL_ERROR, f"公司用户信息服务不可用: {exc}") from exc
+
+        try:
+            data = response.json() if response.text else {}
+        except ValueError:
+            data = {}
+
+        if response.status_code >= 400 or not self._is_success_payload(data):
+            msg = data.get("msg") or data.get("message") or "公司用户信息查询失败"
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, msg)
+
         user_info = data.get("data") if isinstance(data.get("data"), dict) else data
         return user_info if isinstance(user_info, dict) else {}
 
@@ -261,15 +376,13 @@ class AuthService:
         self, uid: str, cookies: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         info_url = current_app.config.get("AUTH_COMPANY_UID_INFO_URL", "")
-        app_id = current_app.config.get("AUTH_COMPANY_APP_ID", "")
-        secret_credit = current_app.config.get("AUTH_COMPANY_SECRET_CREDIT", "")
         if not info_url:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "未配置公司 SSO 用户信息接口")
-        if not app_id or not secret_credit:
+        headers = self._get_company_api_headers()
+        if not headers.get("X-App-Id") or not headers.get("X-Secret-Credit"):
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "未配置公司 SSO 凭证(appid/secret-credit)")
 
         timeout = float(current_app.config.get("AUTH_COMPANY_PASSWORD_VERIFY_TIMEOUT", 8.0))
-        headers = {"X-App-Id": app_id, "X-Secret-Credit": secret_credit}
 
         try:
             response = requests.get(
@@ -331,6 +444,46 @@ class AuthService:
             "valid": 1,
         }
 
+    def _assign_default_role_if_missing(self, user_payload: Dict[str, Any], user: Optional[User] = None) -> Dict[str, Any]:
+        existing_role_ids = list((user.role_ids if user else None) or [])
+        if existing_role_ids:
+            user_payload["role_ids"] = existing_role_ids
+            return user_payload
+
+        incoming_role_ids = list(user_payload.get("role_ids") or [])
+        if incoming_role_ids:
+            return user_payload
+
+        default_role = self._get_or_create_default_role()
+        user_payload["role_ids"] = [default_role.id]
+        return user_payload
+
+    def _upsert_authenticated_user(self, payload: Dict[str, Any]) -> User:
+        user = self.repository.get_user_by_domain_account(payload["domain_account"])
+        if not user and payload.get("lc_user_id"):
+            user = self.repository.get_user_by_lc_user_id(payload["lc_user_id"])
+            if user and user.domain_account != payload["domain_account"]:
+                user.domain_account = payload["domain_account"]
+
+        if not user:
+            legacy = self.repository.get_user_by_email(payload["email"])
+            if legacy and not legacy.domain_account:
+                legacy.domain_account = payload["domain_account"]
+                legacy.lc_user_id = payload.get("lc_user_id")
+                legacy.user_name = payload["user_name"]
+                legacy.real_name = payload["real_name"]
+                legacy.department_id = payload.get("department_id")
+                legacy.valid = 1
+                normalized_payload = self._assign_default_role_if_missing(payload, legacy)
+                legacy.role_ids = normalized_payload.get("role_ids")
+                self.repository.update_last_login(legacy, int(time.time()))
+                return legacy
+
+        normalized_payload = self._assign_default_role_if_missing(payload, user)
+        return self.repository.upsert_user_by_domain_account(
+            normalized_payload["domain_account"], normalized_payload
+        )
+
     def _issue_login_result(self, user: User) -> Dict[str, Any]:
         permission_codes = self._get_permission_codes(user.role_ids)
         access_token = create_access_token(
@@ -349,32 +502,17 @@ class AuthService:
         if self._is_test_account_bypass_allowed(normalized_domain):
             return self._login_by_existing_db_user(normalized_domain)
 
-        info = self._verify_password_by_company_api(normalized_domain, password)
-        payload = self._build_user_payload(normalized_domain, info)
-
-        user = self.repository.get_user_by_domain_account(payload["domain_account"])
-        if not user and payload.get("lc_user_id"):
-            user = self.repository.get_user_by_lc_user_id(payload["lc_user_id"])
-            if user and user.domain_account != payload["domain_account"]:
-                user.domain_account = payload["domain_account"]
-
-        if not user:
-            legacy = self.repository.get_user_by_email(payload["email"])
-            if legacy and not legacy.domain_account:
-                legacy.domain_account = payload["domain_account"]
-                legacy.lc_user_id = payload.get("lc_user_id")
-                legacy.user_name = payload["user_name"]
-                legacy.real_name = payload["real_name"]
-                legacy.department_id = payload.get("department_id")
-                legacy.valid = 1
-                user = legacy
-                self.repository.update_last_login(user, int(time.time()))
-            else:
-                user = self.repository.upsert_user_by_domain_account(
-                    payload["domain_account"], payload
-                )
+        verify_info = self._verify_password_by_company_api(normalized_domain, password)
+        company_access_token = self._extract_company_access_token(verify_info)
+        if current_app.config.get("AUTH_GET_USER_INFO_URL"):
+            info = self._fetch_user_info_by_domain_account(
+                normalized_domain,
+                access_token=company_access_token,
+            )
         else:
-            user = self.repository.upsert_user_by_domain_account(payload["domain_account"], payload)
+            info = verify_info
+        payload = self._build_user_payload(normalized_domain, info)
+        user = self._upsert_authenticated_user(payload)
 
         if user.valid != 1:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
@@ -387,19 +525,23 @@ class AuthService:
         if not uid:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "缺少 uid")
 
-        info = self._fetch_user_info_by_uid(uid, cookie_dict)
+        uid_info = self._fetch_user_info_by_uid(uid, cookie_dict)
         domain_account = self._normalize_domain_account(
-            str(info.get("domain_account") or info.get("domainAccount") or "")
+            str(uid_info.get("domain_account") or uid_info.get("domainAccount") or "")
         )
         if not domain_account:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "公司接口未返回域账号，无法登录")
 
+        info = uid_info
+        if current_app.config.get("AUTH_GET_USER_INFO_URL"):
+            detail_info = self._fetch_user_info_by_domain_account(
+                domain_account,
+                access_token=self._extract_company_access_token(uid_info),
+                cookies=cookie_dict,
+            )
+            info = {**uid_info, **detail_info}
         payload = self._build_user_payload(domain_account, info)
-        if payload.get("lc_user_id"):
-            existing = self.repository.get_user_by_lc_user_id(payload["lc_user_id"])
-            if existing and existing.domain_account != payload["domain_account"]:
-                existing.domain_account = payload["domain_account"]
-        user = self.repository.upsert_user_by_domain_account(payload["domain_account"], payload)
+        user = self._upsert_authenticated_user(payload)
 
         if user.valid != 1:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
@@ -433,6 +575,11 @@ class AuthService:
         roles = self._get_valid_roles(user.role_ids)
         permission_codes = self._get_permission_codes(user.role_ids)
         return self._serialize_user(user, roles, permission_codes)
+
+    def get_current_session(self, user_identity: Any) -> Dict[str, Any]:
+        user = self.get_current_user(user_identity)
+        menus = self.get_user_menus(user_identity)
+        return {"user": user, "menus": menus}
 
     def get_all_users(self) -> List[Dict[str, Any]]:
         users = self.repository.get_all_valid_users()

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 from collections import Counter, defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from app.common.errors import BusinessError, NotFoundError
 from app.constants import ErrorCode
@@ -32,18 +32,53 @@ DEFAULT_PLATFORM_SETTINGS: Dict[str, Any] = {
 
 
 SETTING_DESCRIPTIONS: Dict[str, str] = {
-    "announcement_poll_interval_seconds": "公告轮询周期（秒）",
-    "tracking_enabled": "是否启用前端埋点收集",
-    "privacy_policy_required": "是否强制要求同意隐私协议",
+    "announcement_poll_interval_seconds": "公告轮询周期(秒)",
+    "tracking_enabled": "是否启用前端埋点",
+    "privacy_policy_required": "是否要求用户同意隐私协议",
     "privacy_policy_title": "隐私协议标题",
-    "privacy_policy_version": "隐私协议版本号",
+    "privacy_policy_version": "隐私协议版本",
     "privacy_policy_summary": "隐私协议摘要",
     "privacy_policy_content": "隐私协议正文",
 }
 
 
+FUNNEL_DEFINITIONS = [
+    {
+        "key": "submission_to_result",
+        "title": "新建仿真到结果查看",
+        "steps": [
+            {"event_name": "dashboard.shortcut_click", "feature_key": "dashboard.new_sim"},
+            {"event_name": "submission.submit_success", "feature_key": "submission.submit"},
+            {"event_name": "results.view", "feature_key": "results.page"},
+        ],
+    },
+    {
+        "key": "orders_to_results",
+        "title": "申请单到结果查看",
+        "steps": [
+            {"event_name": "orders.page_interaction", "feature_key": "orders.result_open"},
+            {"event_name": "results.view", "feature_key": "results.page"},
+        ],
+    },
+]
+
+
 def _now_ts() -> int:
     return int(time.time())
+
+
+def _safe_str(value: Any) -> Optional[str]:
+    text = str(value or "").strip()
+    return text or None
+
+
+def _safe_int(value: Any) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class PlatformService:
@@ -154,7 +189,9 @@ class PlatformService:
         self._get_valid_user_or_raise(user_identity)
         return {
             "settings": self._get_settings(),
-            "announcements": [self._serialize_announcement(item) for item in self.repository.list_announcements()],
+            "announcements": [
+                self._serialize_announcement(item) for item in self.repository.list_announcements()
+            ],
         }
 
     def update_settings(self, user_identity: Any, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -186,8 +223,8 @@ class PlatformService:
             sort=int(payload.get("sort") or 100),
             start_at=payload.get("start_at"),
             end_at=payload.get("end_at"),
-            link_text=str(payload.get("link_text") or "").strip() or None,
-            link_url=str(payload.get("link_url") or "").strip() or None,
+            link_text=_safe_str(payload.get("link_text")),
+            link_url=_safe_str(payload.get("link_url")),
             created_by=user.domain_account,
             updated_by=user.domain_account,
         )
@@ -211,8 +248,8 @@ class PlatformService:
         item.sort = int(payload.get("sort") or 100)
         item.start_at = payload.get("start_at")
         item.end_at = payload.get("end_at")
-        item.link_text = str(payload.get("link_text") or "").strip() or None
-        item.link_url = str(payload.get("link_url") or "").strip() or None
+        item.link_text = _safe_str(payload.get("link_text"))
+        item.link_url = _safe_str(payload.get("link_url"))
         item.updated_by = user.domain_account
         self.repository.save_announcement(item)
         self.repository.commit()
@@ -226,6 +263,26 @@ class PlatformService:
         self.repository.delete_announcement(item)
         self.repository.commit()
 
+    def _normalize_tracking_event(
+        self, user: User, item: Dict[str, Any], now_ts: int
+    ) -> TrackingEvent:
+        metadata = item.get("metadata") or {}
+        return TrackingEvent(
+            event_name=str(item["event_name"]).strip(),
+            event_type=str(item.get("event_type") or "interaction").strip() or "interaction",
+            page_path=_safe_str(item.get("page_path")),
+            page_key=_safe_str(metadata.get("pageKey")),
+            feature_key=_safe_str(metadata.get("featureKey")),
+            module_key=_safe_str(metadata.get("moduleKey")),
+            result=_safe_str(metadata.get("result")),
+            target=_safe_str(item.get("target")),
+            session_id=_safe_str(item.get("session_id")),
+            domain_account=user.domain_account,
+            metadata_json=metadata,
+            duration_ms=_safe_int(metadata.get("durationMs")),
+            created_at=_safe_int(item.get("occurred_at")) or now_ts,
+        )
+
     def track_events(self, user_identity: Any, events: List[Dict[str, Any]]) -> Dict[str, Any]:
         user = self._get_valid_user_or_raise(user_identity)
         settings = self._get_settings()
@@ -233,70 +290,234 @@ class PlatformService:
             return {"accepted_count": 0, "tracking_enabled": False}
 
         now_ts = _now_ts()
-        rows: List[TrackingEvent] = []
-        for item in events:
-            rows.append(
-                TrackingEvent(
-                    event_name=str(item["event_name"]).strip(),
-                    event_type=str(item.get("event_type") or "interaction").strip() or "interaction",
-                    page_path=str(item.get("page_path") or "").strip() or None,
-                    target=str(item.get("target") or "").strip() or None,
-                    session_id=str(item.get("session_id") or "").strip() or None,
-                    domain_account=user.domain_account,
-                    metadata_json=item.get("metadata") or {},
-                    created_at=int(item.get("occurred_at") or now_ts),
-                )
-            )
+        rows = [self._normalize_tracking_event(user, item, now_ts) for item in events]
         self.repository.add_tracking_events(rows)
         self.repository.commit()
         return {"accepted_count": len(rows), "tracking_enabled": True}
 
-    def get_analytics_summary(self, user_identity: Any, days: int) -> Dict[str, Any]:
-        self._get_valid_user_or_raise(user_identity)
+    def _load_analytics_events(self, days: int) -> List[TrackingEvent]:
         now_ts = _now_ts()
         start_ts = now_ts - days * 24 * 60 * 60
-        events = self.repository.list_tracking_events_since(start_ts)
+        return self.repository.list_tracking_events_since(start_ts)
+
+    def get_analytics_summary(self, user_identity: Any, days: int) -> Dict[str, Any]:
+        self._get_valid_user_or_raise(user_identity)
+        events = self._load_analytics_events(days)
 
         total_events = len(events)
         unique_users = {item.domain_account for item in events if item.domain_account}
-        page_view_count = 0
+        page_views = 0
         event_counter: Counter[str] = Counter()
         page_counter: Counter[str] = Counter()
+        module_counter: Counter[str] = Counter()
+        success_events = 0
+        failure_events = 0
         timeline_counter: defaultdict[str, int] = defaultdict(int)
 
         for item in events:
             event_counter[item.event_name] += 1
-            if item.page_path:
-                page_counter[item.page_path] += 1
             if item.event_name == "page_view":
-                page_view_count += 1
+                if item.page_key:
+                    page_counter[item.page_key] += 1
+                elif item.page_path:
+                    page_counter[item.page_path] += 1
+            if item.module_key:
+                module_counter[item.module_key] += 1
+            if item.event_name == "page_view":
+                page_views += 1
+            if item.result == "success":
+                success_events += 1
+            if item.result == "failure" or item.event_name.endswith("failure"):
+                failure_events += 1
             day_key = time.strftime("%Y-%m-%d", time.localtime(item.created_at))
             timeline_counter[day_key] += 1
 
-        acceptances = event_counter.get("privacy_accept", 0)
-        announcement_views = event_counter.get("announcement_view", 0)
-
-        timeline = [
-            {"date": day, "count": count}
-            for day, count in sorted(timeline_counter.items(), key=lambda pair: pair[0])
-        ]
-        top_events = [{"name": name, "count": count} for name, count in event_counter.most_common(8)]
-        top_pages = [{"path": path, "count": count} for path, count in page_counter.most_common(8)]
+        announcement_views = event_counter.get("platform.announcement_view", 0)
+        privacy_acceptances = event_counter.get("platform.privacy_accept", 0)
+        feature_events = sum(
+            count
+            for name, count in event_counter.items()
+            if name != "page_view" and "." in name
+        )
 
         return {
             "summary": {
                 "days": days,
                 "total_events": total_events,
                 "unique_users": len(unique_users),
-                "page_views": page_view_count,
-                "privacy_acceptances": acceptances,
+                "page_views": page_views,
+                "privacy_acceptances": privacy_acceptances,
                 "announcement_views": announcement_views,
+                "feature_events": feature_events,
+                "success_events": success_events,
+                "failure_events": failure_events,
             },
-            "timeline": timeline,
-            "top_events": top_events,
-            "top_pages": top_pages,
+            "timeline": [
+                {"date": day, "count": count}
+                for day, count in sorted(timeline_counter.items(), key=lambda pair: pair[0])
+            ],
+            "top_events": [{"name": name, "count": count} for name, count in event_counter.most_common(10)],
+            "top_pages": [{"path": name, "count": count} for name, count in page_counter.most_common(10)],
+            "top_modules": [{"name": name, "count": count} for name, count in module_counter.most_common(10)],
+        }
+
+    def get_analytics_features(self, user_identity: Any, days: int) -> Dict[str, Any]:
+        self._get_valid_user_or_raise(user_identity)
+        events = self._load_analytics_events(days)
+
+        page_stats: dict[str, dict[str, Any]] = {}
+        feature_stats: dict[str, dict[str, Any]] = {}
+        module_stats: dict[str, dict[str, Any]] = {}
+
+        for item in events:
+            user_key = item.domain_account or "anonymous"
+
+            if item.event_name == "page_view" and (item.page_key or item.page_path):
+                page_key = item.page_key or item.page_path
+                current = page_stats.setdefault(
+                    page_key,
+                    {
+                        "page_key": item.page_key or page_key,
+                        "page_path": item.page_path or page_key,
+                        "count": 0,
+                        "users": set(),
+                    },
+                )
+                current["count"] += 1
+                current["users"].add(user_key)
+
+            if item.feature_key:
+                current = feature_stats.setdefault(
+                    item.feature_key,
+                    {
+                        "feature_key": item.feature_key,
+                        "event_name": item.event_name,
+                        "module_key": item.module_key,
+                        "page_key": item.page_key,
+                        "count": 0,
+                        "users": set(),
+                    },
+                )
+                current["count"] += 1
+                current["users"].add(user_key)
+
+            if item.module_key:
+                current = module_stats.setdefault(
+                    item.module_key,
+                    {"module_key": item.module_key, "count": 0, "users": set()},
+                )
+                current["count"] += 1
+                current["users"].add(user_key)
+
+        def _normalize(items: Iterable[dict[str, Any]], user_key: str) -> List[dict[str, Any]]:
+            result: List[dict[str, Any]] = []
+            for item in items:
+                next_item = dict(item)
+                next_item[user_key] = len(item["users"])
+                del next_item["users"]
+                result.append(next_item)
+            return result
+
+        pages = sorted(
+            _normalize(page_stats.values(), "unique_users"),
+            key=lambda item: item["count"],
+            reverse=True,
+        )
+        features = sorted(
+            _normalize(feature_stats.values(), "unique_users"),
+            key=lambda item: item["count"],
+            reverse=True,
+        )
+        modules = sorted(
+            _normalize(module_stats.values(), "unique_users"),
+            key=lambda item: item["count"],
+            reverse=True,
+        )
+
+        return {"days": days, "pages": pages[:20], "features": features[:30], "modules": modules[:20]}
+
+    def get_analytics_funnels(self, user_identity: Any, days: int) -> Dict[str, Any]:
+        self._get_valid_user_or_raise(user_identity)
+        events = sorted(self._load_analytics_events(days), key=lambda item: (item.created_at, item.id))
+
+        sessions: dict[str, List[TrackingEvent]] = defaultdict(list)
+        for item in events:
+            session_key = item.session_id or f"user:{item.domain_account or 'anonymous'}"
+            sessions[session_key].append(item)
+
+        funnels: List[dict[str, Any]] = []
+        for definition in FUNNEL_DEFINITIONS:
+            step_counts = [0 for _ in definition["steps"]]
+            for session_events in sessions.values():
+                step_index = 0
+                for item in session_events:
+                    if step_index >= len(definition["steps"]):
+                        break
+                    step = definition["steps"][step_index]
+                    if item.event_name != step["event_name"]:
+                        continue
+                    if step.get("feature_key") and item.feature_key != step["feature_key"]:
+                        continue
+                    step_counts[step_index] += 1
+                    step_index += 1
+
+            steps = []
+            previous = step_counts[0] if step_counts else 0
+            for index, step in enumerate(definition["steps"]):
+                count = step_counts[index]
+                conversion_rate = 0 if previous == 0 else round(count / previous * 100, 2)
+                steps.append(
+                    {
+                        "index": index + 1,
+                        "event_name": step["event_name"],
+                        "feature_key": step.get("feature_key"),
+                        "count": count,
+                        "conversion_rate": conversion_rate if index > 0 else 100.0,
+                    }
+                )
+                previous = count or previous
+
+            funnels.append({"key": definition["key"], "title": definition["title"], "steps": steps})
+
+        return {"days": days, "funnels": funnels}
+
+    def get_analytics_failures(self, user_identity: Any, days: int) -> Dict[str, Any]:
+        self._get_valid_user_or_raise(user_identity)
+        events = self._load_analytics_events(days)
+
+        failed_events = [
+            item
+            for item in events
+            if item.result == "failure" or item.event_name.endswith("failure")
+        ]
+
+        event_counter: Counter[str] = Counter()
+        page_counter: Counter[str] = Counter()
+        feature_counter: Counter[str] = Counter()
+
+        for item in failed_events:
+            event_counter[item.event_name] += 1
+            if item.page_key:
+                page_counter[item.page_key] += 1
+            elif item.page_path:
+                page_counter[item.page_path] += 1
+            if item.feature_key:
+                feature_counter[item.feature_key] += 1
+
+        return {
+            "days": days,
+            "total_failures": len(failed_events),
+            "top_failed_events": [
+                {"name": name, "count": count} for name, count in event_counter.most_common(12)
+            ],
+            "top_failed_pages": [
+                {"page_key": name, "count": count} for name, count in page_counter.most_common(12)
+            ],
+            "top_failed_features": [
+                {"feature_key": name, "count": count}
+                for name, count in feature_counter.most_common(12)
+            ],
         }
 
 
 platform_service = PlatformService()
-

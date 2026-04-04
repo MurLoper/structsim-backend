@@ -14,6 +14,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     order_no = db.Column(db.String(50), unique=True, nullable=False, comment='订单编号')
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False, comment='项目ID')
+    phase_id = db.Column(db.Integer, index=True, comment='项目阶段ID')
 
     # 模型层级
     model_level_id = db.Column(db.Integer, comment='模型层级ID')
@@ -73,6 +74,7 @@ class Order(db.Model):
             'id': self.id,
             'order_no': self.order_no,
             'project_id': self.project_id,
+            'phase_id': self.__dict__.get('phase_id'),
             'model_level_id': self.model_level_id,
             'origin_file': {
                 'type': self.origin_file_type,
@@ -108,6 +110,7 @@ class Order(db.Model):
             'id': self.id,
             'order_no': self.order_no,
             'project_id': self.project_id,
+            'phase_id': self.__dict__.get('phase_id'),
             'remark': self.remark,
             'sim_type_ids': self.sim_type_ids,
             'fold_type_ids': self.fold_type_ids,

@@ -47,6 +47,8 @@ class OrdersRepository:
             query = query.options(defer(Order.domain_account))
         if not cls._has_order_column('base_dir'):
             query = query.options(defer(Order.base_dir))
+        if not cls._has_order_column('phase_id'):
+            query = query.options(defer(Order.phase_id))
         return query
 
     @classmethod
@@ -109,7 +111,7 @@ class OrdersRepository:
     def create_order(cls, order_data: dict) -> Order:
         """创建订单并 flush，不在仓储层提交事务。"""
         missing_columns = {
-            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir')
+            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir', 'phase_id')
             if name in order_data and not cls._has_order_column(name)
         }
         if missing_columns:
@@ -132,7 +134,7 @@ class OrdersRepository:
     def update_order(cls, order: Order, update_data: dict) -> Order:
         """更新订单，不在仓储层提交事务。"""
         missing_columns = {
-            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir')
+            name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir', 'phase_id')
             if name in update_data and not cls._has_order_column(name)
         }
         if missing_columns:

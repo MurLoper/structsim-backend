@@ -23,12 +23,18 @@ from app.models import (
     ConditionDef,
     OutputDef
 )
+from app.services.external_data import project_phase_repository, user_resource_pool_repository
 
 
 class OrderInitConfigService:
     """提单初始化配置服务"""
     
-    def get_init_config(self, project_id: int, sim_type_id: Optional[int] = None) -> Dict[str, Any]:
+    def get_init_config(
+        self,
+        project_id: int,
+        sim_type_id: Optional[int] = None,
+        domain_account: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         获取提单初始化配置
         
@@ -79,13 +85,21 @@ class OrderInitConfigService:
         solver_options = self._get_solver_options(sim_type.id)
         default_solver = next((opt for opt in solver_options if opt['isDefault'] == 1), None)
         
-        # 6. 组装响应
+        # 6. 用户资源池
+        resource_pool_data = user_resource_pool_repository.get_user_resource_pools(domain_account or '')
+
+        # 7. 组装响应
+        default_phase_id = project_phase_repository.get_default_phase_id(project.id)
         return {
             'project_id': project.id,
             'projectName': project.name,
             'sim_type_id': sim_type.id,
             'sim_type_name': sim_type.name,
             'sim_type_code': sim_type.code,
+            'phases': project_phase_repository.list_phases(),
+            'defaultPhaseId': default_phase_id,
+            'resourcePools': resource_pool_data.get('resourcePools', []),
+            'defaultResourceId': resource_pool_data.get('defaultResourceId'),
             'defaultParamGroup': default_param_group,
             'defaultCondOutGroup': default_cond_out_group,
             'defaultSolver': default_solver,

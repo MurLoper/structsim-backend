@@ -75,6 +75,16 @@ class SolverOptionResponse(BaseModel):
     isDefault: int
 
 
+class PhaseOptionResponse(BaseModel):
+    phaseId: int
+    phaseName: str
+
+
+class ResourcePoolOptionResponse(BaseModel):
+    id: int
+    name: str
+
+
 class OrderInitConfigResponse(BaseModel):
     """提单初始化配置响应"""
     projectId: int
@@ -82,6 +92,10 @@ class OrderInitConfigResponse(BaseModel):
     simTypeId: int
     simTypeName: str
     simTypeCode: str
+    phases: List[PhaseOptionResponse]
+    defaultPhaseId: Optional[int]
+    resourcePools: List[ResourcePoolOptionResponse]
+    defaultResourceId: Optional[int]
     
     # 默认配置
     defaultParamGroup: Optional[ParamGroupOptionResponse]
@@ -92,4 +106,3 @@ class OrderInitConfigResponse(BaseModel):
     paramGroupOptions: List[ParamGroupOptionResponse]
     condOutGroupOptions: List[CondOutGroupOptionResponse]
     solverOptions: List[SolverOptionResponse]
-

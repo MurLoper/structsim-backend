@@ -3,6 +3,7 @@
 职责：路由定义、参数校验、HTTP响应
 """
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 from app.common.response import success, error
 from app.common.errors import NotFoundError, BusinessError
@@ -15,6 +16,7 @@ service = OrderInitConfigService()
 
 
 @init_config_bp.route('/orders/init-config', methods=['GET'])
+@jwt_required()
 def get_init_config():
     """
     获取提单初始化配置
@@ -29,8 +31,14 @@ def get_init_config():
         
         if not project_id:
             return error(code=ErrorCode.VALIDATION_ERROR, msg="projectId 参数必填")
-        
-        config = service.get_init_config(project_id, sim_type_id)
+
+        identity = get_jwt_identity()
+        if isinstance(identity, dict):
+            user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
+        else:
+            user_identity = identity
+
+        config = service.get_init_config(project_id, sim_type_id, str(user_identity or ''))
         return success(data=config)
     except NotFoundError as e:
         return error(code=ErrorCode.NOT_FOUND, msg=str(e))
@@ -38,4 +46,3 @@ def get_init_config():
         return error(code=ErrorCode.BUSINESS_ERROR, msg=str(e))
     except Exception as e:
         return error(code=ErrorCode.INTERNAL_ERROR, msg=str(e))
-

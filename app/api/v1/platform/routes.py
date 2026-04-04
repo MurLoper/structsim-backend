@@ -51,7 +51,7 @@ def accept_privacy_policy():
             accepted_ip=request.headers.get("X-Forwarded-For", request.remote_addr),
             policy_version=validated.policy_version,
         )
-        return success(result, "隐私协议已同意")
+        return success(result, "隐私协议已确认")
     except ValidationError as exc:
         return error(ErrorCode.VALIDATION_ERROR, str(exc), http_status=400)
     except BusinessError as exc:
@@ -71,13 +71,53 @@ def track_platform_events():
         return error(exc.code, exc.msg, http_status=400)
 
 
+def _get_days_query() -> int:
+    validated = AnalyticsQueryRequest(days=int(request.args.get("days") or 7))
+    return validated.days
+
+
 @platform_bp.route("/analytics/summary", methods=["GET"])
 @jwt_required()
 @require_permission("VIEW_DASHBOARD")
 def get_platform_analytics_summary():
     try:
-        validated = AnalyticsQueryRequest(days=int(request.args.get("days") or 7))
-        return success(platform_service.get_analytics_summary(_get_identity_value(), validated.days))
+        return success(platform_service.get_analytics_summary(_get_identity_value(), _get_days_query()))
+    except ValidationError as exc:
+        return error(ErrorCode.VALIDATION_ERROR, str(exc), http_status=400)
+    except BusinessError as exc:
+        return error(exc.code, exc.msg, http_status=400)
+
+
+@platform_bp.route("/analytics/features", methods=["GET"])
+@jwt_required()
+@require_permission("VIEW_DASHBOARD")
+def get_platform_analytics_features():
+    try:
+        return success(platform_service.get_analytics_features(_get_identity_value(), _get_days_query()))
+    except ValidationError as exc:
+        return error(ErrorCode.VALIDATION_ERROR, str(exc), http_status=400)
+    except BusinessError as exc:
+        return error(exc.code, exc.msg, http_status=400)
+
+
+@platform_bp.route("/analytics/funnels", methods=["GET"])
+@jwt_required()
+@require_permission("VIEW_DASHBOARD")
+def get_platform_analytics_funnels():
+    try:
+        return success(platform_service.get_analytics_funnels(_get_identity_value(), _get_days_query()))
+    except ValidationError as exc:
+        return error(ErrorCode.VALIDATION_ERROR, str(exc), http_status=400)
+    except BusinessError as exc:
+        return error(exc.code, exc.msg, http_status=400)
+
+
+@platform_bp.route("/analytics/failures", methods=["GET"])
+@jwt_required()
+@require_permission("VIEW_DASHBOARD")
+def get_platform_analytics_failures():
+    try:
+        return success(platform_service.get_analytics_failures(_get_identity_value(), _get_days_query()))
     except ValidationError as exc:
         return error(ErrorCode.VALIDATION_ERROR, str(exc), http_status=400)
     except BusinessError as exc:

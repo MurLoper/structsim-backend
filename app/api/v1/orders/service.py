@@ -485,9 +485,14 @@ class OrdersService:
         if origin_fold_type_id is None:
             origin_fold_type_id = project_info.get('originFoldTypeId')
 
+        resolved_phase_id = order_data.get('phase_id')
+        if resolved_phase_id is None:
+            resolved_phase_id = project_info.get('phaseId', project_info.get('phase_id'))
+
         order_dict = {
             'order_no': generate_order_no(),
             'project_id': order_data.get('project_id'),
+            'phase_id': resolved_phase_id,
             'model_level_id': order_data.get('model_level_id'),
             'origin_file_type': origin_file.get('type', 1),
             'origin_file_name': origin_file.get('name'),
@@ -545,7 +550,7 @@ class OrdersService:
             'input_json',
             'origin_file_type', 'origin_file_name', 'origin_file_path', 'origin_file_id',
             'origin_fold_type_id', 'model_level_id',
-            'workflow_id', 'submit_check', 'client_meta', 'opt_issue_id', 'base_dir',
+            'workflow_id', 'submit_check', 'client_meta', 'opt_issue_id', 'base_dir', 'phase_id',
         ]
         filtered_data = {
             k: v for k, v in update_data.items()

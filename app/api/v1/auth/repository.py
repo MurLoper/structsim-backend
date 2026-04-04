@@ -4,7 +4,7 @@
 from typing import List, Optional
 
 from app.extensions import db
-from app.models.auth import User
+from app.models.auth import Permission, Role, User
 
 
 class AuthRepository:
@@ -29,6 +29,23 @@ class AuthRepository:
     @staticmethod
     def get_all_valid_users() -> List[User]:
         return User.query.filter_by(valid=1).order_by(User.domain_account.asc()).all()
+
+    @staticmethod
+    def get_role_by_code(code: str) -> Optional[Role]:
+        return Role.query.filter_by(code=code, valid=1).first()
+
+    @staticmethod
+    def get_permissions_by_codes(codes: List[str]) -> List[Permission]:
+        if not codes:
+            return []
+        return Permission.query.filter(Permission.code.in_(codes), Permission.valid == 1).all()
+
+    @staticmethod
+    def create_role(role_data: dict) -> Role:
+        role = Role(**role_data)
+        db.session.add(role)
+        db.session.commit()
+        return role
 
     @staticmethod
     def update_last_login(user: User, timestamp: int) -> None:
