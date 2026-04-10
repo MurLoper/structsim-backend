@@ -122,20 +122,69 @@ OPENAPI_SPEC = {
                     "projectId": {"type": "integer", "nullable": True}
                 }
             },
-            "OrderInitConfigResponse": {
+            "OrderProjectInitConfigResponse": {
                 "type": "object",
                 "properties": {
                     "projectId": {"type": "integer"},
                     "projectName": {"type": "string"},
-                    "simTypeId": {"type": "integer"},
-                    "simTypeName": {"type": "string"},
-                    "simTypeCode": {"type": "string"},
+                    "simTypeId": {"type": "integer", "nullable": True},
+                    "simTypeName": {"type": "string", "nullable": True},
+                    "simTypeCode": {"type": "string", "nullable": True},
+                    "phases": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/PhaseOption"}
+                    },
+                    "defaultPhaseId": {"type": "integer", "nullable": True},
+                    "participantCandidates": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/ParticipantCandidate"}
+                    },
                     "defaultParamGroup": {"$ref": "#/components/schemas/ParamGroupOption"},
                     "paramGroupOptions": {"type": "array", "items": {"$ref": "#/components/schemas/ParamGroupOption"}},
                     "defaultCondOutGroup": {"$ref": "#/components/schemas/CondOutGroupOption"},
                     "condOutGroupOptions": {"type": "array", "items": {"$ref": "#/components/schemas/CondOutGroupOption"}},
                     "defaultSolver": {"$ref": "#/components/schemas/SolverOption"},
                     "solverOptions": {"type": "array", "items": {"$ref": "#/components/schemas/SolverOption"}}
+                }
+            },
+            "PhaseOption": {
+                "type": "object",
+                "properties": {
+                    "phaseId": {"type": "integer"},
+                    "phaseName": {"type": "string"}
+                }
+            },
+            "ParticipantCandidate": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "domainAccount": {"type": "string"},
+                    "userName": {"type": "string", "nullable": True},
+                    "realName": {"type": "string", "nullable": True},
+                    "displayName": {"type": "string", "nullable": True},
+                    "email": {"type": "string", "nullable": True},
+                    "departmentId": {"type": "integer", "nullable": True},
+                    "department": {"type": "string", "nullable": True},
+                    "isProjectFrequent": {"type": "boolean"},
+                    "projectFrequency": {"type": "integer"},
+                    "isCurrentUser": {"type": "boolean"}
+                }
+            },
+            "UserResourcePoolsResponse": {
+                "type": "object",
+                "properties": {
+                    "resourcePools": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/ResourcePoolOption"}
+                    },
+                    "defaultResourceId": {"type": "integer", "nullable": True}
+                }
+            },
+            "ResourcePoolOption": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "name": {"type": "string"}
                 }
             },
             "ParamGroupOption": {
@@ -1109,14 +1158,25 @@ OPENAPI_SPEC = {
                 "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
             }
         },
-        "/api/v1/orders/init-config": {
+        "/api/v1/orders/init-project-config": {
             "get": {
                 "tags": ["orders"],
-                "summary": "Get init config",
+                "summary": "Get project context for order initialization",
                 "parameters": [
                     {"name": "projectId", "in": "query", "required": True, "schema": {"type": "integer"}},
                     {"name": "simTypeId", "in": "query", "required": False, "schema": {"type": "integer"}}
                 ],
+                "responses": {
+                    "200": {"$ref": "#/components/schemas/StandardResponse"},
+                    "400": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        },
+        "/api/v1/orders/resource-pools": {
+            "get": {
+                "tags": ["orders"],
+                "summary": "Get user resource pools",
+                "security": [{"BearerAuth": []}],
                 "responses": {
                     "200": {"$ref": "#/components/schemas/StandardResponse"},
                     "400": {"$ref": "#/components/schemas/ErrorResponse"}

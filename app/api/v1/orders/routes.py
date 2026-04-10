@@ -154,6 +154,22 @@ def get_submit_limits():
         return error(e.code, e.msg, http_status=400)
 
 
+@orders_bp.route('/resource-pools', methods=['GET'])
+@jwt_required()
+def get_user_resource_pools():
+    """获取当前用户可用资源池列表与默认资源池。"""
+    try:
+        identity = get_jwt_identity()
+        if isinstance(identity, dict):
+            user_identity = identity.get('domain_account') or identity.get('domainAccount') or identity.get('id')
+        else:
+            user_identity = identity
+        data = orders_service.get_user_resource_pools(str(user_identity))
+        return success(data)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
+
+
 @orders_bp.route('/statistics', methods=['GET'])
 @jwt_required()
 def get_statistics():

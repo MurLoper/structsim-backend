@@ -1,19 +1,19 @@
 """
-提单初始化 - Pydantic Schemas
-职责：请求/响应数据校验
+提单项目上下文初始化 schema。
 """
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
-class OrderInitConfigRequest(BaseModel):
-    """提单初始化配置请求"""
-    projectId: int = Field(..., description="项目ID")
-    simTypeId: Optional[int] = Field(None, description="仿真类型ID，不传则使用项目默认")
+class OrderProjectInitConfigRequest(BaseModel):
+    """项目上下文初始化请求。"""
+
+    projectId: int = Field(..., description="项目 ID")
+    simTypeId: Optional[int] = Field(None, description="仿真类型 ID，可选")
 
 
 class ParamConfigResponse(BaseModel):
-    """参数配置响应"""
     paramDefId: int
     paramName: str
     paramKey: str
@@ -24,7 +24,6 @@ class ParamConfigResponse(BaseModel):
 
 
 class ConditionConfigResponse(BaseModel):
-    """工况配置响应"""
     conditionDefId: int
     conditionName: str
     conditionCode: str
@@ -33,7 +32,6 @@ class ConditionConfigResponse(BaseModel):
 
 
 class OutputConfigResponse(BaseModel):
-    """输出配置响应"""
     outputDefId: int
     outputName: str
     outputCode: str
@@ -42,7 +40,6 @@ class OutputConfigResponse(BaseModel):
 
 
 class SolverConfigResponse(BaseModel):
-    """求解器配置响应"""
     solverId: int
     solverName: str
     solverCode: str
@@ -50,7 +47,6 @@ class SolverConfigResponse(BaseModel):
 
 
 class ParamGroupOptionResponse(BaseModel):
-    """参数组合选项响应"""
     paramGroupId: int
     paramGroupName: str
     isDefault: int
@@ -58,7 +54,6 @@ class ParamGroupOptionResponse(BaseModel):
 
 
 class CondOutGroupOptionResponse(BaseModel):
-    """工况输出组合选项响应"""
     condOutGroupId: int
     condOutGroupName: str
     isDefault: int
@@ -67,7 +62,6 @@ class CondOutGroupOptionResponse(BaseModel):
 
 
 class SolverOptionResponse(BaseModel):
-    """求解器选项响应"""
     solverId: int
     solverName: str
     solverCode: str
@@ -85,24 +79,36 @@ class ResourcePoolOptionResponse(BaseModel):
     name: str
 
 
-class OrderInitConfigResponse(BaseModel):
-    """提单初始化配置响应"""
+class ParticipantCandidateResponse(BaseModel):
+    id: str
+    domainAccount: str
+    userName: Optional[str] = None
+    realName: Optional[str] = None
+    displayName: Optional[str] = None
+    email: Optional[str] = None
+    departmentId: Optional[int] = None
+    department: Optional[str] = None
+    isProjectFrequent: bool = False
+    projectFrequency: int = 0
+    isCurrentUser: bool = False
+
+
+class OrderProjectInitConfigResponse(BaseModel):
+    """项目上下文初始化响应。"""
+
     projectId: int
     projectName: str
-    simTypeId: int
-    simTypeName: str
-    simTypeCode: str
+    simTypeId: Optional[int]
+    simTypeName: Optional[str]
+    simTypeCode: Optional[str]
     phases: List[PhaseOptionResponse]
     defaultPhaseId: Optional[int]
+    participantCandidates: List[ParticipantCandidateResponse]
     resourcePools: List[ResourcePoolOptionResponse]
     defaultResourceId: Optional[int]
-    
-    # 默认配置
     defaultParamGroup: Optional[ParamGroupOptionResponse]
     defaultCondOutGroup: Optional[CondOutGroupOptionResponse]
     defaultSolver: Optional[SolverConfigResponse]
-    
-    # 所有可选配置
     paramGroupOptions: List[ParamGroupOptionResponse]
     condOutGroupOptions: List[CondOutGroupOptionResponse]
     solverOptions: List[SolverOptionResponse]

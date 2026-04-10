@@ -15,6 +15,7 @@ from app.common.errors import NotFoundError, BusinessError
 from app.constants import ErrorCode
 from app.models.auth import User, Role
 from .repository import orders_repository
+from app.services.external_data import user_resource_pool_repository
 
 
 def generate_order_no() -> str:
@@ -370,6 +371,15 @@ class OrdersService:
             'daily_round_limit': limits['daily_round_limit'],
             'today_used_rounds': today_used_rounds,
             'today_remaining_rounds': max(limits['daily_round_limit'] - today_used_rounds, 0),
+        }
+
+    def get_user_resource_pools(self, user_identity: str) -> Dict[str, Any]:
+        user = self._get_submit_user_or_raise(user_identity)
+        normalized_identity = self._normalize_domain_account(user.domain_account)
+        data = user_resource_pool_repository.get_user_resource_pools(normalized_identity)
+        return {
+            'resourcePools': data.get('resourcePools', []),
+            'defaultResourceId': data.get('defaultResourceId'),
         }
     
     def get_orders(

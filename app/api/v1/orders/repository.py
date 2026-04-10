@@ -131,6 +131,17 @@ class OrdersRepository:
         ).all()
 
     @classmethod
+    def get_recent_orders_by_project(cls, project_id: int, limit: int = 100) -> List[Order]:
+        """获取某项目最近订单，用于计算历史常选参与人。"""
+        return (
+            cls._base_query()
+            .filter(Order.project_id == project_id)
+            .order_by(desc(Order.created_at))
+            .limit(limit)
+            .all()
+        )
+
+    @classmethod
     def update_order(cls, order: Order, update_data: dict) -> Order:
         """更新订单，不在仓储层提交事务。"""
         missing_columns = {

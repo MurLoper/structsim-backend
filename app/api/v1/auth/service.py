@@ -169,6 +169,8 @@ class AuthService:
             "dailyRoundLimit": AuthService._resolve_effective_daily_round_limit(
                 user.daily_round_limit, limits["dailyRoundLimitDefault"]
             ),
+            "recentProjectIds": list(user.recent_project_ids or []),
+            "recentSimTypeIds": list(user.recent_sim_type_ids or []),
             "valid": user.valid,
             "createdAt": user.created_at,
             "updatedAt": user.updated_at,
@@ -579,6 +581,25 @@ class AuthService:
     def get_current_session(self, user_identity: Any) -> Dict[str, Any]:
         user = self.get_current_user(user_identity)
         menus = self.get_user_menus(user_identity)
+        try:
+            from app.api.v1.orders.service import orders_service
+
+            submit_limits = orders_service.get_submit_limits(str(user.get("domainAccount") or ""))
+        except Exception:
+            submit_limits = {}
+
+        if submit_limits:
+            user = {
+                **user,
+                "maxBatchSize": submit_limits.get("max_batch_size", user.get("maxBatchSize")),
+                "maxCpuCores": submit_limits.get("max_cpu_cores", user.get("maxCpuCores")),
+                "dailyRoundLimitDefault": submit_limits.get(
+                    "daily_round_limit_default", user.get("dailyRoundLimitDefault")
+                ),
+                "dailyRoundLimit": submit_limits.get("daily_round_limit", user.get("dailyRoundLimit")),
+                "todayUsedRounds": submit_limits.get("today_used_rounds", 0),
+                "todayRemainingRounds": submit_limits.get("today_remaining_rounds", 0),
+            }
         return {"user": user, "menus": menus}
 
     def get_all_users(self) -> List[Dict[str, Any]]:
