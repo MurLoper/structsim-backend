@@ -101,25 +101,39 @@ class ResultsService:
         round_obj = self.repository.get_round_by_id(round_id)
         return self._serialize_round(round_obj)
 
-    def get_order_conditions(self, order_id: int) -> List[Dict[str, Any]]:
+    def get_order_conditions(
+        self,
+        order_id: int,
+        include_external: bool = False,
+    ) -> List[Dict[str, Any]]:
         conditions = self.repository.get_order_conditions(order_id)
         if conditions:
-            return [
-                self._enrich_order_condition_payload(
-                    self._serialize_order_condition(item, include_mock_summary=True)
+            payloads = [
+                self._serialize_order_condition(
+                    item,
+                    include_mock_summary=False,
+                    include_snapshot=False,
                 )
                 for item in conditions
             ]
+            if include_external:
+                return self._enrich_order_condition_payloads(payloads, include_outputs=False)
+            return payloads
 
         order = self.repository.get_order_by_id(order_id)
         if not order:
             return []
-        return [
-            self._enrich_order_condition_payload(
-                self._serialize_order_condition(item, include_mock_summary=True)
+        payloads = [
+            self._serialize_order_condition(
+                item,
+                include_mock_summary=True,
+                include_snapshot=False,
             )
             for item in self._build_mock_order_conditions_from_order(order)
         ]
+        if include_external:
+            return self._enrich_order_condition_payloads(payloads, include_outputs=False)
+        return payloads
 
     def get_order_condition(self, order_condition_id: int) -> Dict[str, Any]:
         condition = self._resolve_order_condition(order_condition_id)
@@ -132,6 +146,9 @@ class ResultsService:
         payload["roundSchema"] = self._build_round_schema(condition)
         payload["mockResultEnabled"] = payload.get("resultSource") != "external"
         return payload
+
+    def get_order_condition_external_summaries(self, order_id: int) -> List[Dict[str, Any]]:
+        return self.get_order_conditions(order_id, include_external=True)
 
     def get_order_condition_rounds(
         self,
@@ -164,8 +181,42 @@ class ResultsService:
         opt_issue_id = self._to_int(payload.get('optIssueId'), 0)
         opt_job_id = self._to_int(payload.get('optJobId'), 0)
 
-        opt_issue = optimization_repository.build_issue_summary(opt_issue_id) if opt_issue_id > 0 else None
-        job_summaries = optimization_repository.build_job_summaries([opt_job_id]) if opt_job_id > 0 else []
+        issue_map, job_summaries = optimization_repository.build_issue_and_job_summaries(
+            [opt_issue_id],
+            [opt_job_id],
+        )
+        opt_issue = issue_map.get(opt_issue_id)
+        return self._apply_external_enrichment(payload, opt_issue, job_summaries)
+
+    def _enrich_order_condition_payloads(
+        self,
+        payloads: List[Dict[str, Any]],
+        include_outputs: bool = True,
+    ) -> List[Dict[str, Any]]:
+        issue_map, job_summaries = optimization_repository.build_issue_and_job_summaries(
+            [self._to_int(item.get('optIssueId'), 0) for item in payloads],
+            [self._to_int(item.get('optJobId'), 0) for item in payloads],
+            include_outputs=include_outputs,
+        )
+        job_map = {self._to_int(item.get('id'), 0): item for item in job_summaries}
+        enriched_payloads: List[Dict[str, Any]] = []
+        for payload in payloads:
+            opt_job_id = self._to_int(payload.get('optJobId'), 0)
+            enriched_payloads.append(
+                self._apply_external_enrichment(
+                    payload,
+                    issue_map.get(self._to_int(payload.get('optIssueId'), 0)),
+                    [job_map[opt_job_id]] if opt_job_id in job_map else [],
+                )
+            )
+        return enriched_payloads
+
+    def _apply_external_enrichment(
+        self,
+        payload: Dict[str, Any],
+        opt_issue: Dict[str, Any] | None,
+        job_summaries: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         payload['optIssue'] = opt_issue
         payload['conditionJobs'] = job_summaries
         payload['jobSummaries'] = job_summaries
@@ -204,7 +255,10 @@ class ResultsService:
         if opt_job_id <= 0:
             return None
 
-        job_summaries = optimization_repository.build_job_summaries([opt_job_id])
+        issue_map, job_summaries = optimization_repository.build_issue_and_job_summaries(
+            [self._to_int(getattr(condition, 'opt_issue_id', None), 0)],
+            [opt_job_id],
+        )
         if not job_summaries:
             return None
 
@@ -247,8 +301,10 @@ class ResultsService:
         end = start + page_size
         paged_items = items[start:end]
 
-        condition_payload = self._enrich_order_condition_payload(
-            self._serialize_order_condition(condition, include_mock_summary=False)
+        condition_payload = self._apply_external_enrichment(
+            self._serialize_order_condition(condition, include_mock_summary=False),
+            issue_map.get(self._to_int(getattr(condition, 'opt_issue_id', None), 0)),
+            job_summaries,
         )
         condition_payload['roundSchema'] = self._build_round_schema(condition)
 
@@ -340,6 +396,7 @@ class ResultsService:
         self,
         condition,
         include_mock_summary: bool = False,
+        include_snapshot: bool = True,
     ) -> Dict[str, Any]:
         payload = self._condition_to_dict(condition)
         result = {
@@ -362,13 +419,16 @@ class ResultsService:
             "runningModule": payload.get("running_module"),
             "process": payload.get("process"),
             "status": payload.get("status"),
+            "canResubmit": self._to_int(payload.get("status"), 0) == 3
+            and self._to_int(payload.get("opt_job_id"), 0) <= 0,
             "statistics": payload.get("statistics_json"),
             "resultSummary": payload.get("result_summary_json"),
-            "conditionSnapshot": payload.get("condition_snapshot"),
             "externalMeta": payload.get("external_meta"),
             "createdAt": payload.get("created_at"),
             "updatedAt": payload.get("updated_at"),
         }
+        if include_snapshot:
+            result["conditionSnapshot"] = payload.get("condition_snapshot")
         if include_mock_summary:
             self._apply_mock_condition_summary(condition, result)
         return result

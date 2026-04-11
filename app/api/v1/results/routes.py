@@ -59,7 +59,18 @@ def get_rounds(sim_type_result_id: int):
 @results_bp.route("/order/<int:order_id>/conditions", methods=["GET"])
 @jwt_required()
 def get_order_conditions(order_id: int):
-    return success(results_service.get_order_conditions(order_id))
+    include_external = str(request.args.get("includeExternal", "false")).lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    return success(results_service.get_order_conditions(order_id, include_external=include_external))
+
+
+@results_bp.route("/order/<int:order_id>/conditions/external-summary", methods=["GET"])
+@jwt_required()
+def get_order_condition_external_summaries(order_id: int):
+    return success(results_service.get_order_condition_external_summaries(order_id))
 
 
 @results_bp.route("/order-condition/<int:order_condition_id>", methods=["GET"])

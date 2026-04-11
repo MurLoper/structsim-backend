@@ -47,6 +47,7 @@ class Config:
     EXTERNAL_MYSQL_CONNECT_TIMEOUT = float(os.getenv('EXTERNAL_MYSQL_CONNECT_TIMEOUT', 10))
     EXTERNAL_MYSQL_READ_TIMEOUT = float(os.getenv('EXTERNAL_MYSQL_READ_TIMEOUT', 20))
     EXTERNAL_MYSQL_WRITE_TIMEOUT = float(os.getenv('EXTERNAL_MYSQL_WRITE_TIMEOUT', 20))
+    EXTERNAL_MYSQL_POOL_SIZE = int(os.getenv('EXTERNAL_MYSQL_POOL_SIZE', 4))
     EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT = os.getenv(
         'EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT', 'simlation_project'
     )
@@ -60,6 +61,14 @@ class Config:
         'EXTERNAL_MYSQL_SCHEMA_UNION_OPT_CONF', 'union_opt_conf'
     )
     EXTERNAL_MYSQL_SCHEMA_SQRS_HW = os.getenv('EXTERNAL_MYSQL_SCHEMA_SQRS_HW', 'sqrs_hw')
+
+    # Automation distribution API (mock by default until the company endpoint is available)
+    AUTOMATION_DISTRIBUTION_URL = os.getenv('AUTOMATION_DISTRIBUTION_URL', '')
+    AUTOMATION_DISTRIBUTION_TIMEOUT = float(os.getenv('AUTOMATION_DISTRIBUTION_TIMEOUT', 15.0))
+    AUTOMATION_SUBMIT_MODE = os.getenv('AUTOMATION_SUBMIT_MODE', 'mock').lower()
+    AUTOMATION_MOCK_WRITE_UNION_OPT = (
+        os.getenv('AUTOMATION_MOCK_WRITE_UNION_OPT', 'false').lower() == 'true'
+    )
 
     # Redis
     REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')

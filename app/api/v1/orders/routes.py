@@ -13,6 +13,7 @@ from app.common.errors import NotFoundError, BusinessError
 from app.common.serializers import get_snake_json
 from .schemas import OrderCreate, OrderUpdate, OrderQuery, VerifyFileRequest
 from .service import orders_service
+from app.services.automation.distribution_client import AutomationSubmissionError
 from .excel_parser_service import excel_parser_service
 from .param_merge_service import param_merge_service
 
@@ -82,6 +83,21 @@ def get_order_conditions(order_id: int):
         return success(result)
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+
+
+@orders_bp.route('/conditions/<int:order_condition_id>/resubmit', methods=['POST'])
+@jwt_required()
+def resubmit_order_condition(order_condition_id: int):
+    """重提失败或未生成 job 的订单工况。"""
+    try:
+        result = orders_service.resubmit_order_condition(order_condition_id)
+        return success(result, "重提成功")
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
+    except AutomationSubmissionError as e:
+        return error(ErrorCode.EXTERNAL_SERVICE_ERROR, str(e), http_status=502)
 
 
 @orders_bp.route('', methods=['POST'])

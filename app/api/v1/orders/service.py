@@ -15,6 +15,8 @@ from app.common.errors import NotFoundError, BusinessError
 from app.constants import ErrorCode
 from app.models.auth import User, Role
 from .repository import orders_repository
+from app.services.automation import automation_distribution_client
+from app.services.automation.distribution_client import AutomationSubmissionError
 from app.services.external_data import user_resource_pool_repository
 
 
@@ -313,6 +315,128 @@ class OrdersService:
         return rows
 
     @staticmethod
+    def _merge_external_meta(existing_meta: Any, patch: Dict[str, Any]) -> Dict[str, Any]:
+        meta = dict(existing_meta) if isinstance(existing_meta, dict) else {}
+        meta.update(patch)
+        return meta
+
+    @staticmethod
+    def _automation_success_meta(result) -> Dict[str, Any]:
+        return {
+            'automationStatus': result.status,
+            'automationRaw': result.raw,
+            'automationError': None,
+            'submittedAt': int(datetime.datetime.utcnow().timestamp()),
+        }
+
+    @staticmethod
+    def _automation_failure_meta(exc: Exception, issue_id: int) -> Dict[str, Any]:
+        return {
+            'automationStatus': 'failed',
+            'automationError': str(exc),
+            'automationIssueId': issue_id or None,
+            'submittedAt': int(datetime.datetime.utcnow().timestamp()),
+        }
+
+    def _submit_order_conditions(self, order, conditions: List[Any]) -> None:
+        if not conditions:
+            return
+
+        issue_id = self._to_int(getattr(order, 'opt_issue_id', None), 0)
+        has_failure = False
+        has_success = False
+
+        for condition in conditions:
+            try:
+                result = automation_distribution_client.submit_condition(
+                    order=order,
+                    condition=condition,
+                    issue_id=issue_id or None,
+                )
+                issue_id = self._to_int(result.issue_id, issue_id)
+                if issue_id > 0 and self._to_int(getattr(order, 'opt_issue_id', 0), 0) <= 0:
+                    self.repository.update_order(order, {'opt_issue_id': issue_id})
+                self.repository.update_order_condition_opti(
+                    condition,
+                    {
+                        'opt_issue_id': issue_id,
+                        'opt_job_id': self._to_int(result.job_id, 0),
+                        'status': 1,
+                        'process': 0,
+                        'external_meta': self._merge_external_meta(
+                            getattr(condition, 'external_meta', None),
+                            self._automation_success_meta(result),
+                        ),
+                    },
+                )
+                has_success = True
+            except AutomationSubmissionError as exc:
+                has_failure = True
+                self.repository.update_order_condition_opti(
+                    condition,
+                    {
+                        'opt_issue_id': issue_id or 0,
+                        'status': 3,
+                        'process': 100,
+                        'external_meta': self._merge_external_meta(
+                            getattr(condition, 'external_meta', None),
+                            self._automation_failure_meta(exc, issue_id),
+                        ),
+                    },
+                )
+
+        if has_failure:
+            self.repository.update_order(order, {'status': 3, 'progress': 100})
+        elif has_success:
+            self.repository.update_order(order, {'status': 1, 'progress': 0})
+
+    def _submit_single_condition(self, order, condition) -> None:
+        issue_id = self._to_int(getattr(order, 'opt_issue_id', None), 0)
+        if issue_id <= 0:
+            issue_id = self._to_int(getattr(condition, 'opt_issue_id', None), 0)
+
+        previous_job_ids = []
+        external_meta = getattr(condition, 'external_meta', None)
+        if isinstance(external_meta, dict):
+            previous_job_ids = [
+                int(item)
+                for item in external_meta.get('previousJobIds', [])
+                if self._to_int(item, 0) > 0
+            ]
+        current_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
+        if current_job_id > 0 and current_job_id not in previous_job_ids:
+            previous_job_ids.append(current_job_id)
+
+        result = automation_distribution_client.submit_condition(
+            order=order,
+            condition=condition,
+            issue_id=issue_id or None,
+            resubmit_attempt=len(previous_job_ids),
+        )
+        resolved_issue_id = self._to_int(result.issue_id, 0)
+        if resolved_issue_id > 0 and self._to_int(getattr(order, 'opt_issue_id', None), 0) <= 0:
+            self.repository.update_order(order, {'opt_issue_id': resolved_issue_id})
+
+        self.repository.update_order_condition_opti(
+            condition,
+            {
+                'opt_issue_id': resolved_issue_id,
+                'opt_job_id': self._to_int(result.job_id, 0),
+                'status': 1,
+                'process': 0,
+                'external_meta': self._merge_external_meta(
+                    getattr(condition, 'external_meta', None),
+                    {
+                        **self._automation_success_meta(result),
+                        'previousJobIds': previous_job_ids,
+                        'resubmittedAt': int(datetime.datetime.utcnow().timestamp()),
+                    },
+                ),
+            },
+        )
+        self.repository.update_order(order, {'status': 1, 'progress': 0})
+
+    @staticmethod
     def _merge_role_limits(roles: List[Role]) -> Dict[str, int]:
         max_batch_size: Optional[int] = None
         max_cpu_cores: Optional[int] = None
@@ -529,7 +653,8 @@ class OrdersService:
         try:
             order = self.repository.create_order(order_dict)
             condition_rows = self._build_order_condition_rows(order_dict, order.id, order.order_no)
-            self.repository.replace_order_condition_optis(order.id, condition_rows)
+            condition_entities = self.repository.replace_order_condition_optis(order.id, condition_rows)
+            self._submit_order_conditions(order, condition_entities)
             self.repository.commit()
             payload = order.to_dict()
             payload['conditions'] = [row.to_list_dict() for row in self.repository.get_order_condition_optis(order.id)]
@@ -599,6 +724,50 @@ class OrdersService:
         if not order:
             raise NotFoundError("订单不存在")
         return [item.to_list_dict() for item in self.repository.get_order_condition_optis(order_id)]
+
+    def resubmit_order_condition(self, order_condition_id: int) -> Dict:
+        condition = self.repository.get_order_condition_opti_by_id(order_condition_id)
+        if not condition:
+            raise NotFoundError("订单工况不存在")
+
+        order = self.repository.get_order_by_id(condition.order_id)
+        if not order:
+            raise NotFoundError("订单不存在")
+
+        condition_status = self._to_int(getattr(condition, 'status', None), 0)
+        opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
+        if condition_status != 3 or opt_job_id > 0:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, '仅提交失败且未关联 job 的工况允许重提')
+
+        try:
+            self._submit_single_condition(order, condition)
+            self.repository.commit()
+            return {
+                'order': order.to_dict(),
+                'condition': condition.to_dict(),
+            }
+        except AutomationSubmissionError as exc:
+            issue_id = self._to_int(getattr(order, 'opt_issue_id', None), 0) or self._to_int(
+                getattr(condition, 'opt_issue_id', None), 0
+            )
+            self.repository.update_order_condition_opti(
+                condition,
+                {
+                    'opt_issue_id': issue_id or 0,
+                    'status': 3,
+                    'process': 100,
+                    'external_meta': self._merge_external_meta(
+                        getattr(condition, 'external_meta', None),
+                        self._automation_failure_meta(exc, issue_id),
+                    ),
+                },
+            )
+            self.repository.update_order(order, {'status': 3, 'progress': 100})
+            self.repository.commit()
+            raise
+        except Exception:
+            self.repository.rollback()
+            raise
     
     def delete_order(self, order_id: int) -> None:
         """

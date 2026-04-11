@@ -185,6 +185,14 @@ class OrdersRepository:
         return OrderConditionOpti.query.filter_by(id=order_condition_id).first()
 
     @staticmethod
+    def update_order_condition_opti(condition: OrderConditionOpti, update_data: dict) -> OrderConditionOpti:
+        for key, value in update_data.items():
+            if hasattr(condition, key):
+                setattr(condition, key, value)
+        db.session.flush()
+        return condition
+
+    @staticmethod
     def commit() -> None:
         db.session.commit()
 

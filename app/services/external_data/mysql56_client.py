@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from queue import Empty, Full, LifoQueue
 from typing import Any, Dict, Iterable, List
 
 import pymysql
@@ -13,6 +14,7 @@ class ExternalMySQL56Client:
 
     def __init__(self) -> None:
         self._connection_kwargs_cache: Dict[str, Any] | None = None
+        self._pools: Dict[str, LifoQueue] = {}
 
     def _build_connection_kwargs(self) -> Dict[str, Any]:
         app = current_app
@@ -37,11 +39,59 @@ class ExternalMySQL56Client:
 
     @contextmanager
     def connection(self, database: str):
-        conn = pymysql.connect(database=database, **self.connection_kwargs)
+        conn = self._acquire_connection(database)
         try:
             yield conn
+        except Exception:
+            self._close_connection(conn)
+            raise
         finally:
+            if getattr(conn, 'open', False):
+                self._release_connection(database, conn)
+
+    def _pool_size(self) -> int:
+        return int(current_app.config.get('EXTERNAL_MYSQL_POOL_SIZE', 0) or 0)
+
+    def _pool_for(self, database: str) -> LifoQueue:
+        if database not in self._pools:
+            self._pools[database] = LifoQueue(maxsize=self._pool_size())
+        return self._pools[database]
+
+    def _new_connection(self, database: str):
+        return pymysql.connect(database=database, **self.connection_kwargs)
+
+    def _acquire_connection(self, database: str):
+        if self._pool_size() <= 0:
+            return self._new_connection(database)
+
+        pool = self._pool_for(database)
+        try:
+            conn = pool.get_nowait()
+        except Empty:
+            return self._new_connection(database)
+
+        try:
+            conn.ping(reconnect=True)
+            return conn
+        except Exception:
+            self._close_connection(conn)
+            return self._new_connection(database)
+
+    def _release_connection(self, database: str, conn) -> None:
+        if self._pool_size() <= 0:
+            self._close_connection(conn)
+            return
+        try:
+            self._pool_for(database).put_nowait(conn)
+        except Full:
+            self._close_connection(conn)
+
+    @staticmethod
+    def _close_connection(conn) -> None:
+        try:
             conn.close()
+        except Exception:
+            pass
 
     def fetch_all(self, database: str, sql: str, params: Iterable[Any] | None = None) -> List[Dict[str, Any]]:
         with self.connection(database) as conn:
