@@ -79,13 +79,6 @@
       "primary_key": 0
     },
     {
-      "name": "opt_param",
-      "type": "JSON",
-      "nullable": true,
-      "default": null,
-      "primary_key": 0
-    },
-    {
       "name": "workflow_id",
       "type": "INTEGER",
       "nullable": true,

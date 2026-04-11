@@ -1,5 +1,5 @@
 """
-提单项目上下文初始化路由。
+鎻愬崟椤圭洰涓婁笂鏂囧垵濮嬪寲璺敱銆?
 """
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -7,6 +7,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.common.errors import BusinessError, NotFoundError
 from app.common.response import error, success
 from app.constants.error_codes import ErrorCode
+
 from .init_config_service import OrderInitConfigService
 
 init_config_bp = Blueprint("init_config", __name__)
@@ -28,12 +29,11 @@ def _resolve_user_identity() -> str:
 def _get_project_init_config_response():
     try:
         project_id = request.args.get("projectId", type=int)
-        sim_type_id = request.args.get("simTypeId", type=int)
 
         if not project_id:
-            return error(code=ErrorCode.VALIDATION_ERROR, msg="projectId 参数必填")
+            return error(code=ErrorCode.VALIDATION_ERROR, msg="projectId 鍙傛暟蹇呭～")
 
-        config = service.get_init_config(project_id, sim_type_id, _resolve_user_identity())
+        config = service.get_init_config(project_id, _resolve_user_identity())
         return success(data=config)
     except NotFoundError as exc:
         return error(code=ErrorCode.NOT_FOUND, msg=str(exc))
@@ -46,7 +46,7 @@ def _get_project_init_config_response():
 @init_config_bp.route("/orders/init-project-config", methods=["GET"])
 @jwt_required()
 def get_project_init_config():
-    """获取提单项目上下文。"""
+    """鑾峰彇鎻愬崟椤圭洰涓婁笂鏂囥€?"""
 
     return _get_project_init_config_response()
 
@@ -54,6 +54,6 @@ def get_project_init_config():
 @init_config_bp.route("/orders/init-config", methods=["GET"])
 @jwt_required()
 def get_init_config_compat():
-    """兼容旧路由，内部转发到新的项目上下文实现。"""
+    """鍏煎鏃ц矾鐢憋紝鍐呴儴杞彂鍒版柊鐨勯」鐩笂涓婃枃瀹炵幇銆?"""
 
     return _get_project_init_config_response()

@@ -1,6 +1,6 @@
 -- StructSim DB Export
--- ExportedAt: 2026-04-10T23:09:45.176010
--- TableCount: 45
+-- ExportedAt: 2026-04-11T00:04:16.582308
+-- TableCount: 43
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
@@ -694,20 +694,6 @@ CREATE TABLE `privacy_policy_acceptances` (
 INSERT INTO `privacy_policy_acceptances` (`id`, `domain_account`, `policy_version`, `accepted_at`, `accepted_ip`, `created_at`, `updated_at`) VALUES
 (1, 'a00012346', '1.0.0', 1775141896, '127.0.0.1', 1775113096, 1775113096),
 (2, 'a00012346', '1.0.0', 1775141899, '127.0.0.1', 1775113099, 1775113099);
-
--- Table: project_sim_type_rels
-DROP TABLE IF EXISTS `project_sim_type_rels`;
-CREATE TABLE `project_sim_type_rels` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `project_id` int NOT NULL COMMENT '项目ID',
-  `sim_type_id` int NOT NULL COMMENT '仿真类型ID',
-  `is_default` smallint DEFAULT NULL COMMENT '是否为默认仿真类型',
-  `sort` int DEFAULT NULL COMMENT '排序',
-  `created_at` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `project_id` (`project_id`),
-  KEY `sim_type_id` (`sim_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: projects
 DROP TABLE IF EXISTS `projects`;
@@ -3388,31 +3374,6 @@ INSERT INTO `sim_types` (`id`, `name`, `code`, `category`, `default_param_tpl_se
 (4, '冲击', '冲击', NULL, NULL, NULL, NULL, 3, NULL, NULL, 1, 40, NULL, 1769934087, 1769934087),
 (5, '热分析', '热分析', NULL, NULL, NULL, NULL, 3, NULL, NULL, 0, 50, NULL, 1769934087, 1773407699);
 
--- Table: solver_resources
-DROP TABLE IF EXISTS `solver_resources`;
-CREATE TABLE `solver_resources` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '资源池名称',
-  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资源池编码',
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '资源池描述',
-  `cpu_cores` int DEFAULT NULL COMMENT 'CPU核心数',
-  `memory_gb` int DEFAULT NULL COMMENT '内存大小GB',
-  `valid` smallint DEFAULT NULL,
-  `sort` int DEFAULT NULL,
-  `created_at` int DEFAULT NULL,
-  `updated_at` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `code` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Data: solver_resources
-INSERT INTO `solver_resources` (`id`, `name`, `code`, `description`, `cpu_cores`, `memory_gb`, `valid`, `sort`, `created_at`, `updated_at`) VALUES
-(1, '标准节点', NULL, NULL, 16, 64, 1, 100, 1769934087, 1769934087),
-(2, '大内存节点', NULL, NULL, 32, 256, 1, 100, 1769934087, 1769934087),
-(3, 'GPU节点', NULL, NULL, 16, 128, 1, 100, 1769934087, 1769934087),
-(4, '高性能节点', NULL, NULL, 64, 512, 1, 100, 1769934087, 1769934087),
-(5, '测试节点', NULL, NULL, 8, 32, 1, 100, 1769934087, 1769934087);
-
 -- Table: solvers
 DROP TABLE IF EXISTS `solvers`;
 CREATE TABLE `solvers` (
@@ -3463,14 +3424,14 @@ CREATE TABLE `status_defs` (
 
 -- Data: status_defs
 INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color_tag`, `valid`, `sort`, `created_at`, `updated_at`, `icon`) VALUES
-(0, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1775833588, 'Clock'),
-(1, '运行中', 'RUNNING', 'PROCESS', '#f59e0b', 1, 10, 1774154394, 1775833588, 'Hourglass'),
-(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1775833588, 'CheckCircle'),
-(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1775833588, 'XCircle'),
-(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1775833588, 'RotateCcw'),
-(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1775833588, 'Ban'),
-(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1775833588, 'Timer'),
-(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1775833588, 'CircleCheck');
+(0, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1775836610, 'Clock'),
+(1, '运行中', 'RUNNING', 'PROCESS', '#f59e0b', 1, 10, 1774154394, 1775836610, 'Hourglass'),
+(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1775836610, 'CheckCircle'),
+(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1775836610, 'XCircle'),
+(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1775836610, 'RotateCcw'),
+(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1775836610, 'Ban'),
+(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1775836610, 'Timer'),
+(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1775836610, 'CircleCheck');
 
 -- Table: tracking_events
 DROP TABLE IF EXISTS `tracking_events`;
@@ -3498,7 +3459,7 @@ CREATE TABLE `tracking_events` (
   KEY `idx_tracking_events_feature_key` (`feature_key`,`created_at`),
   KEY `idx_tracking_events_module_key` (`module_key`,`created_at`),
   KEY `idx_tracking_events_result` (`result`,`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=159 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='前端埋点事件';
+) ENGINE=InnoDB AUTO_INCREMENT=177 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='前端埋点事件';
 
 -- Data: tracking_events
 INSERT INTO `tracking_events` (`id`, `event_name`, `event_type`, `page_path`, `page_key`, `feature_key`, `module_key`, `result`, `target`, `session_id`, `domain_account`, `metadata_json`, `duration_ms`, `created_at`) VALUES
@@ -3659,7 +3620,25 @@ INSERT INTO `tracking_events` (`id`, `event_name`, `event_type`, `page_path`, `p
 (155, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775833610333),
 (156, 'page_view', 'navigation', '/create', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/create", "page_key": "submission.editor"}', NULL, 1775833614872),
 (157, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'project', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "module_key": "submission", "feature_key": "submission.drawer.project"}', NULL, 1775833624950),
-(158, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'params', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.params", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1775833634305);
+(158, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'params', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.params", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1775833634305),
+(159, 'page_view', 'navigation', '/create', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/create", "page_key": "submission.editor"}', NULL, 1775833882960),
+(160, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'solver', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.solver", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1775833936209),
+(161, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775834007472),
+(162, 'page_view', 'navigation', '/', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/", "page_key": "dashboard.home"}', NULL, 1775834008415),
+(163, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775834513519),
+(164, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1775834678860),
+(165, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1775834678975),
+(166, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1775834678975),
+(167, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1775834678978),
+(168, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1775834678978),
+(169, 'results.condition_focus', 'interaction', '/results/1001', NULL, NULL, NULL, NULL, '17', '7mhrhasqzz', 'a00012346', '{"source": "overview", "order_no": "1001", "page_key": "results.page", "entity_id": 17, "module_key": "results", "feature_key": "results.condition.focus"}', NULL, 1775834682049),
+(170, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1775834682064),
+(171, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835336040),
+(172, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835397290),
+(173, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835418599),
+(174, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835762310),
+(175, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835807976),
+(176, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1775835896045);
 
 -- Table: upload_chunks
 DROP TABLE IF EXISTS `upload_chunks`;

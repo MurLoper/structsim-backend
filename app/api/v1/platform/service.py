@@ -81,6 +81,27 @@ def _safe_int(value: Any) -> Optional[int]:
         return None
 
 
+def _normalize_event_timestamp(value: Any, fallback_ts: int) -> int:
+    timestamp = _safe_int(value)
+    if not timestamp or timestamp < 0:
+        return fallback_ts
+
+    # Frontend versions once reported JavaScript millisecond timestamps.
+    # The database stores seconds; convert defensive copies for old rows.
+    while timestamp > 9_999_999_999:
+        timestamp = timestamp // 1000
+
+    return timestamp if timestamp > 0 else fallback_ts
+
+
+def _format_event_day(value: Any) -> str:
+    timestamp = _normalize_event_timestamp(value, _now_ts())
+    try:
+        return time.strftime("%Y-%m-%d", time.localtime(timestamp))
+    except (OSError, OverflowError, ValueError):
+        return time.strftime("%Y-%m-%d", time.localtime(_now_ts()))
+
+
 class PlatformService:
     def __init__(self):
         self.repository = platform_repository
@@ -280,7 +301,7 @@ class PlatformService:
             domain_account=user.domain_account,
             metadata_json=metadata,
             duration_ms=_safe_int(metadata.get("durationMs")),
-            created_at=_safe_int(item.get("occurred_at")) or now_ts,
+            created_at=_normalize_event_timestamp(item.get("occurred_at"), now_ts),
         )
 
     def track_events(self, user_identity: Any, events: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -329,7 +350,7 @@ class PlatformService:
                 success_events += 1
             if item.result == "failure" or item.event_name.endswith("failure"):
                 failure_events += 1
-            day_key = time.strftime("%Y-%m-%d", time.localtime(item.created_at))
+            day_key = _format_event_day(item.created_at)
             timeline_counter[day_key] += 1
 
         announcement_views = event_counter.get("platform.announcement_view", 0)
@@ -438,7 +459,10 @@ class PlatformService:
 
     def get_analytics_funnels(self, user_identity: Any, days: int) -> Dict[str, Any]:
         self._get_valid_user_or_raise(user_identity)
-        events = sorted(self._load_analytics_events(days), key=lambda item: (item.created_at, item.id))
+        events = sorted(
+            self._load_analytics_events(days),
+            key=lambda item: (_normalize_event_timestamp(item.created_at, 0), item.id),
+        )
 
         sessions: dict[str, List[TrackingEvent]] = defaultdict(list)
         for item in events:

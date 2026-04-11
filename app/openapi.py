@@ -613,15 +613,6 @@ OPENAPI_SPEC = {
                     "outputs": {"type": "array", "items": {"$ref": "#/components/schemas/CondOutGroupOutputItem"}}
                 }
             },
-            "ProjectSimTypeRelCreateRequest": {
-                "type": "object",
-                "properties": {
-                    "simTypeId": {"type": "integer"},
-                    "isDefault": {"type": "boolean", "nullable": True},
-                    "sort": {"type": "integer", "nullable": True}
-                },
-                "required": ["simTypeId"]
-            },
             "SimTypeParamGroupRelCreateRequest": {
                 "type": "object",
                 "properties": {
@@ -1505,50 +1496,6 @@ OPENAPI_SPEC = {
                 "parameters": [
                     {"name": "group_id", "in": "path", "required": True, "schema": {"type": "integer"}},
                     {"name": "output_def_id", "in": "path", "required": True, "schema": {"type": "integer"}}
-                ],
-                "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
-            }
-        },
-        "/api/v1/projects/{project_id}/sim-types": {
-            "get": {
-                "tags": ["relations"],
-                "summary": "List project sim types",
-                "parameters": [
-                    {"name": "project_id", "in": "path", "required": True, "schema": {"type": "integer"}}
-                ],
-                "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
-            },
-            "post": {
-                "tags": ["relations"],
-                "summary": "Add sim type to project",
-                "parameters": [
-                    {"name": "project_id", "in": "path", "required": True, "schema": {"type": "integer"}}
-                ],
-                "requestBody": {
-                    "required": True,
-                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProjectSimTypeRelCreateRequest"}}}
-                },
-                "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
-            }
-        },
-        "/api/v1/projects/{project_id}/sim-types/{sim_type_id}/default": {
-            "put": {
-                "tags": ["relations"],
-                "summary": "Set default sim type for project",
-                "parameters": [
-                    {"name": "project_id", "in": "path", "required": True, "schema": {"type": "integer"}},
-                    {"name": "sim_type_id", "in": "path", "required": True, "schema": {"type": "integer"}}
-                ],
-                "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
-            }
-        },
-        "/api/v1/projects/{project_id}/sim-types/{sim_type_id}": {
-            "delete": {
-                "tags": ["relations"],
-                "summary": "Remove sim type from project",
-                "parameters": [
-                    {"name": "project_id", "in": "path", "required": True, "schema": {"type": "integer"}},
-                    {"name": "sim_type_id", "in": "path", "required": True, "schema": {"type": "integer"}}
                 ],
                 "responses": {"200": {"$ref": "#/components/schemas/StandardResponse"}}
             }

@@ -8,28 +8,6 @@ from pydantic import BaseModel, Field
 
 # ============ 项目-仿真类型关联 ============
 
-class ProjectSimTypeRelCreateRequest(BaseModel):
-    """创建项目-仿真类型关联请求"""
-    sim_type_id: int = Field(..., description="仿真类型ID")
-    is_default: Optional[int] = Field(0, description="是否为默认仿真类型")
-    sort: Optional[int] = Field(100, description="排序")
-
-
-class ProjectSimTypeRelResponse(BaseModel):
-    """项目-仿真类型关联响应"""
-    id: int
-    project_id: int
-    sim_type_id: int
-    is_default: int
-    sort: int
-    created_at: int
-    # 仿真类型信息
-    sim_type_name: Optional[str] = None
-    sim_type_code: Optional[str] = None
-
-
-# ============ 仿真类型-参数组合关联 ============
-
 class SimTypeParamGroupRelCreateRequest(BaseModel):
     """创建仿真类型-参数组合关联请求"""
     param_group_id: int = Field(..., description="参数组合ID")
@@ -96,8 +74,3 @@ class SimTypeSolverRelResponse(BaseModel):
 
 
 # ============ 设置默认配置请求 ============
-
-class SetDefaultRequest(BaseModel):
-    """设置默认配置请求"""
-    is_default: int = Field(1, description="是否为默认，1=是，0=否")
-
