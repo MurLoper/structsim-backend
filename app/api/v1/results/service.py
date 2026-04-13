@@ -296,12 +296,29 @@ class ResultsService:
     ) -> List[Dict[str, Any]]:
         opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
         opt_condition_config_id = self._to_int(getattr(condition, 'opt_condition_config_id', None), 0)
+        para_config_name_map = {
+            self._to_int(item.get('id'), 0): str(item.get('name') or f"para_{item.get('id')}")
+            for item in job_summary.get('paraConfigs') or []
+        }
         items: List[Dict[str, Any]] = []
         for round_item in job_summary.get('rounds') or []:
             round_status = int(round_item.get('status', 0) or 0)
             if status is not None and round_status != status:
                 continue
             outputs = {}
+            output_attachments: Dict[str, Dict[str, Any]] = {}
+            params = {}
+            for param in round_item.get('params') or []:
+                param_condition_config_id = self._to_int(param.get('n_condition_config_id'), 0)
+                if (
+                    opt_condition_config_id > 0
+                    and param_condition_config_id > 0
+                    and param_condition_config_id != opt_condition_config_id
+                ):
+                    continue
+                para_config_id = self._to_int(param.get('n_para_config_id'), 0)
+                params[para_config_name_map.get(para_config_id, f"para_{para_config_id}")] = param.get('s_value')
+            matched_outputs: List[Dict[str, Any]] = []
             for output in round_item.get('outputs') or []:
                 output_condition_config_id = self._to_int(output.get('conditionConfigId'), 0)
                 if (
@@ -315,6 +332,16 @@ class ResultsService:
                 if value in (None, ''):
                     value = output.get('originValue')
                 outputs[str(resp_name)] = value
+                output_attachments[str(resp_name)] = {
+                    'imagePaths': output.get('imagePaths') or [],
+                    'aviPaths': output.get('aviPaths') or [],
+                    'curveJsonPath': output.get('curveJsonPath'),
+                    'dataDir': output.get('dataDir'),
+                    'taskId': output.get('taskId'),
+                    'optDataId': output.get('optDataId'),
+                }
+                matched_outputs.append(output)
+            first_output = matched_outputs[0] if matched_outputs else {}
             items.append(
                 {
                     'id': f"external-{opt_job_id}-{round_item.get('circleId')}",
@@ -326,8 +353,14 @@ class ResultsService:
                     'roundIndex': int(round_item.get('roundIndex', 0) or 0),
                     'algorithmType': getattr(condition, 'algorithm_type', None),
                     'status': round_status,
-                    'params': {},
+                    'params': params,
                     'outputs': outputs,
+                    'outputAttachments': output_attachments,
+                    'optDataId': first_output.get('optDataId'),
+                    'taskId': first_output.get('taskId'),
+                    'dataDir': first_output.get('dataDir'),
+                    'baseDir': job_summary.get('baseDir'),
+                    'jobDir': job_summary.get('jobDir'),
                     'runningModule': round_item.get('runningModule'),
                     'process': 100 if round_status == 2 else (50 if round_status == 1 else 0),
                     'moduleDetails': [],

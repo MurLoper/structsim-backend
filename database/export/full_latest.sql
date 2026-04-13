@@ -1,5 +1,5 @@
 -- StructSim DB Export
--- ExportedAt: 2026-04-13T21:03:54.402359
+-- ExportedAt: 2026-04-14T00:25:48.387119
 -- TableCount: 44
 
 SET NAMES utf8mb4;
@@ -3481,14 +3481,14 @@ CREATE TABLE `status_defs` (
 
 -- Data: status_defs
 INSERT INTO `status_defs` (`id`, `name`, `code`, `type`, `color_tag`, `valid`, `sort`, `created_at`, `updated_at`, `icon`) VALUES
-(0, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1776085401, 'Clock'),
-(1, '运行中', 'RUNNING', 'PROCESS', '#f59e0b', 1, 10, 1774154394, 1776085401, 'Hourglass'),
-(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1776085401, 'CheckCircle'),
-(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1776085401, 'XCircle'),
-(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1776085401, 'RotateCcw'),
-(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1776085401, 'Ban'),
-(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1776085401, 'Timer'),
-(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1776085401, 'CircleCheck');
+(0, '未开始', 'NOT_STARTED', 'PROCESS', '#6b7280', 1, 0, 1769934087, 1776096147, 'Clock'),
+(1, '运行中', 'RUNNING', 'PROCESS', '#f59e0b', 1, 10, 1774154394, 1776096147, 'Hourglass'),
+(2, '已完成', 'COMPLETED', 'FINAL', '#4ec110', 1, 20, 1769934087, 1776096147, 'CheckCircle'),
+(3, '运行失败', 'FAILED', 'FINAL', '#FF0000', 1, 30, 1769934087, 1776096147, 'XCircle'),
+(4, '草稿箱', 'DRAFT', 'PROCESS', '#8798b0', 1, 40, 1769934087, 1776096147, 'RotateCcw'),
+(5, '手动终止', 'CANCELLED', 'FINAL', '#595040', 1, 50, 1769934087, 1776096147, 'Ban'),
+(6, '启动中', 'STARTING', 'PROCESS', '#edaf02', 1, 60, 1769934087, 1776096147, 'Timer'),
+(7, '小模块完成', 'PARTIAL_COMPLETED', 'PROCESS', '#84cc16', 1, 70, 1769934087, 1776096147, 'CircleCheck');
 
 -- Table: tracking_events
 DROP TABLE IF EXISTS `tracking_events`;
@@ -3516,7 +3516,7 @@ CREATE TABLE `tracking_events` (
   KEY `idx_tracking_events_feature_key` (`feature_key`,`created_at`),
   KEY `idx_tracking_events_module_key` (`module_key`,`created_at`),
   KEY `idx_tracking_events_result` (`result`,`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=440 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='前端埋点事件';
+) ENGINE=InnoDB AUTO_INCREMENT=532 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='前端埋点事件';
 
 -- Data: tracking_events
 INSERT INTO `tracking_events` (`id`, `event_name`, `event_type`, `page_path`, `page_key`, `feature_key`, `module_key`, `result`, `target`, `session_id`, `domain_account`, `metadata_json`, `duration_ms`, `created_at`) VALUES
@@ -3958,7 +3958,100 @@ INSERT INTO `tracking_events` (`id`, `event_name`, `event_type`, `page_path`, `p
 (436, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1775964985),
 (437, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1775964985),
 (438, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1775964985),
-(439, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1775964985);
+(439, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1775964985),
+(440, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776088342),
+(441, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1009, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776088346),
+(442, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776088346),
+(443, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776088346),
+(444, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776088346),
+(445, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776088346),
+(446, 'results.condition_focus', 'interaction', '/results/1009', NULL, NULL, NULL, NULL, '33', '7mhrhasqzz', 'a00012346', '{"source": "overview", "order_no": "1009", "page_key": "results.page", "entity_id": 33, "module_key": "results", "feature_key": "results.condition.focus"}', NULL, 1776088354),
+(447, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776088354),
+(448, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776088484),
+(449, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776088487),
+(450, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776088487),
+(451, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776088487),
+(452, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776088487),
+(453, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776088487),
+(454, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776088542),
+(455, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'analysis', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.analysis"}', NULL, 1776088567),
+(456, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776089632),
+(457, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776090285),
+(458, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776090576),
+(459, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776090892),
+(460, 'page_view', 'navigation', '/', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/", "page_key": "dashboard.home"}', NULL, 1776094548),
+(461, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776094550),
+(462, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776094556),
+(463, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094556),
+(464, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094556),
+(465, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094556),
+(466, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094556),
+(467, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776094565),
+(468, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094686),
+(469, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776094700),
+(470, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094703),
+(471, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776094707),
+(472, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094728),
+(473, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776094729),
+(474, 'page_view', 'navigation', '/create', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/create", "page_key": "submission.editor"}', NULL, 1776094762),
+(475, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'params', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.params", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1776094768),
+(476, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'params', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.params", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1776094783),
+(477, 'submission.drawer_open', 'interaction', '/create', NULL, NULL, NULL, NULL, 'params', '7mhrhasqzz', 'a00012346', '{"page_key": "submission.editor", "entity_id": 5, "module_key": "submission", "feature_key": "submission.drawer.params", "sim_type_id": 1, "fold_type_id": 1}', NULL, 1776094788),
+(478, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776094818),
+(479, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1009, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776094819),
+(480, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094820),
+(481, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094820),
+(482, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094820),
+(483, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094820),
+(484, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776094826),
+(485, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1009, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776094830),
+(486, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094830),
+(487, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094830),
+(488, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776094830),
+(489, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776094830),
+(490, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776094990),
+(491, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776095006),
+(492, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776095006),
+(493, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776095006),
+(494, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776095006),
+(495, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776095006),
+(496, 'results.condition_focus', 'interaction', '/results/1001', NULL, NULL, NULL, NULL, '17', '7mhrhasqzz', 'a00012346', '{"source": "overview", "order_no": "1001", "page_key": "results.page", "entity_id": 17, "module_key": "results", "feature_key": "results.condition.focus"}', NULL, 1776095013),
+(497, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776095013),
+(498, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776096034),
+(499, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096034),
+(500, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096034);
+INSERT INTO `tracking_events` (`id`, `event_name`, `event_type`, `page_path`, `page_key`, `feature_key`, `module_key`, `result`, `target`, `session_id`, `domain_account`, `metadata_json`, `duration_ms`, `created_at`) VALUES
+(501, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096034),
+(502, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096034),
+(503, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776096043),
+(504, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1001, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776096046),
+(505, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096046),
+(506, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096046),
+(507, 'results.view', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, '1001', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096046),
+(508, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096046),
+(509, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776096048),
+(510, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1002', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1002, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776096164),
+(511, 'results.view', 'navigation', '/results/1002', NULL, NULL, NULL, NULL, '1002', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1002, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096164),
+(512, 'results.tab_change', 'navigation', '/results/1002', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1002, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096164),
+(513, 'results.view', 'navigation', '/results/1002', NULL, NULL, NULL, NULL, '1002', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1002, "module_key": "results", "feature_key": "results.page"}', NULL, 1776096164),
+(514, 'results.tab_change', 'navigation', '/results/1002', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1002, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096164),
+(515, 'results.condition_focus', 'interaction', '/results/1002', NULL, NULL, NULL, NULL, '20', '7mhrhasqzz', 'a00012346', '{"source": "overview", "order_no": "1002", "page_key": "results.page", "entity_id": 20, "module_key": "results", "feature_key": "results.condition.focus"}', NULL, 1776096175),
+(516, 'results.tab_change', 'navigation', '/results/1002', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1002, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776096175),
+(517, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776096197),
+(518, 'results.tab_change', 'navigation', '/results/1001', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1001, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776096275),
+(519, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776096497),
+(520, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776096937),
+(521, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1009, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776096940),
+(522, 'page_view', 'navigation', '/', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"page_key": "dashboard.home"}', NULL, 1776096943),
+(523, 'page_view', 'navigation', '/orders', NULL, NULL, NULL, NULL, NULL, '7mhrhasqzz', 'a00012346', '{"hash": "#/orders", "page_key": "orders.list"}', NULL, 1776097267),
+(524, 'orders.result_open', 'navigation', '/orders', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"source": "button", "page_key": "orders.list", "entity_id": 1009, "module_key": "orders", "feature_key": "orders.result.open"}', NULL, 1776097270),
+(525, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776097270),
+(526, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776097270),
+(527, 'results.view', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, '1009', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.page"}', NULL, 1776097270),
+(528, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776097270),
+(529, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776097280),
+(530, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'overview', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.overview"}', NULL, 1776097338),
+(531, 'results.tab_change', 'navigation', '/results/1009', NULL, NULL, NULL, NULL, 'detail', '7mhrhasqzz', 'a00012346', '{"page_key": "results.page", "entity_id": 1009, "module_key": "results", "feature_key": "results.tab.detail"}', NULL, 1776097340);
 
 -- Table: upload_chunks
 DROP TABLE IF EXISTS `upload_chunks`;
@@ -4052,7 +4145,7 @@ CREATE TABLE `users` (
 
 -- Data: users
 INSERT INTO `users` (`id`, `email`, `password_hash`, `avatar`, `phone`, `role_ids`, `valid`, `preferences`, `recent_project_ids`, `recent_sim_type_ids`, `last_login_at`, `created_at`, `updated_at`, `domain_account`, `lc_user_id`, `user_name`, `real_name`, `daily_round_limit`, `department_id`) VALUES
-(10001, 'a00012346@company.local', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', NULL, NULL, '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1775911237, 1769962885, 1775882437, 'a00012346', NULL, 'a00012346', 'a00012346', 500, NULL),
+(10001, 'a00012346@company.local', 'scrypt:32768:8:1$umSVRE4a6B0Yv7Ih$45ec3f09ea6cd927754d4a26bbe9758f71bc7c304dda3e1fbdf5da472490e7ced18671daafefa3216bf1a1a753b60fb49e89000cce931259e3c19dfde2187a1a', NULL, NULL, '[1]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, 1776094546, 1769962885, 1776065746, 'a00012346', NULL, 'a00012346', 'a00012346', 500, NULL),
 (10002, 'zhangsan@example.com', 'scrypt:32768:8:1$tHDVGtDqrZGS8XN0$f8e8efd924bc782a2cd22e585ac51c683cead0080156c110217aa337dd6ac105cf64cd706d94d52175c2c767d5c5d623cc46e3ee4fbe22339a0dd7b3403392b3', NULL, NULL, '[2]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'z00012347', NULL, '张三', '张三', 500, 1),
 (10003, 'lisi@example.com', 'scrypt:32768:8:1$Xa4rTg1Y4wIYOCXP$b3d14f878599a71274d31c9f90be2a6da7c382d4e30509c96053bf12504bb511ef39a65819e6c0953ad4d3d5dbbcdf3bff068de977364757d28b6d3c6f0a85ba', NULL, NULL, '[3]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'l00012348', NULL, '李四', '李四', 500, 1),
 (10004, 'wangwu@example.com', 'scrypt:32768:8:1$qVVj1W8ucWefiatr$7d08be611b4dd3f2084d581f16bfc75853bb85efb02aac95474b5a572ada8ec17bd25a6632911b15790d727484b4c4c15da4818591792a73701a03cf91520dbd', NULL, NULL, '[4]', 1, '{"lang": 1, "theme": 1}', NULL, NULL, NULL, 1769962885, 1769934086, 'w00012349', NULL, '王五', '王五', 500, 2),
