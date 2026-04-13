@@ -39,7 +39,7 @@ class Config:
     }
 
     # External MySQL 5.6 (只读聚合查询)
-    EXTERNAL_MYSQL_HOST = os.getenv('EXTERNAL_MYSQL_HOST', '154.9.255.18')
+    EXTERNAL_MYSQL_HOST = os.getenv('EXTERNAL_MYSQL_HOST', 'localhost')
     EXTERNAL_MYSQL_PORT = int(os.getenv('EXTERNAL_MYSQL_PORT', 3306))
     EXTERNAL_MYSQL_USER = os.getenv('EXTERNAL_MYSQL_USER', 'root')
     EXTERNAL_MYSQL_PASSWORD = os.getenv('EXTERNAL_MYSQL_PASSWORD', 'Ndgsyxn.7')
