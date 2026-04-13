@@ -46,7 +46,7 @@ from app.models.order import (
     Order,
     OrderResult
 )
-from app.models.order_condition_opti import OrderConditionOpti
+from app.models.case_opti import OrderCaseOpti, CaseConditionOpti
 
 # 结果模型
 from app.models.result import (
@@ -108,7 +108,8 @@ __all__ = [
     # 订单
     'Order',
     'OrderResult',
-    'OrderConditionOpti',
+    'OrderCaseOpti',
+    'CaseConditionOpti',
     # 结果
     'SimTypeResult',
     'Round',

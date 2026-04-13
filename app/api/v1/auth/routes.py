@@ -77,6 +77,25 @@ def sso_callback_login():
         return error(e.code, e.msg, http_status=400)
 
 
+@auth_bp.route('/opt-access-token', methods=['POST'])
+def opt_access_token_login():
+    """iframe 嵌入场景：使用公司平台 cookie 中的 opt_access_token 换取本平台 token。"""
+    try:
+        payload = get_snake_json() or {}
+        access_token = (
+            str(payload.get('opt_access_token') or payload.get('optAccessToken') or '').strip()
+            or str(request.cookies.get('opt_access_token') or '').strip()
+        )
+        result = auth_service.login_by_opt_access_token(access_token, request.cookies.to_dict())
+        return success(result, "嵌入登录成功")
+    except ValidationError as e:
+        return error(ErrorCode.VALIDATION_ERROR, str(e), http_status=400)
+    except NotFoundError as e:
+        return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
+    except BusinessError as e:
+        return error(e.code, e.msg, http_status=400)
+
+
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():

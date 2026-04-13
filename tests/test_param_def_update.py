@@ -3,8 +3,16 @@
 """
 import requests
 import json
+import pytest
 
 BASE_URL = "http://localhost:5000/api/v1"
+
+
+def _request_or_skip(method, url, **kwargs):
+    try:
+        return requests.request(method, url, timeout=3, **kwargs)
+    except requests.RequestException as exc:
+        pytest.skip(f"requires a running local backend at {BASE_URL}: {exc}")
 
 def test_update_param_def():
     """测试更新参数定义"""
@@ -13,7 +21,7 @@ def test_update_param_def():
     print("=" * 60)
     print("1. 获取参数定义列表")
     print("=" * 60)
-    response = requests.get(f"{BASE_URL}/config/param-defs")
+    response = _request_or_skip("GET", f"{BASE_URL}/config/param-defs")
     print(f"状态码: {response.status_code}")
     data = response.json()
     print(f"响应: {json.dumps(data, indent=2, ensure_ascii=False)}")
@@ -43,7 +51,8 @@ def test_update_param_def():
 
     print(f"更新数据: {json.dumps(update_data, indent=2, ensure_ascii=False)}")
     
-    response = requests.put(
+    response = _request_or_skip(
+        "PUT",
         f"{BASE_URL}/config/param-defs/{param_id}",
         json=update_data,
         headers={"Content-Type": "application/json"}
@@ -98,7 +107,7 @@ def test_update_param_def():
     print("4. 重新获取验证")
     print("=" * 60)
     
-    response = requests.get(f"{BASE_URL}/config/param-defs/{param_id}")
+    response = _request_or_skip("GET", f"{BASE_URL}/config/param-defs/{param_id}")
     print(f"状态码: {response.status_code}")
     result = response.json()
     
@@ -133,4 +142,3 @@ if __name__ == "__main__":
         print(f"\n❌ 测试失败: {e}")
         import traceback
         traceback.print_exc()
-

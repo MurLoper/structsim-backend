@@ -76,7 +76,7 @@ python run.py --init-db && gunicorn -c gunicorn_conf.py wsgi:app
 
 当前已接入一套同实例多 schema 的只读外部库，用于补齐提交页项目阶段、输出后处理 component 字典，以及结果分析中的外部优化链路：
 
-- `simlation_project`
+- `simulation_project`
 - `struct_module`
 - `union_opt_kernal`
 - `union_opt_conf`
@@ -84,8 +84,8 @@ python run.py --init-db && gunicorn -c gunicorn_conf.py wsgi:app
 
 主要用途：
 
-- `simlation_project.phase`：阶段字典
-- `simlation_project.pp_phase`：`project_id -> phase_id` 默认映射
+- `simulation_project.phase`：阶段字典
+- `simulation_project.pp_phase`：`project_id -> phase_id` 默认映射
 - `struct_module.component`：输出后处理 `component` 字典
 - `union_opt_kernal.opt_issues`：订单级优化任务
 - `union_opt_kernal.jobs`：工况级任务

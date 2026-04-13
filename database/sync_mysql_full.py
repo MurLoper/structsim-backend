@@ -21,13 +21,13 @@ try:
     from .export_mysql import build_output_file, export_database, parse_csv
     from .import_mysql import import_database
     from .migrations.user_identity_upgrade import upgrade_identity_schema
-    from .migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
+    from .migrations.case_opti_upgrade import upgrade_case_opti_schema
     from .migrations.order_phase_upgrade import upgrade_order_phase_schema
 except ImportError:
     from export_mysql import build_output_file, export_database, parse_csv  # pyright: ignore[reportImplicitRelativeImport]
     from import_mysql import import_database  # pyright: ignore[reportImplicitRelativeImport]
     from migrations.user_identity_upgrade import upgrade_identity_schema  # pyright: ignore[reportImplicitRelativeImport]
-    from migrations.order_condition_opti_upgrade import upgrade_order_condition_schema  # pyright: ignore[reportImplicitRelativeImport]
+    from migrations.case_opti_upgrade import upgrade_case_opti_schema  # pyright: ignore[reportImplicitRelativeImport]
     from migrations.order_phase_upgrade import upgrade_order_phase_schema  # pyright: ignore[reportImplicitRelativeImport]
 
 
@@ -70,8 +70,8 @@ def main() -> int:
     if not args.skip_identity_upgrade:
         print('预处理: 升级源库用户身份字段...')
         upgrade_identity_schema(args.source_db_url, verbose=True)
-        print('预处理: 升级源库订单 condition 表结构...')
-        upgrade_order_condition_schema(args.source_db_url, verbose=True)
+        print('预处理: 升级源库订单 case/condition 新链路...')
+        upgrade_case_opti_schema(args.source_db_url, verbose=True)
         print('预处理: 升级源库 orders.phase_id 字段...')
         upgrade_order_phase_schema(args.source_db_url, verbose=True)
 
@@ -80,7 +80,7 @@ def main() -> int:
         source_db_url=args.source_db_url,
         output_file=output_file,
         include_tables=set(),
-        exclude_tables=set(),
+        exclude_tables={'order_condition_opti'},
         chunk_size=max(1, args.chunk_size),
         strip_fk=not args.keep_foreign_keys,
         required_tables=required_tables,
@@ -106,8 +106,8 @@ def main() -> int:
     if ok and not args.skip_identity_upgrade:
         print('后处理: 升级目标库用户身份字段...')
         upgrade_identity_schema(args.target_db_url, verbose=True)
-        print('后处理: 升级目标库订单 condition 表结构...')
-        upgrade_order_condition_schema(args.target_db_url, verbose=True)
+        print('后处理: 升级目标库订单 case/condition 新链路...')
+        upgrade_case_opti_schema(args.target_db_url, verbose=True)
         print('后处理: 升级目标库 orders.phase_id 字段...')
         upgrade_order_phase_schema(args.target_db_url, verbose=True)
 

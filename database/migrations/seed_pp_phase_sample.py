@@ -1,9 +1,9 @@
 """
-为外部 simlation_project.pp_phase 生成一批示例关联数据。
+为外部 simulation_project.pp_phase 生成一批示例关联数据。
 
 规则：
 1. 从本地主库读取 projects.id
-2. 从外部 simlation_project.phase 读取可用 phase_id
+2. 从外部 simulation_project.phase 读取可用 phase_id
 3. 对尚未存在映射的 project_id 按稳定顺序轮询分配 phase_id
 
 说明：
@@ -51,7 +51,7 @@ def seed_pp_phase_sample(dry_run: bool = False) -> dict[str, int]:
         if not local_projects:
             return {'projectCount': 0, 'insertedCount': 0, 'skippedCount': 0}
 
-        schema_name = app.config['EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT']
+        schema_name = app.config['EXTERNAL_MYSQL_SCHEMA_SIMULATION_PROJECT']
         conn = _connect_external(app)
         try:
             with conn.cursor() as cur:
@@ -100,7 +100,7 @@ def seed_pp_phase_sample(dry_run: bool = False) -> dict[str, int]:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='为外部 simlation_project.pp_phase 生成示例关联数据')
+    parser = argparse.ArgumentParser(description='为外部 simulation_project.pp_phase 生成示例关联数据')
     parser.add_argument('--dry-run', action='store_true', help='只预览，不实际写入')
     args = parser.parse_args()
     result = seed_pp_phase_sample(dry_run=args.dry_run)

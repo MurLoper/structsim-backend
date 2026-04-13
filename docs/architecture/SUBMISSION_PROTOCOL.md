@@ -91,7 +91,7 @@ GET /api/v1/orders/init-config?projectId={id}&simTypeId={id?}
 
 ```sql
 SELECT phase_id
-FROM simlation_project.pp_phase
+FROM simulation_project.pp_phase
 WHERE pp_record_id = :project_id
 ORDER BY pp_phase_id DESC
 LIMIT 1
@@ -163,6 +163,25 @@ LIMIT 1
 `optParam` 仅作为历史兼容字段保留，不再作为新链路主语义。
 
 ## 6. 结果
+
+## 6.1 case 提单链路补充
+
+`inputJson.globalParams` 是当前区分提单分发策略的标准字段：
+
+```json
+{
+  "globalParams": {
+    "applyToAll": true,
+    "rotateDropFlag": false
+  }
+}
+```
+
+规则：
+- `applyToAll=true`：一个订单生成 `1 issue + 1 job + n condition_config`。
+- `applyToAll!=true`：一个订单生成 `1 issue + n case/job`，每个 case/job 下一个 `condition_config`。
+- `rotateDropFlag=true`：写入外部 `subject_config_struct.n_rotate_drop=1`；全局模式应用到所有工况，非全局模式只应用到对应工况。
+- 本地结构固定为 `orders -> order_case_opti -> case_condition_opti`。
 
 当前提单初始化正式分层如下：
 

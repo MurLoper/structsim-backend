@@ -48,8 +48,8 @@ class Config:
     EXTERNAL_MYSQL_READ_TIMEOUT = float(os.getenv('EXTERNAL_MYSQL_READ_TIMEOUT', 20))
     EXTERNAL_MYSQL_WRITE_TIMEOUT = float(os.getenv('EXTERNAL_MYSQL_WRITE_TIMEOUT', 20))
     EXTERNAL_MYSQL_POOL_SIZE = int(os.getenv('EXTERNAL_MYSQL_POOL_SIZE', 4))
-    EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT = os.getenv(
-        'EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT', 'simlation_project'
+    EXTERNAL_MYSQL_SCHEMA_SIMULATION_PROJECT = os.getenv(
+        'EXTERNAL_MYSQL_SCHEMA_SIMULATION_PROJECT', 'simulation_project'
     )
     EXTERNAL_MYSQL_SCHEMA_STRUCT_MODULE = os.getenv(
         'EXTERNAL_MYSQL_SCHEMA_STRUCT_MODULE', 'struct_module'
@@ -155,6 +155,7 @@ class TestingConfig(Config):
     """Testing configuration."""
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_BINDS = {}
 
 
 config = {

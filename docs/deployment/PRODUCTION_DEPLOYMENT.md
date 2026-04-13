@@ -170,7 +170,7 @@ kubectl -n structsim logs deploy/structsim-backend
 
 当前已接入同一实例下的多 schema：
 
-- `simlation_project`
+- `simulation_project`
 - `struct_module`
 - `union_opt_kernal`
 - `union_opt_conf`
@@ -178,8 +178,8 @@ kubectl -n structsim logs deploy/structsim-backend
 
 用途如下：
 
-- `simlation_project.phase`：项目阶段字典
-- `simlation_project.pp_phase`：`project_id -> phase_id` 默认映射
+- `simulation_project.phase`：项目阶段字典
+- `simulation_project.pp_phase`：`project_id -> phase_id` 默认映射
 - `struct_module.component`：输出后处理 `component` 字典
 - `union_opt_kernal.opt_issues`：订单级优化任务
 - `union_opt_kernal.jobs`：工况级任务
@@ -196,7 +196,7 @@ kubectl -n structsim logs deploy/structsim-backend
 - `EXTERNAL_MYSQL_PORT`
 - `EXTERNAL_MYSQL_USER`
 - `EXTERNAL_MYSQL_PASSWORD`
-- `EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT`
+- `EXTERNAL_MYSQL_SCHEMA_SIMULATION_PROJECT`
 - `EXTERNAL_MYSQL_SCHEMA_STRUCT_MODULE`
 - `EXTERNAL_MYSQL_SCHEMA_UNION_OPT_KERNAL`
 - `EXTERNAL_MYSQL_SCHEMA_UNION_OPT_CONF`

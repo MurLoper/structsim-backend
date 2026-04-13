@@ -8,11 +8,11 @@ from .mysql56_client import external_mysql56_client
 
 
 class ProjectPhaseRepository:
-    """simlation_project 阶段与项目阶段映射查询。"""
+    """simulation_project 阶段与项目阶段映射查询。"""
 
     @staticmethod
     def _db_name() -> str:
-        return current_app.config['EXTERNAL_MYSQL_SCHEMA_SIMLATION_PROJECT']
+        return current_app.config['EXTERNAL_MYSQL_SCHEMA_SIMULATION_PROJECT']
 
     @staticmethod
     def _normalize_phase_name(raw_name: Any, phase_id: int) -> str:

@@ -85,12 +85,12 @@ def get_order_conditions(order_id: int):
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)
 
 
-@orders_bp.route('/conditions/<int:order_condition_id>/resubmit', methods=['POST'])
+@orders_bp.route('/case-conditions/<int:case_condition_id>/resubmit', methods=['POST'])
 @jwt_required()
-def resubmit_order_condition(order_condition_id: int):
-    """重提失败或未生成 job 的订单工况。"""
+def resubmit_case_condition(case_condition_id: int):
+    """重提失败或未生成 condition_config 的 case 工况。"""
     try:
-        result = orders_service.resubmit_order_condition(order_condition_id)
+        result = orders_service.resubmit_case_condition(case_condition_id)
         return success(result, "重提成功")
     except NotFoundError as e:
         return error(ErrorCode.RESOURCE_NOT_FOUND, e.msg, http_status=404)

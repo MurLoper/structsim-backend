@@ -29,11 +29,11 @@ from sqlalchemy import MetaData, create_engine, text, inspect
 
 try:
     from .migrations.user_identity_upgrade import upgrade_identity_schema
-    from .migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
+    from .migrations.case_opti_upgrade import upgrade_case_opti_schema
     from .migrations.order_phase_upgrade import upgrade_order_phase_schema
 except Exception:  # pragma: no cover
     from migrations.user_identity_upgrade import upgrade_identity_schema  # pyright: ignore[reportImplicitRelativeImport]
-    from migrations.order_condition_opti_upgrade import upgrade_order_condition_schema  # pyright: ignore[reportImplicitRelativeImport]
+    from migrations.case_opti_upgrade import upgrade_case_opti_schema  # pyright: ignore[reportImplicitRelativeImport]
     from migrations.order_phase_upgrade import upgrade_order_phase_schema  # pyright: ignore[reportImplicitRelativeImport]
 
 
@@ -232,6 +232,8 @@ def main() -> int:
     output_file = build_output_file(args.output_file)
     include_tables = parse_csv(args.only_tables)
     exclude_tables = parse_csv(args.exclude_tables)
+    if not include_tables:
+        exclude_tables.add('order_condition_opti')
     required_tables = sorted(parse_csv(args.required_tables))
 
     print('=' * 60)
@@ -246,8 +248,8 @@ def main() -> int:
     if not args.skip_identity_upgrade:
         print('预处理: 升级源库用户身份字段...')
         upgrade_identity_schema(args.source_db_url, verbose=True)
-        print('预处理: 升级源库订单 condition 表结构...')
-        upgrade_order_condition_schema(args.source_db_url, verbose=True)
+        print('预处理: 升级源库订单 case/condition 新链路...')
+        upgrade_case_opti_schema(args.source_db_url, verbose=True)
         print('预处理: 升级源库 orders.phase_id 字段...')
         upgrade_order_phase_schema(args.source_db_url, verbose=True)
 

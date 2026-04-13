@@ -65,4 +65,5 @@ def test_orders_crud_flow(client, auth_headers, project, fold_type, sim_type):
     assert update_payload['data']['baseDir'] == '/data/orders/ord-1'
 
     delete_resp = client.delete(f'/api/v1/orders/{order_id}', headers=auth_headers)
-    assert delete_resp.status_code == 200
+    assert delete_resp.status_code == 400
+    assert '未开始' in delete_resp.get_json()['msg']

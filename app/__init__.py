@@ -42,10 +42,10 @@ def _auto_upgrade_identity_schema(app: Flask) -> None:
         logger.exception(f'身份字段自动升级失败: {exc}')
 
 
-def _auto_upgrade_order_condition_schema(app: Flask) -> None:
-    """应用启动时自动升级订单 condition 运行实体相关表结构。"""
-    if os.getenv('AUTO_ORDER_CONDITION_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
-        logger.info('已禁用 AUTO_ORDER_CONDITION_UPGRADE，跳过订单 condition 表结构升级')
+def _auto_upgrade_case_opti_schema(app: Flask) -> None:
+    """应用启动时自动创建 orders -> order_case_opti -> case_condition_opti 结构。"""
+    if os.getenv('AUTO_CASE_OPTI_UPGRADE', 'true').lower() not in ('1', 'true', 'yes', 'on'):
+        logger.info('已禁用 AUTO_CASE_OPTI_UPGRADE，跳过 case/opti 表结构升级')
         return
 
     db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
@@ -53,11 +53,11 @@ def _auto_upgrade_order_condition_schema(app: Flask) -> None:
         return
 
     try:
-        from database.migrations.order_condition_opti_upgrade import upgrade_order_condition_schema
-        upgrade_order_condition_schema(str(db_url), verbose=False)
-        logger.info('订单 condition 表结构自动升级检查完成')
+        from database.migrations.case_opti_upgrade import upgrade_case_opti_schema
+        upgrade_case_opti_schema(str(db_url), verbose=False)
+        logger.info('case/opti 表结构自动升级检查完成')
     except Exception as exc:
-        logger.exception(f'订单 condition 表结构自动升级失败: {exc}')
+        logger.exception(f'case/opti 表结构自动升级失败: {exc}')
 
 
 def _auto_upgrade_status_defs_schema(app: Flask) -> None:
@@ -145,7 +145,7 @@ def create_app(config_name=None):
 
     # 自动升级身份字段（兼容旧数据库结构）
     _auto_upgrade_identity_schema(app)
-    _auto_upgrade_order_condition_schema(app)
+    _auto_upgrade_case_opti_schema(app)
     _auto_upgrade_status_defs_schema(app)
     _auto_upgrade_user_department_schema(app)
     _auto_upgrade_platform_features_schema(app)

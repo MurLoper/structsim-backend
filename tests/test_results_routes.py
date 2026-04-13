@@ -41,31 +41,21 @@ def test_results_endpoints(client, app, db_session):
     db_session.add(round_item)
     db_session.commit()
 
-    sim_resp = client.get(f'/api/results/sim-type/{sim_result.id}', headers=headers)
+    sim_resp = client.get(f'/api/v1/results/sim-type/{sim_result.id}', headers=headers)
     assert sim_resp.status_code == 200
 
-    list_resp = client.get(f'/api/results/order/{order.id}/sim-types', headers=headers)
+    list_resp = client.get(f'/api/v1/results/order/{order.id}/sim-types', headers=headers)
     assert list_resp.status_code == 200
 
     rounds_resp = client.get(
-        f'/api/results/sim-type/{sim_result.id}/rounds?page=1&pageSize=10',
+        f'/api/v1/results/sim-type/{sim_result.id}/rounds?page=1&pageSize=10',
         headers=headers
     )
     assert rounds_resp.status_code == 200
 
-    round_detail = client.get(f'/api/results/rounds/{round_item.id}', headers=headers)
-    assert round_detail.status_code == 200
-
-    analysis_resp = client.post(
-        '/api/results/analysis',
-        json={
-            'orderId': order.id,
-            'simTypeId': sim_type.id,
-            'chartType': 'SCATTER',
-            'xField': 'x',
-            'yField': 'y',
-        },
-        headers=headers
+    update_resp = client.patch(
+        f'/api/v1/results/round/{round_item.id}/status',
+        json={'status': 2, 'progress': 100},
+        headers=headers,
     )
-    assert analysis_resp.status_code == 200
-    assert analysis_resp.get_json()['totalPoints'] == 1
+    assert update_resp.status_code == 200

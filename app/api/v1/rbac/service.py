@@ -207,7 +207,7 @@ def _user_to_dict(user: User, roles: List[Role], permissions: List[Permission]) 
     return {
         "id": user.domain_account,
         "domainAccount": user.domain_account,
-        "lcUserId": user.lc_user_id,
+        "lcUserId": getattr(user, "lc_user_id", None),
         "userName": user.user_name,
         "realName": user.real_name,
         "email": user.email,

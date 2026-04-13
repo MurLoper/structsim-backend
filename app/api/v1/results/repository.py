@@ -9,7 +9,7 @@ from sqlalchemy import func, inspect
 from app.extensions import db
 from app.models.config import FoldType, SimType
 from app.models.order import Order
-from app.models.order_condition_opti import OrderConditionOpti
+from app.models.case_opti import CaseConditionOpti, OrderCaseOpti
 from app.models.result import Round, SimTypeResult
 
 
@@ -20,9 +20,16 @@ class ResultsRepository:
         self.session = db.session
 
     @staticmethod
-    def _has_order_condition_opti_table() -> bool:
+    def _has_case_condition_table() -> bool:
         try:
-            return 'order_condition_opti' in set(inspect(db.engine).get_table_names())
+            return 'case_condition_opti' in set(inspect(db.engine).get_table_names())
+        except Exception:
+            return True
+
+    @staticmethod
+    def _has_case_table() -> bool:
+        try:
+            return 'order_case_opti' in set(inspect(db.engine).get_table_names())
         except Exception:
             return True
 
@@ -117,20 +124,25 @@ class ResultsRepository:
             "statusDistribution": {str(status): count for status, count in status_counts},
         }
 
-    def get_order_conditions(self, order_id: int) -> List[OrderConditionOpti]:
-        if not self._has_order_condition_opti_table():
+    def get_order_conditions(self, order_id: int) -> List[CaseConditionOpti]:
+        if not self._has_case_condition_table():
             return []
         return (
-            self.session.query(OrderConditionOpti)
+            self.session.query(CaseConditionOpti)
             .filter_by(order_id=order_id)
-            .order_by(OrderConditionOpti.id.asc())
+            .order_by(CaseConditionOpti.case_index.asc(), CaseConditionOpti.id.asc())
             .all()
         )
 
-    def get_order_condition_by_id(self, order_condition_id: int) -> Optional[OrderConditionOpti]:
-        if not self._has_order_condition_opti_table():
-            return None
-        return self.session.get(OrderConditionOpti, order_condition_id)
+    def get_order_cases(self, order_id: int) -> List[OrderCaseOpti]:
+        if not self._has_case_table():
+            return []
+        return (
+            self.session.query(OrderCaseOpti)
+            .filter_by(order_id=order_id)
+            .order_by(OrderCaseOpti.case_index.asc(), OrderCaseOpti.id.asc())
+            .all()
+        )
 
     def get_order_by_id(self, order_id: int) -> Optional[Order]:
         return self.session.get(Order, order_id)

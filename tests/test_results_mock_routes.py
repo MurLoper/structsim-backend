@@ -1,7 +1,7 @@
 from app.models.order import Order
 
 
-def test_results_conditions_fallback_to_order_input_json(client, auth_headers, db_session, project):
+def test_results_cases_fallback_to_order_input_json(client, auth_headers, db_session, project):
     order = Order(
         order_no='ORD_MOCK_FALLBACK_001',
         project_id=project.id,
@@ -31,35 +31,25 @@ def test_results_conditions_fallback_to_order_input_json(client, auth_headers, d
     db_session.add(order)
     db_session.commit()
 
-    summary_resp = client.get(f'/api/results/order/{order.id}/conditions', headers=auth_headers)
-    assert summary_resp.status_code == 200
-    summary_payload = summary_resp.get_json()['data']
-    assert len(summary_payload) == 1
-    assert summary_payload[0]['conditionId'] == 101
-    assert summary_payload[0]['foldTypeName'] == '半折叠态'
-    assert summary_payload[0]['simTypeName'] == '跌落'
-    assert summary_payload[0]['roundTotal'] == 4
-    assert summary_payload[0]['resultSource'] == 'mock'
-
-    mock_condition_id = summary_payload[0]['id']
-    detail_resp = client.get(f'/api/results/order-condition/{mock_condition_id}', headers=auth_headers)
-    assert detail_resp.status_code == 200
-    detail_payload = detail_resp.get_json()['data']
-    assert detail_payload['conditionId'] == 101
-    assert detail_payload['roundSchema']['paramKeys'] == ['厚度', '角度']
-
-    rounds_resp = client.get(
-        f'/api/results/order-condition/{mock_condition_id}/rounds?page=1&pageSize=20',
-        headers=auth_headers,
-    )
-    assert rounds_resp.status_code == 200
-    rounds_payload = rounds_resp.get_json()['data']
-    assert rounds_payload['total'] == 4
-    assert rounds_payload['orderCondition']['conditionId'] == 101
-    assert len(rounds_payload['items']) == 4
+    cases_resp = client.get(f'/api/v1/results/order/{order.id}/cases', headers=auth_headers)
+    assert cases_resp.status_code == 200
+    cases_payload = cases_resp.get_json()['data']
+    assert len(cases_payload['cases']) == 1
+    assert len(cases_payload['conditions']) == 1
+    case_payload = cases_payload['cases'][0]
+    assert len(case_payload['conditions']) == 1
+    condition_payload = case_payload['conditions'][0]
+    assert condition_payload['conditionId'] == 101
+    assert condition_payload['foldTypeName'] == '半折叠态'
+    assert condition_payload['simTypeName'] == '跌落'
+    assert condition_payload['roundTotal'] == 4
+    assert condition_payload['resultSource'] == 'mock'
+    assert condition_payload['rounds']['total'] == 4
+    assert condition_payload['rounds']['orderCondition']['conditionId'] == 101
+    assert len(condition_payload['rounds']['items']) == 4
 
 
-def test_results_mock_payload_follows_order_status(client, auth_headers, db_session, project):
+def test_results_cases_mock_payload_follows_order_status(client, auth_headers, db_session, project):
     order = Order(
         order_no='ORD_MOCK_STATUS_001',
         project_id=project.id,
@@ -103,25 +93,28 @@ def test_results_mock_payload_follows_order_status(client, auth_headers, db_sess
     db_session.add(order)
     db_session.commit()
 
-    summary_resp = client.get(f'/api/results/order/{order.id}/conditions', headers=auth_headers)
-    assert summary_resp.status_code == 200
-    summary_payload = summary_resp.get_json()['data']
-    assert [item['status'] for item in summary_payload] == [2, 1, 0]
-
-    running_condition_id = summary_payload[1]['id']
-    rounds_resp = client.get(
-        f'/api/results/order-condition/{running_condition_id}/rounds?page=1&pageSize=20',
-        headers=auth_headers,
-    )
-    assert rounds_resp.status_code == 200
-    rounds_payload = rounds_resp.get_json()['data']
-    assert rounds_payload['statistics']['runningRounds'] == 1
-    assert rounds_payload['items'][-1]['status'] == 1
+    cases_resp = client.get(f'/api/v1/results/order/{order.id}/cases', headers=auth_headers)
+    assert cases_resp.status_code == 200
+    cases_payload = cases_resp.get_json()['data']
+    condition_payloads = [
+        condition
+        for case_payload in cases_payload['cases']
+        for condition in case_payload['conditions']
+    ]
+    assert [item['status'] for item in condition_payloads] == [2, 1, 0]
+    running_payload = next(item for item in condition_payloads if item['conditionId'] == 202)
+    assert running_payload['rounds']['statistics']['runningRounds'] == 1
+    assert running_payload['rounds']['items'][-1]['status'] == 1
 
     order.status = 3
     order.progress = 100
     db_session.commit()
 
-    failed_summary_resp = client.get(f'/api/results/order/{order.id}/conditions', headers=auth_headers)
-    failed_summary_payload = failed_summary_resp.get_json()['data']
-    assert [item['status'] for item in failed_summary_payload] == [2, 3, 0]
+    failed_cases_resp = client.get(f'/api/v1/results/order/{order.id}/cases', headers=auth_headers)
+    failed_payload = failed_cases_resp.get_json()['data']
+    failed_conditions = [
+        condition
+        for case_payload in failed_payload['cases']
+        for condition in case_payload['conditions']
+    ]
+    assert [item['status'] for item in failed_conditions] == [2, 3, 0]

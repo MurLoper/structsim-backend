@@ -139,6 +139,8 @@ class AuthService:
             return True
         if payload.get("login_flag") in (1, "1", True, "true", "SUCCESS", "success"):
             return True
+        if payload.get("success_flag") in (1, "1", True, "true", "TRUE", "success", "SUCCESS"):
+            return True
         return False
 
     @staticmethod
@@ -413,10 +415,13 @@ class AuthService:
         normalized_domain = self._normalize_domain_account(
             str(info.get("domain_account") or info.get("domainAccount") or domain_account)
         )
-        user_name = self._normalize_user_name(info.get("user_name") or info.get("userName"))
+        user_name = self._normalize_user_name(
+            info.get("user_name") or info.get("userName") or info.get("userNameEn")
+        )
         real_name = (
             info.get("real_name")
             or info.get("realName")
+            or info.get("realname")
             or info.get("name")
             or user_name
             or normalized_domain
@@ -445,6 +450,81 @@ class AuthService:
             "department_id": department_id,
             "valid": 1,
         }
+
+    def _fetch_user_info_by_access_token(
+        self,
+        access_token: str,
+        cookies: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        normalized_token = str(access_token or "").strip()
+        if not normalized_token:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "缺少 opt_access_token")
+
+        info_url = current_app.config.get("AUTH_GET_USER_INFO_URL", "")
+        if not info_url:
+            domain_account = self._normalize_domain_account(
+                str(
+                    (cookies or {}).get("domain_account")
+                    or (cookies or {}).get("user_account")
+                    or (cookies or {}).get("user_name")
+                    or "embed_mock_user"
+                )
+            )
+            return {
+                "domain_account": domain_account,
+                "user_account": domain_account,
+                "user_name": (cookies or {}).get("user_name") or domain_account,
+                "real_name": (cookies or {}).get("real_name")
+                or (cookies or {}).get("user_name")
+                or domain_account,
+                "email": f"{domain_account}@company.local",
+                "department": "mock",
+                "department_id": self._resolve_department_id(department_name="mock"),
+            }
+
+        timeout = float(current_app.config.get("AUTH_GET_USER_INFO_TIMEOUT", 8.0))
+        method = current_app.config.get("AUTH_GET_USER_INFO_METHOD", "GET").upper()
+        headers = self._get_company_api_headers()
+        headers["Authorization"] = f"Bearer {normalized_token}"
+        payload = {"token": normalized_token}
+
+        try:
+            if method == "POST":
+                response = requests.post(
+                    info_url,
+                    json=payload,
+                    headers=headers,
+                    timeout=timeout,
+                    cookies=cookies,
+                )
+            else:
+                response = requests.get(
+                    info_url,
+                    params=payload,
+                    headers=headers,
+                    timeout=timeout,
+                    cookies=cookies,
+                )
+        except requests.RequestException as exc:
+            raise BusinessError(ErrorCode.INTERNAL_ERROR, f"公司用户信息服务不可用: {exc}") from exc
+
+        try:
+            data = response.json() if response.text else {}
+        except ValueError:
+            data = {}
+
+        if response.status_code >= 400 or not self._is_success_payload(data):
+            msg = (
+                data.get("error_msg")
+                or data.get("success_msg")
+                or data.get("msg")
+                or data.get("message")
+                or "公司用户信息查询失败"
+            )
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, msg)
+
+        user_info = data.get("data") if isinstance(data.get("data"), dict) else data
+        return user_info if isinstance(user_info, dict) else {}
 
     def _assign_default_role_if_missing(self, user_payload: Dict[str, Any], user: Optional[User] = None) -> Dict[str, Any]:
         existing_role_ids = list((user.role_ids if user else None) or [])
@@ -548,6 +628,32 @@ class AuthService:
         if user.valid != 1:
             raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
 
+        return self._issue_login_result(user)
+
+    def login_by_opt_access_token(
+        self,
+        access_token: str,
+        cookie_dict: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        user_info = self._fetch_user_info_by_access_token(access_token, cookie_dict)
+        domain_account = self._normalize_domain_account(
+            str(
+                user_info.get("domain_account")
+                or user_info.get("domainAccount")
+                or user_info.get("user_account")
+                or user_info.get("userAccount")
+                or (cookie_dict or {}).get("domain_account")
+                or (cookie_dict or {}).get("user_account")
+                or ""
+            )
+        )
+        if not domain_account:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "公司接口未返回域账号，无法登录")
+
+        payload = self._build_user_payload(domain_account, user_info)
+        user = self._upsert_authenticated_user(payload)
+        if user.valid != 1:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "账号已被禁用")
         return self._issue_login_result(user)
 
     def _resolve_user_by_identity(self, user_identity: Any):

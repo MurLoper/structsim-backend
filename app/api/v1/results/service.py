@@ -101,81 +101,125 @@ class ResultsService:
         round_obj = self.repository.get_round_by_id(round_id)
         return self._serialize_round(round_obj)
 
-    def get_order_conditions(
-        self,
-        order_id: int,
-        include_external: bool = False,
-    ) -> List[Dict[str, Any]]:
+    def get_order_case_results(self, order_id: int) -> Dict[str, Any]:
         conditions = self.repository.get_order_conditions(order_id)
-        if conditions:
-            payloads = [
-                self._serialize_order_condition(
-                    item,
-                    include_mock_summary=False,
-                    include_snapshot=False,
-                )
-                for item in conditions
-            ]
-            if include_external:
-                return self._enrich_order_condition_payloads(payloads, include_outputs=False)
-            return payloads
+        cases = self.repository.get_order_cases(order_id)
+        if not conditions:
+            order = self.repository.get_order_by_id(order_id)
+            if not order:
+                return {
+                    'orderId': order_id,
+                    'cases': [],
+                    'conditions': [],
+                }
+            conditions = self._build_mock_order_conditions_from_order(order)
 
-        order = self.repository.get_order_by_id(order_id)
-        if not order:
-            return []
-        payloads = [
-            self._serialize_order_condition(
-                item,
-                include_mock_summary=True,
-                include_snapshot=False,
+        issue_ids = [
+            self._to_int(getattr(condition, 'opt_issue_id', None), 0)
+            for condition in conditions
+        ] + [self._to_int(getattr(case, 'opt_issue_id', None), 0) for case in cases]
+        job_ids = [
+            self._to_int(getattr(condition, 'opt_job_id', None), 0)
+            for condition in conditions
+        ] + [self._to_int(getattr(case, 'opt_job_id', None), 0) for case in cases]
+        issue_map, job_summaries = optimization_repository.build_issue_and_job_summaries(
+            issue_ids,
+            job_ids,
+            include_outputs=True,
+        )
+        job_map = {self._to_int(item.get('id'), 0): item for item in job_summaries}
+        conditions_by_case: Dict[int, List[Any]] = {}
+        for condition in conditions:
+            conditions_by_case.setdefault(self._to_int(getattr(condition, 'order_case_id', None), 0), []).append(condition)
+
+        case_entries: List[Tuple[int, Any | None]] = [
+            (self._to_int(getattr(case, 'id', None), 0), case)
+            for case in sorted(
+                cases,
+                key=lambda item: (
+                    self._to_int(getattr(item, 'case_index', None), 0),
+                    self._to_int(getattr(item, 'id', None), 0),
+                ),
             )
-            for item in self._build_mock_order_conditions_from_order(order)
         ]
-        if include_external:
-            return self._enrich_order_condition_payloads(payloads, include_outputs=False)
-        return payloads
+        known_case_ids = {case_id for case_id, _case in case_entries}
+        for case_id in sorted(conditions_by_case.keys()):
+            if case_id not in known_case_ids:
+                case_entries.append((case_id, None))
 
-    def get_order_condition(self, order_condition_id: int) -> Dict[str, Any]:
-        condition = self._resolve_order_condition(order_condition_id)
-        if not condition:
-            raise NotFoundError(f"订单工况 {order_condition_id} 不存在")
+        result_cases: List[Dict[str, Any]] = []
+        for case_id, case_entry in case_entries:
+            case_conditions = conditions_by_case.get(case_id, [])
+            if not case_conditions:
+                continue
+            first_condition = case_conditions[0]
+            opt_issue_id = self._to_int(getattr(case_entry, 'opt_issue_id', None), 0) or self._to_int(getattr(first_condition, 'opt_issue_id', None), 0)
+            opt_job_id = self._to_int(getattr(case_entry, 'opt_job_id', None), 0) or self._to_int(getattr(first_condition, 'opt_job_id', None), 0)
+            job_summary = job_map.get(opt_job_id)
+            serialized_conditions: List[Dict[str, Any]] = []
+            case_total = 0
+            case_completed = 0
+            case_failed = 0
+            case_running = 0
+            for condition in case_conditions:
+                condition_payload = self._apply_external_enrichment(
+                    self._serialize_order_condition(condition, include_mock_summary=True),
+                    issue_map.get(self._to_int(getattr(condition, 'opt_issue_id', None), opt_issue_id)),
+                    [job_summary] if job_summary else [],
+                )
+                if job_summary:
+                    round_payload = self._build_external_condition_rounds_payload_from_job_summary(
+                        condition=condition,
+                        job_summary=job_summary,
+                        opt_issue=issue_map.get(opt_issue_id),
+                    )
+                else:
+                    round_payload = self._build_order_condition_rounds_payload(
+                        condition=condition,
+                        page=1,
+                        page_size=max(self._resolve_mock_total_rounds(condition), 1),
+                        status=None,
+                    )
+                stats = self._normalize_dict(round_payload.get('statistics'))
+                case_total += self._to_int(stats.get('totalRounds'), 0)
+                case_completed += self._to_int(stats.get('completedRounds'), 0)
+                case_failed += self._to_int(stats.get('failedRounds'), 0)
+                case_running += self._to_int(stats.get('runningRounds'), 0)
+                serialized_conditions.append({
+                    **condition_payload,
+                    'rounds': round_payload,
+                })
 
-        payload = self._enrich_order_condition_payload(
-            self._serialize_order_condition(condition, include_mock_summary=True)
-        )
-        payload["roundSchema"] = self._build_round_schema(condition)
-        payload["mockResultEnabled"] = payload.get("resultSource") != "external"
-        return payload
+            result_cases.append({
+                'id': case_id,
+                'orderId': order_id,
+                'orderNo': getattr(first_condition, 'order_no', None),
+                'caseIndex': self._to_int(getattr(case_entry, 'case_index', None), self._to_int(getattr(first_condition, 'case_index', None), 1)) if case_entry is not None else self._to_int(getattr(first_condition, 'case_index', None), 1),
+                'caseName': getattr(case_entry, 'case_name', None) if case_entry is not None else None,
+                'optIssueId': opt_issue_id,
+                'optJobId': opt_job_id,
+                'parameterScope': getattr(case_entry, 'parameter_scope', None) if case_entry is not None else getattr(first_condition, 'parameter_scope', None),
+                'status': self._to_int(getattr(case_entry, 'status', None), self._to_int(getattr(first_condition, 'status', None), 0)) if case_entry is not None else self._to_int(getattr(first_condition, 'status', None), 0),
+                'process': float(getattr(case_entry, 'process', 0) or getattr(first_condition, 'process', 0) or 0) if case_entry is not None else float(getattr(first_condition, 'process', 0) or 0),
+                'optIssue': issue_map.get(opt_issue_id),
+                'jobSummary': job_summary,
+                'statistics': {
+                    'totalRounds': case_total,
+                    'completedRounds': case_completed,
+                    'failedRounds': case_failed,
+                    'runningRounds': case_running,
+                },
+                'conditions': serialized_conditions,
+            })
 
-    def get_order_condition_external_summaries(self, order_id: int) -> List[Dict[str, Any]]:
-        return self.get_order_conditions(order_id, include_external=True)
-
-    def get_order_condition_rounds(
-        self,
-        order_condition_id: int,
-        page: int = 1,
-        page_size: int = 100,
-        status: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        condition = self._resolve_order_condition(order_condition_id)
-        if not condition:
-            raise NotFoundError(f"订单工况 {order_condition_id} 不存在")
-
-        external_payload = self._build_external_order_condition_rounds_payload(
-            condition=condition,
-            page=page,
-            page_size=page_size,
-            status=status,
-        )
-        if external_payload is not None:
-            return external_payload
-
-        return self._build_order_condition_rounds_payload(
-            condition=condition,
-            page=page,
-            page_size=page_size,
-            status=status,
-        )
+        return {
+            'orderId': order_id,
+            'cases': sorted(result_cases, key=lambda item: (item.get('caseIndex') or 0, item.get('id') or 0)),
+            'conditions': [
+                self._serialize_order_condition(condition, include_mock_summary=False, include_snapshot=False)
+                for condition in conditions
+            ],
+        }
 
     def _enrich_order_condition_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         opt_issue_id = self._to_int(payload.get('optIssueId'), 0)
@@ -244,33 +288,28 @@ class ResultsService:
             payload.setdefault('resultSource', 'mock')
         return payload
 
-    def _build_external_order_condition_rounds_payload(
+    def _build_external_round_items_from_job_summary(
         self,
         condition,
-        page: int,
-        page_size: int,
-        status: Optional[int],
-    ) -> Dict[str, Any] | None:
+        job_summary: Dict[str, Any],
+        status: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
-        if opt_job_id <= 0:
-            return None
-
-        issue_map, job_summaries = optimization_repository.build_issue_and_job_summaries(
-            [self._to_int(getattr(condition, 'opt_issue_id', None), 0)],
-            [opt_job_id],
-        )
-        if not job_summaries:
-            return None
-
-        job_summary = job_summaries[0]
-        raw_rounds = job_summary.get('rounds') or []
+        opt_condition_config_id = self._to_int(getattr(condition, 'opt_condition_config_id', None), 0)
         items: List[Dict[str, Any]] = []
-        for round_item in raw_rounds:
+        for round_item in job_summary.get('rounds') or []:
             round_status = int(round_item.get('status', 0) or 0)
             if status is not None and round_status != status:
                 continue
             outputs = {}
             for output in round_item.get('outputs') or []:
+                output_condition_config_id = self._to_int(output.get('conditionConfigId'), 0)
+                if (
+                    opt_condition_config_id > 0
+                    and output_condition_config_id > 0
+                    and output_condition_config_id != opt_condition_config_id
+                ):
+                    continue
                 resp_name = output.get('respName') or f"resp_{output.get('respConfigId')}"
                 value = output.get('finalValue')
                 if value in (None, ''):
@@ -279,9 +318,11 @@ class ResultsService:
             items.append(
                 {
                     'id': f"external-{opt_job_id}-{round_item.get('circleId')}",
-                    'orderConditionId': getattr(condition, 'id', None),
+                    'caseConditionId': getattr(condition, 'id', None),
                     'optIssueId': getattr(condition, 'opt_issue_id', None),
                     'optJobId': opt_job_id,
+                    'caseId': getattr(condition, 'order_case_id', None),
+                    'optConditionConfigId': getattr(condition, 'opt_condition_config_id', None),
                     'roundIndex': int(round_item.get('roundIndex', 0) or 0),
                     'algorithmType': getattr(condition, 'algorithm_type', None),
                     'status': round_status,
@@ -293,32 +334,34 @@ class ResultsService:
                     'finalResult': round_item.get('finalValue'),
                 }
             )
+        return items
 
+    def _build_external_condition_rounds_payload_from_job_summary(
+        self,
+        condition,
+        job_summary: Dict[str, Any],
+        opt_issue: Dict[str, Any] | None = None,
+        status: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        items = self._build_external_round_items_from_job_summary(condition, job_summary, status)
         total = len(items)
-        page = max(page, 1)
-        page_size = max(page_size, 1)
-        start = (page - 1) * page_size
-        end = start + page_size
-        paged_items = items[start:end]
-
         condition_payload = self._apply_external_enrichment(
             self._serialize_order_condition(condition, include_mock_summary=False),
-            issue_map.get(self._to_int(getattr(condition, 'opt_issue_id', None), 0)),
-            job_summaries,
+            opt_issue,
+            [job_summary],
         )
         condition_payload['roundSchema'] = self._build_round_schema(condition)
-
         return {
             'orderCondition': condition_payload,
             'resultSource': 'external',
             'algorithmType': getattr(condition, 'algorithm_type', None),
             'columns': self._build_round_schema(condition)['columns'],
-            'items': paged_items,
+            'items': items,
             'statistics': self._normalize_dict(condition_payload.get('statistics')),
-            'page': page,
-            'pageSize': page_size,
+            'page': 1,
+            'pageSize': max(total, 1),
             'total': total,
-            'totalPages': ceil(total / page_size) if total > 0 else 0,
+            'totalPages': 1 if total > 0 else 0,
             'optIssue': condition_payload.get('optIssue'),
             'conditionJobs': condition_payload.get('conditionJobs'),
             'jobSummaries': condition_payload.get('jobSummaries'),
@@ -403,8 +446,13 @@ class ResultsService:
             "id": payload.get("id"),
             "orderId": payload.get("order_id"),
             "orderNo": payload.get("order_no"),
+            "caseId": payload.get("order_case_id"),
+            "caseIndex": payload.get("case_index"),
             "optIssueId": payload.get("opt_issue_id"),
             "optJobId": payload.get("opt_job_id"),
+            "optConditionConfigId": payload.get("opt_condition_config_id"),
+            "parameterScope": payload.get("parameter_scope"),
+            "rotateDropFlag": bool(self._to_int(payload.get("rotate_drop_flag"), 0)),
             "conditionId": payload.get("condition_id"),
             "foldTypeId": payload.get("fold_type_id"),
             "foldTypeName": payload.get("fold_type_name"),
@@ -420,9 +468,10 @@ class ResultsService:
             "process": payload.get("process"),
             "status": payload.get("status"),
             "canResubmit": self._to_int(payload.get("status"), 0) == 3
-            and self._to_int(payload.get("opt_job_id"), 0) <= 0,
+            and self._to_int(payload.get("opt_condition_config_id"), 0) <= 0,
             "statistics": payload.get("statistics_json"),
             "resultSummary": payload.get("result_summary_json"),
+            "subjectConfig": payload.get("subject_config"),
             "externalMeta": payload.get("external_meta"),
             "createdAt": payload.get("created_at"),
             "updatedAt": payload.get("updated_at"),
@@ -539,17 +588,6 @@ class ResultsService:
             + max(int(order_id), 0) * MOCK_CONDITION_REF_MULTIPLIER
             + max(int(condition_index), 0)
         )
-
-    @staticmethod
-    def _decode_mock_condition_ref(ref_id: int) -> Optional[Tuple[int, int]]:
-        if ref_id < MOCK_CONDITION_REF_BASE:
-            return None
-        encoded = ref_id - MOCK_CONDITION_REF_BASE
-        order_id = encoded // MOCK_CONDITION_REF_MULTIPLIER
-        condition_index = encoded % MOCK_CONDITION_REF_MULTIPLIER
-        if order_id <= 0 or condition_index <= 0:
-            return None
-        return order_id, condition_index
 
     def _get_order_input_conditions(self, order) -> List[Dict[str, Any]]:
         input_json = self._normalize_dict(getattr(order, "input_json", None))
@@ -671,19 +709,6 @@ class ResultsService:
             for index, sim_type_id in enumerate(sim_type_ids, start=1)
         ]
 
-    def _get_order_input_condition_by_index(
-        self,
-        order,
-        condition_index: int,
-    ) -> Optional[Dict[str, Any]]:
-        if condition_index <= 0:
-            return None
-        conditions = self._get_order_input_conditions(order)
-        list_index = condition_index - 1
-        if list_index >= len(conditions):
-            return None
-        return conditions[list_index]
-
     def _build_mock_order_condition_from_order(
         self,
         order,
@@ -770,28 +795,6 @@ class ResultsService:
             self._build_mock_order_condition_from_order(order, condition_dict, condition_index)
             for condition_index, condition_dict in enumerate(conditions, start=1)
         ]
-
-    def _resolve_mock_order_condition(self, order_condition_id: int):
-        decoded = self._decode_mock_condition_ref(order_condition_id)
-        if not decoded:
-            return None
-
-        order_id, condition_index = decoded
-        order = self.repository.get_order_by_id(order_id)
-        if not order:
-            return None
-
-        condition_dict = self._get_order_input_condition_by_index(order, condition_index)
-        if not condition_dict:
-            return None
-
-        return self._build_mock_order_condition_from_order(order, condition_dict, condition_index)
-
-    def _resolve_order_condition(self, order_condition_id: int):
-        condition = self.repository.get_order_condition_by_id(order_condition_id)
-        if condition:
-            return condition
-        return self._resolve_mock_order_condition(order_condition_id)
 
     def _get_condition_external_meta(self, condition) -> Dict[str, Any]:
         return self._normalize_dict(getattr(condition, "external_meta", None))
@@ -1001,7 +1004,7 @@ class ResultsService:
 
     def _resolve_mock_total_rounds(self, condition) -> int:
         persisted_total = max(self._to_int(getattr(condition, "round_total", 0), 0), 0)
-        if persisted_total > 200:
+        if persisted_total > 0:
             return persisted_total
 
         condition_index, total_conditions = self._get_condition_mock_position(condition)
@@ -1106,7 +1109,7 @@ class ResultsService:
         if mode == "pending":
             return {
                 "id": f"mock-{condition.id}-{round_index}",
-                "orderConditionId": condition.id,
+                "caseConditionId": condition.id,
                 "optIssueId": condition.opt_issue_id,
                 "optJobId": condition.opt_job_id,
                 "roundIndex": round_index,
@@ -1151,7 +1154,7 @@ class ResultsService:
 
         return {
             "id": f"mock-{condition.id}-{round_index}",
-            "orderConditionId": condition.id,
+            "caseConditionId": condition.id,
             "optIssueId": condition.opt_issue_id,
             "optJobId": condition.opt_job_id,
             "roundIndex": round_index,

@@ -1,7 +1,5 @@
 """
-订单模块 - 业务逻辑层
-职责：处理业务逻辑、调用Repository、事务管理
-禁止：直接处理HTTP请求/响应、直接操作数据库
+???? - ????????????????? Repository????????????? HTTP ??/??????????
 """
 import os
 import re
@@ -190,8 +188,20 @@ class OrdersService:
         }
 
     def _estimate_order_rounds(self, input_json: Optional[dict]) -> int:
+        payload = self._normalize_json_dict(input_json)
+        global_params = self._normalize_json_dict(payload.get('globalParams', payload.get('global_params')))
+        if bool(global_params.get('applyToAll', global_params.get('apply_to_all'))):
+            for cond in self._get_input_conditions(payload):
+                params = cond.get('params')
+                if not isinstance(params, dict):
+                    continue
+                return self._estimate_rounds_from_opt_params(
+                    params.get('opt_params', params.get('optParams'))
+                )
+            return 0
+
         total = 0
-        for cond in self._get_input_conditions(input_json):
+        for cond in self._get_input_conditions(payload):
             params = cond.get('params')
             if not isinstance(params, dict):
                 continue
@@ -256,9 +266,12 @@ class OrdersService:
             return []
 
         opt_issue_id = self._to_int(order_dict.get('opt_issue_id'), 0)
+        global_params = self._normalize_json_dict(input_json.get('globalParams', input_json.get('global_params')))
+        apply_to_all = bool(global_params.get('applyToAll', global_params.get('apply_to_all')))
+        global_rotate_drop_flag = bool(global_params.get('rotateDropFlag', global_params.get('rotate_drop_flag')))
         now_ts = int(datetime.datetime.utcnow().timestamp())
         rows: List[dict] = []
-        for condition in conditions:
+        for index, condition in enumerate(conditions, start=1):
             output = self._normalize_json_dict(condition.get('output'))
             params = self._normalize_json_dict(condition.get('params'))
             solver = self._normalize_json_dict(condition.get('solver'))
@@ -266,13 +279,23 @@ class OrdersService:
             round_total = self._estimate_rounds_from_opt_params(
                 params.get('optParams', params.get('opt_params'))
             )
+            case_index = 1 if apply_to_all else index
+            parameter_scope = 'global' if apply_to_all else 'per_condition'
+            rotate_drop_flag = global_rotate_drop_flag if apply_to_all else bool(
+                params.get('rotateDropFlag', params.get('rotate_drop_flag', condition.get('rotateDropFlag', condition.get('rotate_drop_flag'))))
+            )
             condition_remark = condition.get('remark', condition.get('conditionRemark', condition.get('condition_remark')))
             rows.append(
                 {
                     'order_id': order_id,
                     'order_no': order_no,
+                    'case_index': case_index,
+                    'case_name': '全局参数方案' if apply_to_all else f'方案-{index}',
+                    'parameter_scope': parameter_scope,
                     'opt_issue_id': opt_issue_id,
                     'opt_job_id': None,
+                    'opt_condition_config_id': None,
+                    'rotate_drop_flag': 1 if rotate_drop_flag else 0,
                     'condition_id': self._to_int(
                         condition.get('conditionId', condition.get('condition_id'))
                     ),
@@ -290,6 +313,10 @@ class OrdersService:
                     'solver_id': self._extract_solver_id(condition),
                     'care_device_ids': care_device_ids if isinstance(care_device_ids, list) else [],
                     'remark': condition_remark if isinstance(condition_remark, str) else order_dict.get('remark'),
+                    'subject_config': {
+                        'rotateDropFlag': bool(rotate_drop_flag),
+                        'parameterScope': parameter_scope,
+                    },
                     'running_module': None,
                     'process': 0,
                     'status': 0,
@@ -297,12 +324,16 @@ class OrdersService:
                     'result_summary_json': None,
                     'condition_snapshot': {
                         'conditionId': condition.get('conditionId', condition.get('condition_id')),
+                        'caseIndex': case_index,
+                        'parameterScope': parameter_scope,
+                        'rotateDropFlag': bool(rotate_drop_flag),
                         'foldTypeId': condition.get('foldTypeId', condition.get('fold_type_id')),
                         'foldTypeName': condition.get('foldTypeName', condition.get('fold_type_name')),
                         'simTypeId': condition.get('simTypeId', condition.get('sim_type_id')),
                         'simTypeName': condition.get('simTypeName', condition.get('sim_type_name')),
                         'remark': condition_remark if isinstance(condition_remark, str) else None,
                         'params': params,
+                        'globalParams': global_params,
                         'output': output,
                         'solver': solver,
                         'careDeviceIds': care_device_ids if isinstance(care_device_ids, list) else [],
@@ -345,45 +376,56 @@ class OrdersService:
         issue_id = self._to_int(getattr(order, 'opt_issue_id', None), 0)
         has_failure = False
         has_success = False
-
+        grouped_conditions: Dict[int, List[Any]] = {}
         for condition in conditions:
+            grouped_conditions.setdefault(self._to_int(getattr(condition, 'order_case_id', None), 0), []).append(condition)
+
+        for case_conditions in grouped_conditions.values():
+            case_entity = getattr(case_conditions[0], 'order_case', None)
             try:
-                result = automation_distribution_client.submit_condition(
+                result = automation_distribution_client.submit_case(
                     order=order,
-                    condition=condition,
+                    case_entity=case_entity,
+                    conditions=case_conditions,
                     issue_id=issue_id or None,
                 )
                 issue_id = self._to_int(result.issue_id, issue_id)
                 if issue_id > 0 and self._to_int(getattr(order, 'opt_issue_id', 0), 0) <= 0:
                     self.repository.update_order(order, {'opt_issue_id': issue_id})
-                self.repository.update_order_condition_opti(
-                    condition,
-                    {
-                        'opt_issue_id': issue_id,
-                        'opt_job_id': self._to_int(result.job_id, 0),
-                        'status': 1,
-                        'process': 0,
-                        'external_meta': self._merge_external_meta(
-                            getattr(condition, 'external_meta', None),
-                            self._automation_success_meta(result),
-                        ),
-                    },
-                )
+                for condition in case_conditions:
+                    self.repository.update_case_condition(
+                        condition,
+                        {
+                            'opt_issue_id': issue_id,
+                            'opt_job_id': self._to_int(result.job_id, 0),
+                            'opt_condition_config_id': self._to_int(
+                                result.condition_config_ids.get(self._to_int(getattr(condition, 'id', None), 0)),
+                                0,
+                            ),
+                            'status': 1,
+                            'process': 0,
+                            'external_meta': self._merge_external_meta(
+                                getattr(condition, 'external_meta', None),
+                                self._automation_success_meta(result),
+                            ),
+                        },
+                    )
                 has_success = True
             except AutomationSubmissionError as exc:
                 has_failure = True
-                self.repository.update_order_condition_opti(
-                    condition,
-                    {
-                        'opt_issue_id': issue_id or 0,
-                        'status': 3,
-                        'process': 100,
-                        'external_meta': self._merge_external_meta(
-                            getattr(condition, 'external_meta', None),
-                            self._automation_failure_meta(exc, issue_id),
-                        ),
-                    },
-                )
+                for condition in case_conditions:
+                    self.repository.update_case_condition(
+                        condition,
+                        {
+                            'opt_issue_id': issue_id or 0,
+                            'status': 3,
+                            'process': 100,
+                            'external_meta': self._merge_external_meta(
+                                getattr(condition, 'external_meta', None),
+                                self._automation_failure_meta(exc, issue_id),
+                            ),
+                        },
+                    )
 
         if has_failure:
             self.repository.update_order(order, {'status': 3, 'progress': 100})
@@ -407,9 +449,10 @@ class OrdersService:
         if current_job_id > 0 and current_job_id not in previous_job_ids:
             previous_job_ids.append(current_job_id)
 
-        result = automation_distribution_client.submit_condition(
+        result = automation_distribution_client.submit_case(
             order=order,
-            condition=condition,
+            case_entity=getattr(condition, 'order_case', None),
+            conditions=[condition],
             issue_id=issue_id or None,
             resubmit_attempt=len(previous_job_ids),
         )
@@ -417,11 +460,15 @@ class OrdersService:
         if resolved_issue_id > 0 and self._to_int(getattr(order, 'opt_issue_id', None), 0) <= 0:
             self.repository.update_order(order, {'opt_issue_id': resolved_issue_id})
 
-        self.repository.update_order_condition_opti(
+        self.repository.update_case_condition(
             condition,
             {
                 'opt_issue_id': resolved_issue_id,
                 'opt_job_id': self._to_int(result.job_id, 0),
+                'opt_condition_config_id': self._to_int(
+                    result.condition_config_ids.get(self._to_int(getattr(condition, 'id', None), 0)),
+                    0,
+                ),
                 'status': 1,
                 'process': 0,
                 'external_meta': self._merge_external_meta(
@@ -506,6 +553,7 @@ class OrdersService:
             'defaultResourceId': data.get('defaultResourceId'),
         }
     
+
     def get_orders(
         self,
         page: int = 1,
@@ -520,21 +568,6 @@ class OrdersService:
         start_date: int = None,
         end_date: int = None
     ) -> Dict:
-        """
-        获取订单列表（分页）
-        Args:
-            page: 页码
-            page_size: 每页数量
-            status: 订单状态筛选
-            project_id: 项目ID筛选
-            sim_type_id: 仿真类型ID筛选
-            order_no: 订单编号模糊搜索
-            created_by: 创建人ID筛选
-            start_date: 开始日期时间戳
-            end_date: 结束日期时间戳
-        Returns:
-            包含订单列表和分页信息的字典
-        """
         orders, total = self.repository.get_orders_paginated(
             page=page,
             page_size=page_size,
@@ -556,49 +589,31 @@ class OrdersService:
             'page_size': page_size,
             'total_pages': ceil(total / page_size) if total > 0 else 0
         }
-    
+
     def get_order(self, order_id: int) -> Dict:
-        """
-        获取订单详情
-        Args:
-            order_id: 订单ID
-        Returns:
-            订单详情字典
-        Raises:
-            NotFoundError: 订单不存在
-        """
         order = self.repository.get_order_by_id(order_id)
-        
         if not order:
-            raise NotFoundError("订单不存在")
-        
+            raise NotFoundError("\u8ba2\u5355\u4e0d\u5b58\u5728")
+
         payload = order.to_dict()
         payload['conditions'] = [
-            item.to_list_dict() for item in self.repository.get_order_condition_optis(order_id)
+            item.to_list_dict() for item in self.repository.get_case_conditions(order_id)
         ]
         return payload
-    
+
     def create_order(self, order_data: dict, user_identity: str) -> Dict:
-        """
-        创建订单
-        Args:
-            order_data: 订单数据
-            user_identity: 创建用户域账号
-        Returns:
-            创建的订单信息
-        """
         user = self._get_submit_user_or_raise(user_identity)
         normalized_identity = self._normalize_domain_account(user.domain_account)
         derived_fields = self._derive_order_fields_from_input_json(order_data.get('input_json'))
         if not derived_fields['conditions']:
-            raise BusinessError(ErrorCode.VALIDATION_ERROR, 'input_json.conditions 不能为空')
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, 'input_json.conditions \u4e0d\u80fd\u4e3a\u7a7a')
 
         order_rounds = self._estimate_order_rounds(derived_fields['input_json'])
         limits = self._get_user_submit_limits(normalized_identity)
         if order_rounds > int(limits['max_batch_size']):
             raise BusinessError(
                 ErrorCode.VALIDATION_ERROR,
-                f'本次提单轮次 {order_rounds} 超过上限 {limits["max_batch_size"]}，请减少轮次后再提交'
+                f'\u672c\u6b21\u63d0\u5355\u8f6e\u6b21 {order_rounds} \u8d85\u8fc7\u4e0a\u9650 {limits["max_batch_size"]}\uff0c\u8bf7\u51cf\u5c11\u8f6e\u6b21\u540e\u518d\u63d0\u4ea4'
             )
 
         today_used_rounds = self._sum_today_rounds(normalized_identity)
@@ -606,10 +621,9 @@ class OrdersService:
         if today_used_rounds + order_rounds > daily_round_limit:
             raise BusinessError(
                 ErrorCode.VALIDATION_ERROR,
-                f'今日累计轮次上限为 {daily_round_limit}，当前已使用 {today_used_rounds}，本次需 {order_rounds}'
+                f'\u4eca\u65e5\u7d2f\u8ba1\u8f6e\u6b21\u4e0a\u9650\u4e3a {daily_round_limit}\uff0c\u5f53\u524d\u5df2\u4f7f\u7528 {today_used_rounds}\uff0c\u672c\u6b21\u9700 {order_rounds}'
             )
 
-        # 准备订单数据
         origin_file = order_data.get('origin_file', {})
         project_info = self._normalize_json_dict(derived_fields['input_json'].get('projectInfo'))
         participant_ids = order_data.get('participant_ids')
@@ -646,40 +660,28 @@ class OrdersService:
             'submit_check': order_data.get('submit_check'),
             'client_meta': order_data.get('client_meta'),
             'created_by': normalized_identity,
-            'status': 0,  # 未开始/排队
+            'status': 0,
             'progress': 0
         }
-        
+
         try:
             order = self.repository.create_order(order_dict)
             condition_rows = self._build_order_condition_rows(order_dict, order.id, order.order_no)
-            condition_entities = self.repository.replace_order_condition_optis(order.id, condition_rows)
+            condition_entities = self.repository.replace_case_conditions(order.id, condition_rows)
             self._submit_order_conditions(order, condition_entities)
-            self.repository.commit()
             payload = order.to_dict()
-            payload['conditions'] = [row.to_list_dict() for row in self.repository.get_order_condition_optis(order.id)]
+            payload['conditions'] = [row.to_list_dict() for row in self.repository.get_case_conditions(order.id)]
+            self.repository.commit()
             return payload
         except Exception:
             self.repository.rollback()
             raise
-    
+
     def update_order(self, order_id: int, update_data: dict) -> Dict:
-        """
-        更新订单
-        Args:
-            order_id: 订单ID
-            update_data: 更新数据
-        Returns:
-            更新后的订单信息
-        Raises:
-            NotFoundError: 订单不存在
-        """
         order = self.repository.get_order_by_id(order_id)
-        
         if not order:
-            raise NotFoundError("订单不存在")
-        
-        # 允许更新的字段（编辑态需要全量更新提单数据）
+            raise NotFoundError("\u8ba2\u5355\u4e0d\u5b58\u5728")
+
         allowed_fields = [
             'remark', 'participant_uids',
             'input_json',
@@ -708,11 +710,11 @@ class OrdersService:
                 'remark': filtered_data.get('remark', order.remark),
             }
             condition_rows = self._build_order_condition_rows(rebuilt_source, order.id, order.order_no)
-            self.repository.replace_order_condition_optis(order.id, condition_rows)
+            self.repository.replace_case_conditions(order.id, condition_rows)
             self.repository.commit()
             payload = order.to_dict()
             payload['conditions'] = [
-                item.to_list_dict() for item in self.repository.get_order_condition_optis(order.id)
+                item.to_list_dict() for item in self.repository.get_case_conditions(order.id)
             ]
             return payload
         except Exception:
@@ -722,22 +724,22 @@ class OrdersService:
     def get_order_conditions(self, order_id: int) -> List[Dict]:
         order = self.repository.get_order_by_id(order_id)
         if not order:
-            raise NotFoundError("订单不存在")
-        return [item.to_list_dict() for item in self.repository.get_order_condition_optis(order_id)]
+            raise NotFoundError("\u8ba2\u5355\u4e0d\u5b58\u5728")
+        return [item.to_list_dict() for item in self.repository.get_case_conditions(order_id)]
 
-    def resubmit_order_condition(self, order_condition_id: int) -> Dict:
-        condition = self.repository.get_order_condition_opti_by_id(order_condition_id)
+    def resubmit_case_condition(self, case_condition_id: int) -> Dict:
+        condition = self.repository.get_case_condition_by_id(case_condition_id)
         if not condition:
-            raise NotFoundError("订单工况不存在")
+            raise NotFoundError("\u8ba2\u5355\u5de5\u51b5\u4e0d\u5b58\u5728")
 
         order = self.repository.get_order_by_id(condition.order_id)
         if not order:
-            raise NotFoundError("订单不存在")
+            raise NotFoundError("\u8ba2\u5355\u4e0d\u5b58\u5728")
 
         condition_status = self._to_int(getattr(condition, 'status', None), 0)
-        opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
-        if condition_status != 3 or opt_job_id > 0:
-            raise BusinessError(ErrorCode.VALIDATION_ERROR, '仅提交失败且未关联 job 的工况允许重提')
+        opt_condition_config_id = self._to_int(getattr(condition, 'opt_condition_config_id', None), 0)
+        if condition_status != 3 or opt_condition_config_id > 0:
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, '\u4ec5\u63d0\u4ea4\u5931\u8d25\u4e14\u672a\u5173\u8054 condition_config \u7684\u5de5\u51b5\u5141\u8bb8\u91cd\u63d0')
 
         try:
             self._submit_single_condition(order, condition)
@@ -750,7 +752,7 @@ class OrdersService:
             issue_id = self._to_int(getattr(order, 'opt_issue_id', None), 0) or self._to_int(
                 getattr(condition, 'opt_issue_id', None), 0
             )
-            self.repository.update_order_condition_opti(
+            self.repository.update_case_condition(
                 condition,
                 {
                     'opt_issue_id': issue_id or 0,
@@ -768,54 +770,30 @@ class OrdersService:
         except Exception:
             self.repository.rollback()
             raise
-    
+
     def delete_order(self, order_id: int) -> None:
-        """
-        删除订单
-        Args:
-            order_id: 订单ID
-        Raises:
-            NotFoundError: 订单不存在
-            BusinessError: 订单状态不允许删除
-        """
         order = self.repository.get_order_by_id(order_id)
-        
         if not order:
-            raise NotFoundError("订单不存在")
-        
-        # 只有未开始/排队状态可以删除
+            raise NotFoundError("\u8ba2\u5355\u4e0d\u5b58\u5728")
+
         if order.status != 0:
             raise BusinessError(
                 ErrorCode.VALIDATION_ERROR,
-                "只有未开始（排队中）状态的订单可以删除"
+                "\u53ea\u6709\u672a\u5f00\u59cb\uff08\u6392\u961f\u4e2d\uff09\u72b6\u6001\u7684\u8ba2\u5355\u53ef\u4ee5\u5220\u9664"
             )
-        
+
         self.repository.delete_order(order)
 
     def verify_file(self, path: str, file_type: int = 1) -> Dict:
-        """
-        验证源文件是否存在，并解析 INP 文件的 set 集信息
-
-        Args:
-            path: 文件路径(type=1)或文件ID(type=2)
-            file_type: 1=路径验证, 2=文件ID验证
-        Returns:
-            验证结果字典，包含 success, name, path, inpSets
-        Raises:
-            NotFoundError: 文件不存在
-            BusinessError: 路径格式无效
-        """
         if file_type == 2:
-            # 文件ID验证：查数据库
             try:
                 file_id = int(path)
             except (ValueError, TypeError):
-                raise BusinessError(ErrorCode.VALIDATION_ERROR, "文件ID格式无效")
-            # 查询上传记录
+                raise BusinessError(ErrorCode.VALIDATION_ERROR, "\u6587\u4ef6ID\u683c\u5f0f\u65e0\u6548")
             from app.models.order import UploadFile
             upload = UploadFile.query.get(file_id)
             if not upload:
-                raise NotFoundError("文件记录不存在")
+                raise NotFoundError("\u6587\u4ef6\u8bb0\u5f55\u4e0d\u5b58\u5728")
             return {
                 'success': True,
                 'name': upload.original_name or f'file_{file_id}',
@@ -823,31 +801,22 @@ class OrdersService:
                 'inpSets': [],
             }
 
-        # type=1: 路径验证
         if not path or not path.strip():
-            raise BusinessError(ErrorCode.VALIDATION_ERROR, "文件路径不能为空")
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "\u6587\u4ef6\u8def\u5f84\u4e0d\u80fd\u4e3a\u7a7a")
 
         clean_path = path.strip()
         file_name = os.path.basename(clean_path)
-
         if not file_name:
-            raise BusinessError(ErrorCode.VALIDATION_ERROR, "无法从路径中提取文件名")
+            raise BusinessError(ErrorCode.VALIDATION_ERROR, "\u65e0\u6cd5\u4ece\u8def\u5f84\u4e2d\u63d0\u53d6\u6587\u4ef6\u540d")
 
-        # 尝试在配置的 UPLOAD_FOLDER 下定位文件
         upload_folder = current_app.config.get('UPLOAD_FOLDER', './storage')
         abs_path = clean_path if os.path.isabs(clean_path) else os.path.join(upload_folder, clean_path)
-
         inp_sets: List[Dict] = []
-
         if os.path.isfile(abs_path):
-            # 文件存在，解析 INP set 集
             if file_name.lower().endswith('.inp'):
                 inp_sets = self._parse_inp_sets(abs_path)
         else:
-            # 文件不在本地 — 但路径格式合法即视为通过
-            # 生产环境中文件可能在远程 NFS/共享存储上
-            current_app.logger.info(f"文件不在本地: {abs_path}，路径格式验证通过")
-            # 对 .inp 路径返回空 inpSets，前端可手动配置
+            current_app.logger.info(f"File is not local: {abs_path}; path format validation passed")
             if file_name.lower().endswith('.inp'):
                 inp_sets = []
 
@@ -859,17 +828,15 @@ class OrdersService:
         if inp_sets or file_name.lower().endswith('.inp'):
             result['inpSets'] = inp_sets
         return result
-
     @staticmethod
     def _parse_inp_sets(file_path: str) -> List[Dict]:
         """
-        解析 INP 文件中的 set 集定义
-
+        ?? INP ???? set ???
         支持的关键字:
         - *ELSET, ELSET=name
         - *NSET, NSET=name
-        - *PART, NAME=name (→ component)
-        - *INSTANCE, NAME=name (→ component)
+        - *PART, NAME=name (component)
+        - *INSTANCE, NAME=name (component)
 
         Returns:
             [{"type": "eleset"|"nodeset"|"component", "name": "SET-1"}, ...]
@@ -877,7 +844,7 @@ class OrdersService:
         sets: List[Dict] = []
         seen: set = set()
 
-        # 正则：匹配 *KEYWORD, ... NAME=xxx 或 ELSET=xxx 等
+        # 正则：匹配 *KEYWORD, ... NAME=xxx 或 ELSET=xxx
         pattern_elset = re.compile(r'\*ELSET\b.*?ELSET\s*=\s*([^\s,]+)', re.IGNORECASE)
         pattern_nset = re.compile(r'\*NSET\b.*?NSET\s*=\s*([^\s,]+)', re.IGNORECASE)
         pattern_part = re.compile(r'\*PART\b.*?NAME\s*=\s*([^\s,]+)', re.IGNORECASE)
@@ -917,7 +884,7 @@ class OrdersService:
         return self.repository.get_trends(days)
 
     def get_status_distribution(self) -> List[Dict]:
-        """获取订单状态分布"""
+        """????????"""
         return self.repository.get_status_distribution()
 
 

@@ -1,24 +1,29 @@
-"""
-订单模块 - 数据访问层
-职责：封装所有数据库操作，提供数据访问接口
-禁止：业务逻辑、HTTP 相关代码
-"""
-from typing import Optional, List, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 import time
 
 from sqlalchemy import desc, func, inspect
 from sqlalchemy.orm import defer
+from sqlalchemy.orm.attributes import set_committed_value
 
 from app.extensions import db
+from app.models.case_opti import CaseConditionOpti, OrderCaseOpti
 from app.models.order import Order, OrderResult
-from app.models.order_condition_opti import OrderConditionOpti
 
 
 class OrdersRepository:
-    """订单相关数据访问"""
+    """订单模块数据访问层。"""
+
+    @staticmethod
+    def _is_memory_sqlite() -> bool:
+        try:
+            return str(db.engine.url) == 'sqlite:///:memory:'
+        except Exception:
+            return False
 
     @staticmethod
     def _order_column_names() -> set[str]:
+        if OrdersRepository._is_memory_sqlite():
+            return {column.name for column in Order.__table__.columns}
         try:
             return {col.get('name') for col in inspect(db.engine).get_columns('orders')}
         except Exception:
@@ -30,9 +35,12 @@ class OrdersRepository:
         return not columns or column_name in columns
 
     @staticmethod
-    def _has_order_condition_opti_table() -> bool:
+    def _has_case_opti_tables() -> bool:
+        if OrdersRepository._is_memory_sqlite():
+            return True
         try:
-            return 'order_condition_opti' in set(inspect(db.engine).get_table_names())
+            table_names = set(inspect(db.engine).get_table_names())
+            return {'order_case_opti', 'case_condition_opti'}.issubset(table_names)
         except Exception:
             return True
 
@@ -64,13 +72,8 @@ class OrdersRepository:
         created_by: Optional[str] = None,
         remark: Optional[str] = None,
         start_date: Optional[int] = None,
-        end_date: Optional[int] = None
+        end_date: Optional[int] = None,
     ) -> Tuple[List[Order], int]:
-        """
-        分页获取订单列表
-        Returns:
-            (订单列表, 总数)
-        """
         query = cls._base_query()
 
         if status is not None:
@@ -99,23 +102,20 @@ class OrdersRepository:
         orders = query.order_by(desc(Order.created_at)).offset(
             (page - 1) * page_size
         ).limit(page_size).all()
-
         return orders, total
 
     @classmethod
     def get_order_by_id(cls, order_id: int) -> Optional[Order]:
-        """根据ID获取订单"""
         return cls._base_query().filter(Order.id == order_id).first()
 
     @classmethod
     def create_order(cls, order_data: dict) -> Order:
-        """创建订单并 flush，不在仓储层提交事务。"""
         missing_columns = {
             name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir', 'phase_id')
             if name in order_data and not cls._has_order_column(name)
         }
         if missing_columns:
-            order_data = {k: v for k, v in order_data.items() if k not in missing_columns}
+            order_data = {key: value for key, value in order_data.items() if key not in missing_columns}
         order = Order(**order_data)
         db.session.add(order)
         db.session.flush()
@@ -123,7 +123,6 @@ class OrdersRepository:
 
     @classmethod
     def get_orders_by_creator_between(cls, created_by: str, start_ts: int, end_ts: int) -> List[Order]:
-        """获取某用户在时间区间内提交的订单（用于统计轮次）"""
         return cls._base_query().filter(
             Order.created_by == created_by,
             Order.created_at >= start_ts,
@@ -132,7 +131,6 @@ class OrdersRepository:
 
     @classmethod
     def get_recent_orders_by_project(cls, project_id: int, limit: int = 100) -> List[Order]:
-        """获取某项目最近订单，用于计算历史常选参与人。"""
         return (
             cls._base_query()
             .filter(Order.project_id == project_id)
@@ -143,52 +141,132 @@ class OrdersRepository:
 
     @classmethod
     def update_order(cls, order: Order, update_data: dict) -> Order:
-        """更新订单，不在仓储层提交事务。"""
         missing_columns = {
             name for name in ('condition_summary', 'opt_issue_id', 'domain_account', 'base_dir', 'phase_id')
             if name in update_data and not cls._has_order_column(name)
         }
         if missing_columns:
-            update_data = {k: v for k, v in update_data.items() if k not in missing_columns}
+            update_data = {key: value for key, value in update_data.items() if key not in missing_columns}
+        if update_data and getattr(order, 'id', None):
+            db.session.query(Order).filter(Order.id == order.id).update(
+                update_data,
+                synchronize_session=False,
+            )
         for key, value in update_data.items():
             if hasattr(order, key):
-                setattr(order, key, value)
+                set_committed_value(order, key, value)
         db.session.flush()
         return order
 
     @staticmethod
-    def replace_order_condition_optis(order_id: int, rows: List[dict]) -> List[OrderConditionOpti]:
-        """按订单全量替换 condition 运行实体。"""
-        if not OrdersRepository._has_order_condition_opti_table():
+    def replace_case_conditions(order_id: int, rows: List[dict]) -> List[CaseConditionOpti]:
+        """按订单全量替换 case/condition 自动化关联实体。"""
+        if not OrdersRepository._has_case_opti_tables():
             return []
-        OrderConditionOpti.query.filter_by(order_id=order_id).delete(synchronize_session=False)
-        entities = [OrderConditionOpti(**row) for row in rows]
-        if entities:
-            db.session.add_all(entities)
+
+        CaseConditionOpti.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+        OrderCaseOpti.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+
+        grouped_rows: Dict[int, List[dict]] = {}
+        for row in rows:
+            case_index = int(row.get('case_index') or 1)
+            grouped_rows.setdefault(case_index, []).append(row)
+
+        case_entities: Dict[int, OrderCaseOpti] = {}
+        for case_index, case_rows in sorted(grouped_rows.items()):
+            first_row = case_rows[0]
+            case_entity = OrderCaseOpti(
+                order_id=order_id,
+                order_no=first_row.get('order_no'),
+                case_index=case_index,
+                case_name=first_row.get('case_name') or f'Case-{case_index}',
+                opt_issue_id=first_row.get('opt_issue_id') or 0,
+                opt_job_id=first_row.get('opt_job_id'),
+                parameter_scope=first_row.get('parameter_scope') or 'per_condition',
+                case_snapshot=first_row.get('case_snapshot'),
+                external_meta=first_row.get('external_meta'),
+                status=first_row.get('status') or 0,
+                process=first_row.get('process') or 0,
+                created_at=first_row.get('created_at'),
+                updated_at=first_row.get('updated_at'),
+            )
+            db.session.add(case_entity)
+            db.session.flush()
+            case_entities[case_index] = case_entity
+
+        condition_entities: List[CaseConditionOpti] = []
+        case_only_keys = {'case_name', 'case_snapshot'}
+        for row in rows:
+            case_index = int(row.get('case_index') or 1)
+            condition_row = {key: value for key, value in row.items() if key not in case_only_keys}
+            condition_row['order_case_id'] = case_entities[case_index].id
+            if condition_row.get('opt_job_id') is None:
+                condition_row['opt_job_id'] = case_entities[case_index].opt_job_id
+            condition_entities.append(CaseConditionOpti(**condition_row))
+
+        if condition_entities:
+            db.session.add_all(condition_entities)
         db.session.flush()
-        return entities
+        return condition_entities
 
     @staticmethod
-    def get_order_condition_optis(order_id: int) -> List[OrderConditionOpti]:
-        if not OrdersRepository._has_order_condition_opti_table():
+    def get_case_conditions(order_id: int) -> List[CaseConditionOpti]:
+        if not OrdersRepository._has_case_opti_tables():
             return []
         return (
-            OrderConditionOpti.query.filter_by(order_id=order_id)
-            .order_by(OrderConditionOpti.id.asc())
+            CaseConditionOpti.query.filter_by(order_id=order_id)
+            .order_by(CaseConditionOpti.case_index.asc(), CaseConditionOpti.id.asc())
             .all()
         )
 
     @staticmethod
-    def get_order_condition_opti_by_id(order_condition_id: int) -> Optional[OrderConditionOpti]:
-        if not OrdersRepository._has_order_condition_opti_table():
-            return None
-        return OrderConditionOpti.query.filter_by(id=order_condition_id).first()
+    def get_order_cases(order_id: int) -> List[OrderCaseOpti]:
+        if not OrdersRepository._has_case_opti_tables():
+            return []
+        return (
+            OrderCaseOpti.query.filter_by(order_id=order_id)
+            .order_by(OrderCaseOpti.case_index.asc(), OrderCaseOpti.id.asc())
+            .all()
+        )
 
     @staticmethod
-    def update_order_condition_opti(condition: OrderConditionOpti, update_data: dict) -> OrderConditionOpti:
-        for key, value in update_data.items():
-            if hasattr(condition, key):
-                setattr(condition, key, value)
+    def get_case_condition_by_id(case_condition_id: int) -> Optional[CaseConditionOpti]:
+        if not OrdersRepository._has_case_opti_tables():
+            return None
+        return CaseConditionOpti.query.filter_by(id=case_condition_id).first()
+
+    @staticmethod
+    def update_case_condition(condition: CaseConditionOpti, update_data: dict) -> CaseConditionOpti:
+        condition_update_data = {
+            key: value
+            for key, value in update_data.items()
+            if hasattr(condition, key)
+        }
+        if condition_update_data and getattr(condition, 'id', None):
+            db.session.query(CaseConditionOpti).filter(CaseConditionOpti.id == condition.id).update(
+                condition_update_data,
+                synchronize_session=False,
+            )
+        for key, value in condition_update_data.items():
+            set_committed_value(condition, key, value)
+
+        if condition.order_case_id:
+            with db.session.no_autoflush:
+                case_entity = OrderCaseOpti.query.filter_by(id=condition.order_case_id).first()
+            if case_entity:
+                case_update_data = {
+                    key: update_data[key]
+                    for key in ('opt_issue_id', 'opt_job_id', 'status', 'process', 'external_meta', 'updated_at')
+                    if key in update_data and hasattr(case_entity, key)
+                }
+                if case_update_data:
+                    db.session.query(OrderCaseOpti).filter(OrderCaseOpti.id == case_entity.id).update(
+                        case_update_data,
+                        synchronize_session=False,
+                    )
+                    for key, value in case_update_data.items():
+                        set_committed_value(case_entity, key, value)
+
         db.session.flush()
         return condition
 
@@ -202,20 +280,18 @@ class OrdersRepository:
 
     @staticmethod
     def delete_order(order: Order) -> None:
-        """删除订单"""
-        if OrdersRepository._has_order_condition_opti_table():
-            OrderConditionOpti.query.filter_by(order_id=order.id).delete(synchronize_session=False)
+        if OrdersRepository._has_case_opti_tables():
+            CaseConditionOpti.query.filter_by(order_id=order.id).delete(synchronize_session=False)
+            OrderCaseOpti.query.filter_by(order_id=order.id).delete(synchronize_session=False)
         db.session.delete(order)
         db.session.commit()
 
     @staticmethod
     def get_order_result(order_id: int) -> Optional[OrderResult]:
-        """获取订单结果"""
         return OrderResult.query.filter_by(order_id=order_id).first()
 
     @staticmethod
     def get_statistics() -> Dict:
-        """获取订单统计数据"""
         total = Order.query.count()
         pending = Order.query.filter_by(status=0).count()
         running = Order.query.filter_by(status=1).count()
@@ -226,28 +302,26 @@ class OrdersRepository:
             'pending': pending,
             'running': running,
             'completed': completed,
-            'failed': failed
+            'failed': failed,
         }
 
     @staticmethod
     def get_trends(days: int) -> List[Dict]:
-        """获取订单趋势数据"""
         now = int(time.time())
         start_time = now - days * 86400
         results = db.session.query(
             func.date(func.from_unixtime(Order.created_at)).label('date'),
-            func.count(Order.id).label('count')
+            func.count(Order.id).label('count'),
         ).filter(Order.created_at >= start_time).group_by('date').all()
-        return [{'date': str(r.date), 'count': r.count} for r in results]
+        return [{'date': str(row.date), 'count': row.count} for row in results]
 
     @staticmethod
     def get_status_distribution() -> List[Dict]:
-        """获取订单状态分布"""
         results = db.session.query(
             Order.status,
-            func.count(Order.id).label('count')
+            func.count(Order.id).label('count'),
         ).group_by(Order.status).all()
-        return [{'status': r.status, 'count': r.count} for r in results]
+        return [{'status': row.status, 'count': row.count} for row in results]
 
 
 orders_repository = OrdersRepository()
