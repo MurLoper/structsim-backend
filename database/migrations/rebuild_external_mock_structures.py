@@ -181,7 +181,6 @@ UNION_CREATE_SQL = [
     CREATE TABLE job_condition_config (
         n_id BIGINT NOT NULL PRIMARY KEY,
         s_name VARCHAR(200),
-        s_set_name VARCHAR(200),
         n_job_id BIGINT NOT NULL,
         user_account VARCHAR(100),
         user_name VARCHAR(100),
@@ -272,7 +271,6 @@ UNION_CREATE_SQL = [
         task_record_id BIGINT,
         need_down_result TINYINT,
         running_module VARCHAR(100),
-        running_status VARCHAR(100),
         KEY idx_opt_data_circle (n_opt_circle_id),
         KEY idx_opt_data_condition (n_condition_config_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -298,8 +296,8 @@ UNION_CREATE_SQL = [
         best_label VARCHAR(100),
         origin_value DOUBLE,
         final_value DOUBLE,
-        curvers_json_path VARCHAR(500),
-        curvers_png_path VARCHAR(500),
+        curves_json_path VARCHAR(500),
+        curves_png_path VARCHAR(500),
         cloud_png_path1 VARCHAR(500),
         cloud_png_path2 VARCHAR(500),
         avi_path1 VARCHAR(500),
@@ -339,7 +337,7 @@ UNION_CREATE_SQL = [
         valid TINYINT DEFAULT 1,
         process_platform VARCHAR(100),
         process_env INT,
-        peocess_user VARCHAR(100)
+        process_user VARCHAR(100)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
 ]
@@ -360,7 +358,7 @@ def rebuild_union_schema(cursor) -> None:
         """
         INSERT INTO server_module_config (
             id, resource_name, name, func, func_name, exe, file_path, cwd,
-            script_path, remarks, valid, process_platform, process_env, peocess_user
+            script_path, remarks, valid, process_platform, process_env, process_user
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         [
@@ -577,14 +575,13 @@ def seed_condition(cursor, link: LocalConditionLink) -> None:
     cursor.execute(
         """
         INSERT INTO job_condition_config (
-            n_id, s_name, s_set_name, n_job_id, user_account, user_name,
+            n_id, s_name, n_job_id, user_account, user_name,
             s_condition_dir, s_input_files, n_subject_type, s_param_names
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             link.opt_condition_config_id,
             f'{link.condition_id}_{link.fold_type_name or "工况"}_{link.sim_type_name or "仿真"}',
-            'MOCK_SET',
             link.opt_job_id,
             link.domain_account or link.created_by,
             link.created_by or link.domain_account,
@@ -632,7 +629,7 @@ def seed_condition(cursor, link: LocalConditionLink) -> None:
 
 
 def seed_rounds(cursor, job_id: int, links: List[LocalConditionLink]) -> None:
-    round_count = min(max(max(link.round_total for link in links), 6), 8)
+    round_count = max(max(link.round_total for link in links), 6)
     for round_index in range(1, round_count + 1):
         circle_id = job_id * 100 + round_index
         cursor.execute(
@@ -655,10 +652,10 @@ def seed_rounds(cursor, job_id: int, links: List[LocalConditionLink]) -> None:
                 """
                 INSERT INTO opt_data (
                     id, n_opt_circle_id, n_condition_config_id, data_dir, opt_data_signal,
-                    task_id, total_time, calc_time, need_down_result, running_module, running_status
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    task_id, total_time, calc_time, need_down_result, running_module
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
-                (opt_data_id, circle_id, link.opt_condition_config_id, f'/mock/{circle_id}/{link.opt_condition_config_id}', 'done' if round_index % 5 else 'running', opt_data_id + 10, 120, 90, 1, 'POST', 'done' if round_index % 5 else 'running'),
+                (opt_data_id, circle_id, link.opt_condition_config_id, f'/mock/{circle_id}/{link.opt_condition_config_id}', 'done' if round_index % 5 else 'running', opt_data_id + 10, 120, 90, 1, 'POST'),
             )
             schedule_id = opt_data_id + 30
             cursor.execute(
@@ -675,7 +672,7 @@ def seed_rounds(cursor, job_id: int, links: List[LocalConditionLink]) -> None:
                         """
                         INSERT INTO post_data_save (
                             id, task_id, resp_config_id, best_time, best_label, origin_value,
-                            final_value, curvers_json_path, curvers_png_path, cloud_png_path1,
+                            final_value, curves_json_path, curves_png_path, cloud_png_path1,
                             cloud_png_path2, avi_path1, avi_path2, start_time, end_time
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                         """,

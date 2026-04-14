@@ -190,6 +190,19 @@ class ResultsService:
                     'rounds': round_payload,
                 })
 
+            case_progress = (
+                self._to_int(job_summary.get('progress'), 0)
+                if job_summary
+                else int(round((case_completed / case_total) * 100)) if case_total > 0 else 0
+            )
+            case_status = (
+                self._to_int(job_summary.get('status'), 0)
+                if job_summary
+                else self._to_int(getattr(case_entry, 'status', None), self._to_int(getattr(first_condition, 'status', None), 0))
+                if case_entry is not None
+                else self._to_int(getattr(first_condition, 'status', None), 0)
+            )
+
             result_cases.append({
                 'id': case_id,
                 'orderId': order_id,
@@ -199,8 +212,8 @@ class ResultsService:
                 'optIssueId': opt_issue_id,
                 'optJobId': opt_job_id,
                 'parameterScope': getattr(case_entry, 'parameter_scope', None) if case_entry is not None else getattr(first_condition, 'parameter_scope', None),
-                'status': self._to_int(getattr(case_entry, 'status', None), self._to_int(getattr(first_condition, 'status', None), 0)) if case_entry is not None else self._to_int(getattr(first_condition, 'status', None), 0),
-                'process': float(getattr(case_entry, 'process', 0) or getattr(first_condition, 'process', 0) or 0) if case_entry is not None else float(getattr(first_condition, 'process', 0) or 0),
+                'status': case_status,
+                'process': float(case_progress),
                 'optIssue': issue_map.get(opt_issue_id),
                 'jobSummary': job_summary,
                 'statistics': {
@@ -208,6 +221,7 @@ class ResultsService:
                     'completedRounds': case_completed,
                     'failedRounds': case_failed,
                     'runningRounds': case_running,
+                    'progressPercent': case_progress,
                 },
                 'conditions': serialized_conditions,
             })
@@ -296,6 +310,8 @@ class ResultsService:
     ) -> List[Dict[str, Any]]:
         opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
         opt_condition_config_id = self._to_int(getattr(condition, 'opt_condition_config_id', None), 0)
+        algorithm_type = str(getattr(condition, 'algorithm_type', '') or '').upper()
+        is_bayesian = algorithm_type == 'BAYESIAN'
         para_config_name_map = {
             self._to_int(item.get('id'), 0): str(item.get('name') or f"para_{item.get('id')}")
             for item in job_summary.get('paraConfigs') or []
@@ -306,6 +322,8 @@ class ResultsService:
             if status is not None and round_status != status:
                 continue
             outputs = {}
+            output_origins = {}
+            output_finals = {}
             output_attachments: Dict[str, Dict[str, Any]] = {}
             params = {}
             for param in round_item.get('params') or []:
@@ -328,10 +346,12 @@ class ResultsService:
                 ):
                     continue
                 resp_name = output.get('respName') or f"resp_{output.get('respConfigId')}"
-                value = output.get('finalValue')
-                if value in (None, ''):
-                    value = output.get('originValue')
-                outputs[str(resp_name)] = value
+                origin_value = output.get('originValue')
+                final_value = output.get('finalValue')
+                outputs[str(resp_name)] = origin_value
+                output_origins[str(resp_name)] = origin_value
+                if final_value not in (None, ''):
+                    output_finals[str(resp_name)] = final_value
                 output_attachments[str(resp_name)] = {
                     'imagePaths': output.get('imagePaths') or [],
                     'aviPaths': output.get('aviPaths') or [],
@@ -339,6 +359,8 @@ class ResultsService:
                     'dataDir': output.get('dataDir'),
                     'taskId': output.get('taskId'),
                     'optDataId': output.get('optDataId'),
+                    'originValue': origin_value,
+                    'finalValue': final_value,
                 }
                 matched_outputs.append(output)
             first_output = matched_outputs[0] if matched_outputs else {}
@@ -351,10 +373,12 @@ class ResultsService:
                     'caseId': getattr(condition, 'order_case_id', None),
                     'optConditionConfigId': getattr(condition, 'opt_condition_config_id', None),
                     'roundIndex': int(round_item.get('roundIndex', 0) or 0),
-                    'algorithmType': getattr(condition, 'algorithm_type', None),
+                    'algorithmType': algorithm_type or None,
                     'status': round_status,
                     'params': params,
                     'outputs': outputs,
+                    'outputOrigins': output_origins,
+                    'outputFinals': output_finals if is_bayesian else {},
                     'outputAttachments': output_attachments,
                     'optDataId': first_output.get('optDataId'),
                     'taskId': first_output.get('taskId'),
@@ -362,9 +386,10 @@ class ResultsService:
                     'baseDir': job_summary.get('baseDir'),
                     'jobDir': job_summary.get('jobDir'),
                     'runningModule': round_item.get('runningModule'),
+                    'runningStatus': round_status,
                     'process': 100 if round_status == 2 else (50 if round_status == 1 else 0),
                     'moduleDetails': [],
-                    'finalResult': round_item.get('finalValue'),
+                    'finalResult': round_item.get('finalValue') if is_bayesian else None,
                 }
             )
         return items
@@ -1161,13 +1186,16 @@ class ResultsService:
             }
 
         output_values: Dict[str, Any] = {}
+        output_origin_values: Dict[str, Any] = {}
+        output_final_values: Dict[str, Any] = {}
         weighted_total = 0.0
         for idx, name in enumerate(output_names, start=1):
             base_value = round(40 + round_index * 2.15 + idx * 1.07, 4)
             output_values[name] = base_value
+            output_origin_values[name] = base_value
             if is_bayesian:
                 weighted_value = round(base_value * (0.2 + idx * 0.15), 4)
-                output_values[f"{name}Weighted"] = weighted_value
+                output_final_values[name] = weighted_value
                 weighted_total += weighted_value
 
         failed_rounds = self._to_int(summary.get("failedRounds"), 0)
@@ -1195,7 +1223,10 @@ class ResultsService:
             "status": status,
             "params": param_values,
             "outputs": output_values,
+            "outputOrigins": output_origin_values,
+            "outputFinals": output_final_values if is_bayesian else {},
             "runningModule": running_module,
+            "runningStatus": status,
             "process": progress,
             "moduleDetails": modules,
             "finalResult": round(weighted_total, 4) if is_bayesian else None,

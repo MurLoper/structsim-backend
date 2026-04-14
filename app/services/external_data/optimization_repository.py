@@ -180,7 +180,7 @@ class OptimizationRepository:
         return self._fetch_all(
             cursor,
             f"""
-            SELECT n_id, s_name, s_set_name, n_job_id, user_account, user_name,
+            SELECT n_id, s_name, n_job_id, user_account, user_name,
                    s_condition_dir, s_input_files, n_subject_type, s_param_names
             FROM job_condition_config
             WHERE n_job_id IN ({placeholders})
@@ -255,7 +255,7 @@ class OptimizationRepository:
             f"""
             SELECT id, n_opt_circle_id, n_condition_config_id, data_dir, opt_data_signal,
                    s_errors, task_id, total_time, calc_time, process_id, task_record_id,
-                   need_down_result, running_module, running_status
+                   need_down_result, running_module
             FROM opt_data
             WHERE n_opt_circle_id IN ({placeholders})
             ORDER BY n_opt_circle_id ASC, n_condition_config_id ASC, id ASC
@@ -282,7 +282,7 @@ class OptimizationRepository:
             cursor,
             f"""
             SELECT id, task_id, resp_config_id, best_time, best_label, origin_value,
-                   final_value, curvers_json_path, curvers_png_path, cloud_png_path1,
+                   final_value, curves_json_path, curves_png_path, cloud_png_path1,
                    cloud_png_path2, avi_path1, avi_path2, start_time, end_time,
                    s_errors, max_gif_x, max_gif_y
             FROM post_data_save
@@ -312,7 +312,7 @@ class OptimizationRepository:
             cursor,
             """
             SELECT id, resource_name, name, func, func_name, exe, file_path, cwd,
-                   script_path, remarks, valid, process_platform, process_env, peocess_user
+                   script_path, remarks, valid, process_platform, process_env, process_user
             FROM server_module_config
             WHERE valid = 1
             ORDER BY id ASC
@@ -489,7 +489,6 @@ class OptimizationRepository:
         return {
             'conditionConfigId': row.get('n_id'),
             'name': row.get('s_name'),
-            'setName': row.get('s_set_name'),
             'jobId': row.get('n_job_id'),
             'userAccount': row.get('user_account'),
             'userName': row.get('user_name'),
@@ -563,7 +562,8 @@ class OptimizationRepository:
         payload = self._format_resp_config(resp_config)
         payload.update(
             {
-                'taskId': post_data.get('task_id') if post_data else (schedules[0].get('id') if schedules else None),
+                'taskId': opt_data.get('task_id') if opt_data else None,
+                'postTaskId': post_data.get('task_id') if post_data else (schedules[0].get('id') if schedules else None),
                 'conditionConfigId': condition_config_id,
                 'optDataId': opt_data.get('id') if opt_data else None,
                 'dataDir': opt_data.get('data_dir') if opt_data else None,
@@ -574,13 +574,13 @@ class OptimizationRepository:
                 'imagePaths': [
                     value
                     for value in (
-                        post_data.get('curvers_png_path') if post_data else None,
+                        post_data.get('curves_png_path') if post_data else None,
                         post_data.get('cloud_png_path1') if post_data else None,
                         post_data.get('cloud_png_path2') if post_data else None,
                     )
                     if value
                 ],
-                'curveJsonPath': post_data.get('curvers_json_path') if post_data else None,
+                'curveJsonPath': post_data.get('curves_json_path') if post_data else None,
                 'aviPaths': [
                     value
                     for value in (

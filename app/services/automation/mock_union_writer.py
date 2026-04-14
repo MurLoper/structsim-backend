@@ -130,15 +130,14 @@ class MockUnionWriter:
         cursor.execute(
             """
             INSERT INTO job_condition_config (
-                n_id, s_name, s_set_name, n_job_id, user_account, user_name,
+                n_id, s_name, n_job_id, user_account, user_name,
                 s_condition_dir, s_input_files, n_subject_type, s_param_names
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 condition_config_id,
                 f'{getattr(condition, "condition_id", None) or condition_config_id}_{fold_name}_{sim_name}',
-                'MOCK_SET',
                 job_id,
                 getattr(order, 'domain_account', None) or getattr(order, 'created_by', None),
                 getattr(order, 'created_by', None),
@@ -294,30 +293,29 @@ class MockUnionWriter:
             if not self._exists(cursor, 'opt_data', 'id', opt_data_id):
                 cursor.execute(
                     """
-                    INSERT INTO opt_data (
-                        id, n_opt_circle_id, n_condition_config_id, data_dir, opt_data_signal,
-                        s_errors, task_id, total_time, calc_time, process_id, task_record_id,
-                        need_down_result, running_module, running_status
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                    (
-                        opt_data_id,
-                        circle_id,
-                        condition_config_id,
+                INSERT INTO opt_data (
+                    id, n_opt_circle_id, n_condition_config_id, data_dir, opt_data_signal,
+                    s_errors, task_id, total_time, calc_time, process_id, task_record_id,
+                    need_down_result, running_module
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    opt_data_id,
+                    circle_id,
+                    condition_config_id,
                         f'/mock/circle-{circle_id}/condition-{condition_config_id}',
                         'done' if round_index % 5 else 'running',
                         None,
                         opt_data_id + 10,
                         120 + round_index,
-                        95 + round_index,
-                        None,
-                        opt_data_id + 20,
-                        1,
-                        'POST',
-                        'done' if round_index % 5 else 'running',
-                    ),
-                )
+                    95 + round_index,
+                    None,
+                    opt_data_id + 20,
+                    1,
+                    'POST',
+                ),
+            )
             schedule_id = opt_data_id + 30
             if not self._exists(cursor, 'post_schedule_info', 'id', schedule_id):
                 cursor.execute(
@@ -342,7 +340,7 @@ class MockUnionWriter:
                 """
                 INSERT INTO post_data_save (
                     id, task_id, resp_config_id, best_time, best_label, origin_value,
-                    final_value, curvers_json_path, curvers_png_path, cloud_png_path1,
+                    final_value, curves_json_path, curves_png_path, cloud_png_path1,
                     cloud_png_path2, avi_path1, avi_path2, start_time, end_time,
                     s_errors, max_gif_x, max_gif_y
                 )

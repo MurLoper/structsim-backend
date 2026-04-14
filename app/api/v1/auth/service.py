@@ -342,6 +342,7 @@ class AuthService:
         normalized_access_token = str(access_token or "").strip()
         if normalized_access_token:
             payload["access_token"] = normalized_access_token
+            payload["token"] = normalized_access_token
             headers["Authorization"] = f"Bearer {normalized_access_token}"
 
         try:
