@@ -129,8 +129,25 @@ class ResultsService:
         )
         job_map = {self._to_int(item.get('id'), 0): item for item in job_summaries}
         conditions_by_case: Dict[int, List[Any]] = {}
+        cases_by_job_id: Dict[int, Any] = {}
+        cases_by_index: Dict[int, Any] = {}
+        for case in cases:
+            case_id = self._to_int(getattr(case, 'id', None), 0)
+            if case_id <= 0:
+                continue
+            case_job_id = self._to_int(getattr(case, 'opt_job_id', None), 0)
+            if case_job_id > 0 and case_job_id not in cases_by_job_id:
+                cases_by_job_id[case_job_id] = case
+            case_index = self._to_int(getattr(case, 'case_index', None), 0)
+            if case_index > 0 and case_index not in cases_by_index:
+                cases_by_index[case_index] = case
         for condition in conditions:
-            conditions_by_case.setdefault(self._to_int(getattr(condition, 'order_case_id', None), 0), []).append(condition)
+            resolved_case_id = self._resolve_case_id_for_condition(
+                condition=condition,
+                cases_by_job_id=cases_by_job_id,
+                cases_by_index=cases_by_index,
+            )
+            conditions_by_case.setdefault(resolved_case_id, []).append(condition)
 
         case_entries: List[Tuple[int, Any | None]] = [
             (self._to_int(getattr(case, 'id', None), 0), case)
@@ -234,6 +251,34 @@ class ResultsService:
                 for condition in conditions
             ],
         }
+
+    def _resolve_case_id_for_condition(
+        self,
+        condition,
+        cases_by_job_id: Dict[int, Any],
+        cases_by_index: Dict[int, Any],
+    ) -> int:
+        order_case_id = self._to_int(getattr(condition, 'order_case_id', None), 0)
+        if order_case_id > 0:
+            return order_case_id
+
+        opt_job_id = self._to_int(getattr(condition, 'opt_job_id', None), 0)
+        if opt_job_id > 0:
+            matched_case = cases_by_job_id.get(opt_job_id)
+            if matched_case is not None:
+                matched_case_id = self._to_int(getattr(matched_case, 'id', None), 0)
+                if matched_case_id > 0:
+                    return matched_case_id
+
+        case_index = self._to_int(getattr(condition, 'case_index', None), 0)
+        if case_index > 0:
+            matched_case = cases_by_index.get(case_index)
+            if matched_case is not None:
+                matched_case_id = self._to_int(getattr(matched_case, 'id', None), 0)
+                if matched_case_id > 0:
+                    return matched_case_id
+
+        return 0
 
     def _enrich_order_condition_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         opt_issue_id = self._to_int(payload.get('optIssueId'), 0)
