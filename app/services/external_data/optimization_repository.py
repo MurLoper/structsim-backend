@@ -243,7 +243,7 @@ class OptimizationRepository:
                    n_total_value, d_update
             FROM opt_circle
             WHERE n_job_id IN ({placeholders})
-            ORDER BY n_job_id ASC, n_circle ASC, n_id ASC
+            ORDER BY n_job_id ASC, n_run_num ASC, n_circle ASC, n_id ASC
             """,
             job_ids,
         )
@@ -471,7 +471,7 @@ class OptimizationRepository:
 
             round_summaries.append(
                 {
-                    'roundIndex': int(circle.get('n_circle') or index),
+                    'roundIndex': int(circle.get('n_run_num') or circle.get('n_circle') or index),
                     'circleId': circle_id,
                     'circlePath': circle.get('s_circle_path'),
                     'runNum': circle.get('n_run_num'),

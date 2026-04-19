@@ -412,6 +412,7 @@ class ResultsService:
             items.append(
                 {
                     'id': f"external-{opt_job_id}-{round_item.get('circleId')}",
+                    'circleId': round_item.get('circleId'),
                     'caseConditionId': getattr(condition, 'id', None),
                     'optIssueId': getattr(condition, 'opt_issue_id', None),
                     'optJobId': opt_job_id,
